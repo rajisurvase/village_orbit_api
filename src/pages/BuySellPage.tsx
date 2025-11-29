@@ -1,6 +1,9 @@
 import { usePageSEO } from "@/hooks/usePageSEO";
 import { ShoppingBag } from "lucide-react";
 import ItemList from "@/components/marketplace/ItemList";
+import PostItemForm from "@/components/marketplace/PostItemForm";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
 
 const BuySellPage = () => {
   usePageSEO({
@@ -29,7 +32,26 @@ const BuySellPage = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <ItemList />
+        <Tabs defaultValue="browse" className="w-full">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
+            <TabsTrigger value="browse">Browse Items</TabsTrigger>
+            <TabsTrigger value="sell">Sell an Item</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="browse">
+            <ItemList />
+          </TabsContent>
+          
+          <TabsContent value="sell">
+            <div className="max-w-3xl mx-auto">
+              <PostItemForm 
+                onSuccess={() => {
+                  toast.success("Item posted successfully! It will be visible after admin approval.");
+                }}
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
