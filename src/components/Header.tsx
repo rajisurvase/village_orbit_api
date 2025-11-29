@@ -10,17 +10,15 @@ import {
   LogIn,
   LogOut,
   User,
-  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "./LanguageToggle";
 import SocialMediaButtons from "./SocialMediaButtons";
@@ -34,7 +32,7 @@ import { cn } from "@/lib/utils";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isMobileHomeOpen, setIsMobileHomeOpen] = useState(false);
+  const [desktopHomeOpen, setDesktopHomeOpen] = useState(false);
   const { t } = useTranslation();
   const { user, isAdmin, isSubAdmin } = useAuth();
   const { isPageVisible } = usePageVisibility();
@@ -176,45 +174,59 @@ const Header = () => {
 
           {/* Desktop Navigation & Auth */}
           <div className="flex items-center gap-2">
-            <nav className="hidden lg:flex items-center gap-0.5">
-              {/* HOME Mega Menu */}
-              <NavigationMenu>
-                <NavigationMenuList>
-                  <NavigationMenuItem>
-                    <NavigationMenuTrigger className="text-foreground hover:text-primary hover:bg-primary/10 bg-transparent">
-                      Home
-                    </NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                      <div className="grid w-[800px] gap-3 p-6 md:grid-cols-2 lg:grid-cols-3">
-                        {homeMenuSections.map((section) => (
-                          <div key={section.title} className="space-y-3">
-                            <h4 className="font-semibold text-sm text-primary border-b border-border pb-2">
-                              {section.title}
-                            </h4>
-                            <ul className="space-y-2">
+            <nav className="hidden lg:flex items-center gap-0.5 relative">
+              {/* HOME Accordion Menu */}
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  className="text-foreground hover:text-primary hover:bg-primary/10"
+                  onClick={() => setDesktopHomeOpen(!desktopHomeOpen)}
+                >
+                  Home
+                </Button>
+                
+                {desktopHomeOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setDesktopHomeOpen(false)}
+                    />
+                    <div className="absolute top-full left-0 mt-2 w-80 bg-card border border-border rounded-lg shadow-lg z-50 p-4">
+                      <Accordion type="single" collapsible className="space-y-2">
+                        {homeMenuSections.map((section, idx) => (
+                          <AccordionItem 
+                            key={section.title} 
+                            value={`section-${idx}`}
+                            className="border-b border-border last:border-0"
+                          >
+                            <AccordionTrigger className="text-foreground hover:text-primary py-3 px-2 hover:no-underline [&[data-state=open]>svg]:rotate-90">
+                              <div className="flex items-center gap-2 text-sm">
+                                <ChevronRight className="h-4 w-4 transition-transform" />
+                                <span>{section.title}</span>
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="pl-8 pr-2 space-y-1">
                               {section.items.map((item) => (
-                                <li key={item.name}>
-                                  <NavigationMenuLink asChild>
-                                    <Link
-                                      to={item.href}
-                                      className={cn(
-                                        "block select-none space-y-1 rounded-md p-2 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-sm",
-                                        location.pathname === item.href && "bg-accent/50"
-                                      )}
-                                    >
-                                      {item.name}
-                                    </Link>
-                                  </NavigationMenuLink>
-                                </li>
+                                <Link
+                                  key={item.name}
+                                  to={item.href}
+                                  onClick={() => setDesktopHomeOpen(false)}
+                                  className={cn(
+                                    "block py-2 px-3 text-sm rounded-md transition-colors hover:bg-accent hover:text-accent-foreground",
+                                    location.pathname === item.href && "bg-accent text-accent-foreground"
+                                  )}
+                                >
+                                  {item.name}
+                                </Link>
                               ))}
-                            </ul>
-                          </div>
+                            </AccordionContent>
+                          </AccordionItem>
                         ))}
-                      </div>
-                    </NavigationMenuContent>
-                  </NavigationMenuItem>
-                </NavigationMenuList>
-              </NavigationMenu>
+                      </Accordion>
+                    </div>
+                  </>
+                )}
+              </div>
 
               {/* Standalone Navigation Items */}
               {standaloneNavItems.map((item) => (
@@ -315,48 +327,42 @@ const Header = () => {
             {/* Sidebar */}
             <nav className="fixed top-0 right-0 h-full w-72 bg-card shadow-2xl z-[9999] lg:hidden animate-slide-in-right overflow-y-auto border-l border-border">
               <div className="flex flex-col gap-2 p-4">
-                {/* HOME Dropdown for Mobile */}
-                <div className="space-y-1">
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-between text-foreground hover:text-primary hover:bg-primary/10"
-                    onClick={() => setIsMobileHomeOpen(!isMobileHomeOpen)}
-                  >
-                    <span>Home</span>
-                    <ChevronDown className={cn("h-4 w-4 transition-transform", isMobileHomeOpen && "rotate-180")} />
-                  </Button>
-                  
-                  {isMobileHomeOpen && (
-                    <div className="pl-4 space-y-3 pt-2 animate-accordion-down">
-                      {homeMenuSections.map((section) => (
-                        <div key={section.title} className="space-y-2">
-                          <h4 className="font-semibold text-xs text-primary uppercase tracking-wide">
-                            {section.title}
-                          </h4>
-                          <div className="space-y-1">
-                            {section.items.map((item) => (
-                              <Button
-                                key={item.name}
-                                variant="ghost"
-                                size="sm"
-                                className={cn(
-                                  "w-full justify-start text-sm text-muted-foreground hover:text-primary hover:bg-primary/10",
-                                  location.pathname === item.href && "bg-primary/10 text-primary"
-                                )}
-                                asChild
-                                onClick={() => {
-                                  setIsMenuOpen(false);
-                                  setIsMobileHomeOpen(false);
-                                }}
-                              >
-                                <Link to={item.href}>{item.name}</Link>
-                              </Button>
-                            ))}
+                {/* HOME Accordion for Mobile */}
+                <div className="mb-2">
+                  <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 px-2">
+                    Home
+                  </div>
+                  <Accordion type="single" collapsible className="space-y-1">
+                    {homeMenuSections.map((section, idx) => (
+                      <AccordionItem 
+                        key={section.title} 
+                        value={`section-${idx}`}
+                        className="border-b border-border last:border-0"
+                      >
+                        <AccordionTrigger className="text-foreground hover:text-primary py-3 px-2 hover:no-underline [&[data-state=open]>svg]:rotate-90">
+                          <div className="flex items-center gap-2 text-sm">
+                            <ChevronRight className="h-4 w-4 transition-transform" />
+                            <span>{section.title}</span>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        </AccordionTrigger>
+                        <AccordionContent className="pl-8 pr-2 space-y-1">
+                          {section.items.map((item) => (
+                            <Link
+                              key={item.name}
+                              to={item.href}
+                              onClick={() => setIsMenuOpen(false)}
+                              className={cn(
+                                "block py-2 px-3 text-sm rounded-md transition-colors hover:bg-accent hover:text-accent-foreground",
+                                location.pathname === item.href && "bg-accent text-accent-foreground"
+                              )}
+                            >
+                              {item.name}
+                            </Link>
+                          ))}
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
                 </div>
 
                 {/* Standalone Navigation Items for Mobile */}
