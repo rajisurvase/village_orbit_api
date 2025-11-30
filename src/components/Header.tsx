@@ -1,6 +1,8 @@
 import { useState, useContext, memo } from "react";
 import { createPortal } from "react-dom";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { LazyLoadImage } from 'react-lazy-load-image-component';
+import 'react-lazy-load-image-component/src/effects/blur.css';
 import {
   Menu,
   X,
@@ -151,24 +153,30 @@ const Header = () => {
         )}
         <div className="flex items-center justify-between py-4">
           {/* Logo & Title */}
-          <Link to={CUSTOM_ROUTES.HOME}>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold text-xl shadow-sm">
-                शि
-              </div>
-              <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                  {t("header.title")}
-                </h1>
-                {config?.village && (
-                  <p className="text-sm text-muted-foreground">
-                    {config.village.state} {config.village.district && ","}{" "}
-                    {config.village.district}
-                  </p>
-                )}
-              </div>
-            </div>
-          </Link>
+        <Link to={CUSTOM_ROUTES.HOME}>
+  <div className="flex items-center gap-4">
+  <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-sm">
+  <LazyLoadImage
+    src="/logo.jpg"
+    alt="Logo"
+    effect="blur"
+    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+  />
+</div>
+
+    <div>
+      <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+        {t("header.title")}
+      </h1>
+      {config?.village && (
+        <p className="text-sm text-muted-foreground">
+          {config.village.state} {config.village.district && ","}{" "}
+          {config.village.district}
+        </p>
+      )}
+    </div>
+  </div>
+</Link>
 
          
 
