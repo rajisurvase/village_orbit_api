@@ -85,12 +85,22 @@ const ItemList = () => {
 
   const filterItems = () => {
     let filtered = [...items];
+    
+    console.log("=== FILTER DEBUG ===");
+    console.log("Total items:", items.length);
+    console.log("Search query:", searchQuery);
+    console.log("Selected category:", selectedCategory);
+    console.log("Sort by:", sortBy);
 
     // Step 1: Filter by search query
     if (searchQuery.trim()) {
-      filtered = filtered.filter(item =>
-        item.item_name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      const searchLower = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(item => {
+        const nameMatch = item.item_name.toLowerCase().includes(searchLower);
+        const descMatch = item.description?.toLowerCase().includes(searchLower) || false;
+        return nameMatch || descMatch;
+      });
+      console.log("After search filter:", filtered.length, "items");
     }
 
     // Step 2: Filter by category (case-insensitive)
@@ -98,6 +108,7 @@ const ItemList = () => {
       filtered = filtered.filter(item => 
         item.category.toLowerCase() === selectedCategory.toLowerCase()
       );
+      console.log("After category filter:", filtered.length, "items");
     }
 
     // Step 3: Sort items
@@ -117,6 +128,8 @@ const ItemList = () => {
         break;
     }
 
+    console.log("Final filtered items:", filtered.length);
+    console.log("===================");
     setFilteredItems(filtered);
   };
 
