@@ -37,9 +37,9 @@ const CATEGORIES = [
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest First" },
-  { value: "price-low", label: "Price: Low to High" },
-  { value: "price-high", label: "Price: High to Low" },
-  { value: "name", label: "Name: A to Z" }
+  { value: "priceLowToHigh", label: "Price: Low to High" },
+  { value: "priceHighToLow", label: "Price: High to Low" },
+  { value: "nameAtoZ", label: "Name: A to Z" }
 ];
 
 const ItemList = () => {
@@ -86,28 +86,29 @@ const ItemList = () => {
   const filterItems = () => {
     let filtered = [...items];
 
-    // Filter by category
-    if (selectedCategory !== "All Categories") {
-      filtered = filtered.filter(item => item.category === selectedCategory);
-    }
-
-    // Filter by search query
-    if (searchQuery) {
+    // Step 1: Filter by search query
+    if (searchQuery.trim()) {
       filtered = filtered.filter(item =>
-        item.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.description?.toLowerCase().includes(searchQuery.toLowerCase())
+        item.item_name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
-    // Sort items
+    // Step 2: Filter by category (case-insensitive)
+    if (selectedCategory !== "All Categories") {
+      filtered = filtered.filter(item => 
+        item.category.toLowerCase() === selectedCategory.toLowerCase()
+      );
+    }
+
+    // Step 3: Sort items
     switch (sortBy) {
-      case "price-low":
+      case "priceLowToHigh":
         filtered.sort((a, b) => a.price - b.price);
         break;
-      case "price-high":
+      case "priceHighToLow":
         filtered.sort((a, b) => b.price - a.price);
         break;
-      case "name":
+      case "nameAtoZ":
         filtered.sort((a, b) => a.item_name.localeCompare(b.item_name));
         break;
       case "newest":
