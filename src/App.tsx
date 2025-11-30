@@ -8,6 +8,7 @@ import { CUSTOM_ROUTES } from "./custom-routes";
 import Layout from "./components/Layout";
 import SectionSkeleton from "./components/ui/skeletons/SectionSkeleton";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { UpdateNotification } from "@/components/UpdateNotification";
 
 // Lazy load pages for code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -58,6 +59,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <UpdateNotification />
         <BrowserRouter>
         <Suspense fallback={<SectionSkeleton />}>
           <Routes>

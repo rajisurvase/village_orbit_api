@@ -14,8 +14,11 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
-      registerType: "autoUpdate",
+      registerType: "prompt",
       includeAssets: ["favicon.ico", "robots.txt", "placeholder.svg"],
+      devOptions: {
+        enabled: false
+      },
       manifest: {
         name: "शिवनखेड (खु) ग्रामपंचायत",
         short_name: "शिवनखेड (खु)",
