@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useContext } from "react";
-import { MessageCircle, X, Send, Bot, Mic, MicOff } from "lucide-react";
+import { MessageCircle, X, Send, Bot, Mic, MicOff, Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -15,12 +15,14 @@ type Message = {
 
 const VillageChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { i18n } = useTranslation();
   const isFooterVisible = useFooterVisibility();
   const { config } = useContext(VillageContext);
@@ -31,11 +33,84 @@ const VillageChatbot = () => {
     background: `linear-gradient(135deg, ${bgColor} 0%, ${bgColor} 100%)`,
   };
 
+  // Load messages from localStorage on mount
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const savedMessages = localStorage.getItem("villageChatMessages");
+    if (savedMessages) {
+      try {
+        setMessages(JSON.parse(savedMessages));
+      } catch (error) {
+        console.error("Failed to load messages:", error);
+      }
+    }
+  }, []);
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem("villageChatMessages", JSON.stringify(messages));
     }
   }, [messages]);
+
+  // Auto-scroll to bottom with smooth animation
+  const scrollToBottom = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Reset inactivity timer
+  const resetInactivityTimer = () => {
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+    }
+    if (isOpen && !isMinimized) {
+      inactivityTimerRef.current = setTimeout(() => {
+        setIsMinimized(true);
+      }, 120000); // 2 minutes
+    }
+  };
+
+  // Set up inactivity timer when chat opens
+  useEffect(() => {
+    if (isOpen && !isMinimized) {
+      resetInactivityTimer();
+    }
+    return () => {
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+      }
+    };
+  }, [isOpen, isMinimized]);
+
+  // Clean and process voice input text
+  const cleanVoiceText = (text: string): string => {
+    let cleaned = text.trim();
+    
+    // Remove common noise words and artifacts
+    const noiseWords = ['um', 'uh', 'ah', 'er', 'like', 'you know'];
+    noiseWords.forEach(word => {
+      const regex = new RegExp(`\\b${word}\\b`, 'gi');
+      cleaned = cleaned.replace(regex, '');
+    });
+    
+    // Remove extra spaces
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    
+    // Capitalize first letter
+    if (cleaned.length > 0) {
+      cleaned = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+    }
+    
+    return cleaned;
+  };
 
   // Initialize speech recognition
   useEffect(() => {
@@ -56,14 +131,30 @@ const VillageChatbot = () => {
 
       recognitionRef.current.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
-        setInput(transcript);
-        setIsListening(false);
+        const cleanedText = cleanVoiceText(transcript);
+        
+        if (cleanedText) {
+          setIsListening(false);
+          // Auto-send voice message
+          streamChat(cleanedText);
+          resetInactivityTimer();
+        } else {
+          setIsListening(false);
+          toast.error("I didn't hear anything, please try again.");
+        }
       };
 
       recognitionRef.current.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
         setIsListening(false);
-        toast.error("Voice input failed. Please try again.");
+        
+        if (event.error === 'no-speech') {
+          toast.error("I didn't hear anything, please try again.");
+        } else if (event.error === 'not-allowed') {
+          toast.error("Microphone access denied. Please allow microphone access.");
+        } else {
+          toast.error("Voice input unavailable right now.");
+        }
       };
 
       recognitionRef.current.onend = () => {
@@ -184,6 +275,7 @@ const VillageChatbot = () => {
     if (!input.trim() || isLoading) return;
     const message = input.trim();
     setInput("");
+    resetInactivityTimer(); // Reset inactivity timer on user action
     await streamChat(message);
   };
 
@@ -207,11 +299,36 @@ const VillageChatbot = () => {
       try {
         recognitionRef.current.start();
         setIsListening(true);
-        toast.info("Listening... Speak now!");
+        resetInactivityTimer(); // Reset inactivity timer on user action
       } catch (error) {
         console.error("Error starting recognition:", error);
         toast.error("Failed to start voice input.");
       }
+    }
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setIsMinimized(false);
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+    }
+  };
+
+  const handleMinimize = () => {
+    setIsMinimized(true);
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+    }
+  };
+
+  const handleOpen = () => {
+    if (isMinimized) {
+      setIsMinimized(false);
+      resetInactivityTimer();
+    } else {
+      setIsOpen(true);
+      resetInactivityTimer();
     }
   };
 
@@ -220,33 +337,49 @@ const VillageChatbot = () => {
       {/* Floating Chat Button */}
       <div className="fixed bottom-24 right-6 z-[60]">
         <Button
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={handleOpen}
           className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-500 hover:scale-110"
           style={gradientStyle}
           size="icon"
         >
-          {isOpen ? (
-            <X className="h-6 w-6 text-white" />
-          ) : (
-            <MessageCircle className="h-6 w-6 text-white" />
-          )}
+          <MessageCircle className="h-6 w-6 text-white" />
         </Button>
       </div>
 
       {/* Chat Popup */}
-      {isOpen && (
+      {isOpen && !isMinimized && (
         <div className="fixed bottom-44 right-6 z-[60] w-96 max-w-[calc(100vw-3rem)] h-[500px] max-h-[70vh] bg-card rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
           {/* Header */}
           <div
-            className="p-4 text-white flex items-center gap-3"
+            className="p-4 text-white flex items-center justify-between"
             style={gradientStyle}
           >
-            <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
-              <Bot className="h-6 w-6" />
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
+                <Bot className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">Village Assistant</h3>
+                <p className="text-xs text-white/80">Here to help you!</p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-semibold text-lg">Village Assistant</h3>
-              <p className="text-xs text-white/80">Here to help you!</p>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleMinimize}
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 hover:bg-white/20 text-white"
+              >
+                <Minimize2 className="h-4 w-4" />
+              </Button>
+              <Button
+                onClick={handleClose}
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 hover:bg-white/20 text-white"
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
           </div>
 
@@ -306,13 +439,13 @@ const VillageChatbot = () => {
                 disabled={isLoading}
                 size="icon"
                 variant={isListening ? "destructive" : "outline"}
-                className="shrink-0"
+                className={`shrink-0 ${isListening ? "animate-pulse" : ""}`}
               >
-                {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                {isListening ? <MicOff className="h-4 w-4 animate-pulse" /> : <Mic className="h-4 w-4" />}
               </Button>
               <Button
                 onClick={handleSend}
-                disabled={isLoading || !input.trim()}
+                disabled={isLoading || !input.trim() || isListening}
                 size="icon"
                 className="shrink-0"
               >
