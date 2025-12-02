@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useContext } from "react";
+import { useState, useRef, useEffect, useContext, useCallback } from "react";
 import { MessageCircle, X, Send, Bot, Mic, MicOff, Minimize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,9 +20,10 @@ const VillageChatbot = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isAutoScrollEnabled = useRef(true);
   const { i18n } = useTranslation();
   const isFooterVisible = useFooterVisibility();
   const { config } = useContext(VillageContext);
@@ -52,19 +53,35 @@ const VillageChatbot = () => {
     }
   }, [messages]);
 
-  // Auto-scroll to bottom with smooth animation
-  const scrollToBottom = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: "smooth",
+  // Production-ready auto-scroll using sentinel element
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+    if (messagesEndRef.current && isAutoScrollEnabled.current) {
+      messagesEndRef.current.scrollIntoView({ 
+        behavior, 
+        block: "end" 
       });
     }
-  };
+  }, []);
 
+  // Scroll on new messages or loading state changes
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    // Use requestAnimationFrame for smoother scrolling after DOM update
+    const rafId = requestAnimationFrame(() => {
+      scrollToBottom("smooth");
+    });
+    return () => cancelAnimationFrame(rafId);
+  }, [messages, isLoading, scrollToBottom]);
+
+  // Scroll when chat opens
+  useEffect(() => {
+    if (isOpen && !isMinimized) {
+      // Slight delay to ensure DOM is ready
+      const timeoutId = setTimeout(() => {
+        scrollToBottom("auto");
+      }, 100);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isOpen, isMinimized, scrollToBottom]);
 
   // Reset inactivity timer
   const resetInactivityTimer = () => {
@@ -384,7 +401,7 @@ const VillageChatbot = () => {
           </div>
 
           {/* Messages */}
-          <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+          <ScrollArea className="flex-1 p-4">
             {messages.length === 0 && (
               <div className="text-center text-muted-foreground text-sm space-y-2 mt-8">
                 <Bot className="h-12 w-12 mx-auto mb-4 text-primary" />
@@ -421,6 +438,9 @@ const VillageChatbot = () => {
                 </div>
               </div>
             )}
+            
+            {/* Sentinel element for smooth auto-scroll */}
+            <div ref={messagesEndRef} className="h-px" />
           </ScrollArea>
 
           {/* Input */}
