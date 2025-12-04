@@ -1,4 +1,5 @@
-import { useState, useContext, useCallback } from 'react';
+import { useState, useContext, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -342,22 +343,23 @@ const FeedbackFormWithShare = ({ socialConfig: propSocialConfig, pageTitle: prop
         </DialogContent>
       </Dialog>
 
-      {/* Floating Social Icons - Below the dialog */}
-      {open && iconsVisible && showAnyIcon && (
+      {/* Floating Social Icons - Rendered via Portal above dialog */}
+      {open && iconsVisible && showAnyIcon && createPortal(
         <div 
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] flex items-center justify-center gap-4"
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] flex items-center justify-center gap-4 pointer-events-auto"
           role="group"
           aria-label={t('socialLinks', 'Social media links')}
+          style={{ zIndex: 9999 }}
         >
           {isInstagramEnabled && (
             <button
               type="button"
               onClick={(e) => handleExternalLink(e, socialConfig.instagram, 'instagram')}
               aria-label={t('openInstagram', 'Open Instagram')}
-              className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-full ${iconBgClass} flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary animate-fade-in`}
-              style={{ animationDelay: '0ms' }}
+              className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-full ${iconBgClass} flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary animate-fade-in pointer-events-auto cursor-pointer`}
+              style={{ animationDelay: '0ms', pointerEvents: 'auto' }}
             >
-              <Instagram className="h-5 w-5 text-white" />
+              <Instagram className="h-5 w-5 text-white pointer-events-none" />
             </button>
           )}
 
@@ -366,10 +368,10 @@ const FeedbackFormWithShare = ({ socialConfig: propSocialConfig, pageTitle: prop
               type="button"
               onClick={(e) => handleExternalLink(e, socialConfig.facebook, 'facebook')}
               aria-label={t('openFacebook', 'Open Facebook')}
-              className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-full ${iconBgClass} flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary animate-fade-in`}
-              style={{ animationDelay: '50ms' }}
+              className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-full ${iconBgClass} flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary animate-fade-in pointer-events-auto cursor-pointer`}
+              style={{ animationDelay: '50ms', pointerEvents: 'auto' }}
             >
-              <Facebook className="h-5 w-5 text-white" />
+              <Facebook className="h-5 w-5 text-white pointer-events-none" />
             </button>
           )}
 
@@ -378,13 +380,14 @@ const FeedbackFormWithShare = ({ socialConfig: propSocialConfig, pageTitle: prop
               type="button"
               onClick={(e) => handleExternalLink(e, socialConfig.shareUrl, 'share')}
               aria-label={t('shareProfile', 'Share this profile')}
-              className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-full ${iconBgClass} flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary animate-fade-in`}
-              style={{ animationDelay: '100ms' }}
+              className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-full ${iconBgClass} flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary animate-fade-in pointer-events-auto cursor-pointer`}
+              style={{ animationDelay: '100ms', pointerEvents: 'auto' }}
             >
-              <Share2 className="h-5 w-5 text-white" />
+              <Share2 className="h-5 w-5 text-white pointer-events-none" />
             </button>
           )}
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Share Fallback Modal */}
