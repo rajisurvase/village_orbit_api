@@ -62,10 +62,14 @@ const FeedbackFormWithShare = ({ socialConfig: propSocialConfig, pageTitle: prop
   const socialConfig: SocialConfig = propSocialConfig || (config?.social as SocialConfig) || {};
   const pageTitle = propTitle || (config as any)?.villageName || document.title;
 
+  // Debug logging
+  console.log('FeedbackFormWithShare - config:', config);
+  console.log('FeedbackFormWithShare - socialConfig:', socialConfig);
+
   // Determine enabled state for each icon
   const isInstagramEnabled = socialConfig.enabled?.instagram !== false && !!socialConfig.instagram;
   const isFacebookEnabled = socialConfig.enabled?.facebook !== false && !!socialConfig.facebook;
-  const isShareEnabled = socialConfig.enabled?.share !== false;
+  const isShareEnabled = socialConfig.enabled?.share !== false && !!socialConfig.shareUrl;
   const showAnyIcon = isInstagramEnabled || isFacebookEnabled || isShareEnabled;
 
   const shareUrl = socialConfig.shareUrl || window.location.href;
@@ -132,9 +136,10 @@ const FeedbackFormWithShare = ({ socialConfig: propSocialConfig, pageTitle: prop
     }
   };
 
-  // Handle external link click
-  const handleExternalLink = useCallback((url: string | undefined, platform: string) => {
-    if (!url) {
+  // Handle external link click - direct function, not wrapped in useCallback to avoid popup blocker
+  const handleExternalLink = (url: string | undefined, platform: string) => {
+    console.log('handleExternalLink called:', { url, platform });
+    if (!url || url.trim() === '') {
       toast({
         title: t('pageNotAvailable', 'Page not available'),
         description: t('linkNotConfigured', 'This link is not configured yet.'),
@@ -143,9 +148,10 @@ const FeedbackFormWithShare = ({ socialConfig: propSocialConfig, pageTitle: prop
       return;
     }
     const sanitizedUrl = url.startsWith('http') ? url : `https://${url}`;
-    window.open(sanitizedUrl, '_blank', 'noopener,noreferrer');
+    console.log('Opening URL:', sanitizedUrl);
+    window.open(sanitizedUrl, '_blank');
     onShare?.({ method: platform, url: sanitizedUrl });
-  }, [t, onShare]);
+  };
 
   // Handle share click
   const handleShare = useCallback(async () => {
