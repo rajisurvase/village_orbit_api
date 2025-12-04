@@ -348,7 +348,7 @@ const FeedbackFormWithShare = ({ socialConfig: propSocialConfig, pageTitle: prop
 
           {isShareEnabled && (
             <button
-              onClick={handleShare}
+              onClick={() => handleExternalLink(socialConfig.shareUrl, 'share')}
               aria-label={t('shareProfile', 'Share this profile')}
               className={`w-11 h-11 min-w-[44px] min-h-[44px] rounded-full ${iconBgClass} flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary animate-fade-in`}
               style={{ animationDelay: '100ms' }}
