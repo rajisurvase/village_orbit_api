@@ -122,8 +122,8 @@ const Header = () => {
   })).filter(section => section.items.length > 0);
 
   return (
-    <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
-      <div className="container mx-auto px-4">
+    <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border shadow-sm safe-area-top">
+      <div className="container mx-auto px-3 sm:px-4 lg:px-6">
         {/* Main Header email contact number social icons */}
 
         {config?.contact?.office && (
@@ -152,11 +152,11 @@ const Header = () => {
             {/*<div className="text-sm">{config.contact.office.hours}</div>*/}
           </div>
         )}
-        <div className="flex items-center justify-between py-4">
+        <div className="flex items-center justify-between py-2.5 sm:py-3 md:py-4">
           {/* Logo & Title */}
         <Link to={CUSTOM_ROUTES.HOME}>
-  <div className="flex items-center gap-4">
-  <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-sm">
+  <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+  <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center shadow-sm">
   <LazyLoadImage
     src="/logo.png"
     alt="Logo"
@@ -166,11 +166,11 @@ const Header = () => {
 </div>
 
     <div>
-      <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+      <h1 className="text-base sm:text-lg md:text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
         {t("header.title")}
       </h1>
       {config?.village && (
-        <p className="text-sm text-muted-foreground">
+        <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">
           {config.village.state} {config.village.district && ","}{" "}
           {config.village.district}
         </p>

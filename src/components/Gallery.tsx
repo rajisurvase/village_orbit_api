@@ -56,20 +56,20 @@ const Gallery = ({ gallery }: GalleryProps) => {
   };
 
   return (
-    <section id="gallery" className="py-20 bg-gradient-subtle">
-      <div className="container mx-auto px-4">
+    <section id="gallery" className="py-10 sm:py-14 md:py-16 lg:py-20 bg-gradient-subtle">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center mb-16 animate-fade-in">
-          <h2 className="text-4xl font-bold mb-4 text-gradient">
+        <div className="text-center mb-8 sm:mb-12 md:mb-16 animate-fade-in">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-gradient">
             {t("gallery.title")}
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-2">
             {t("gallery.description")}
           </p>
         </div>
 
         {/* Gallery Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-8 sm:mb-10 md:mb-12">
           {gallery.map((item, index) => (
             <Card
               key={item.title}
@@ -141,12 +141,12 @@ const Gallery = ({ gallery }: GalleryProps) => {
 
         {/* Gallery Categories */}
         <Card className="card-elegant animate-fade-in">
-          <CardContent className="p-8">
-            <h3 className="text-2xl font-bold text-center mb-8 text-gradient">
+          <CardContent className="p-4 sm:p-6 md:p-8">
+            <h3 className="text-xl sm:text-2xl font-bold text-center mb-6 sm:mb-8 text-gradient">
               {t("gallery.categories")}
             </h3>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
               {[
                 {
                   type: "festival",
@@ -175,18 +175,18 @@ const Gallery = ({ gallery }: GalleryProps) => {
               ].map((category, index) => (
                 <div
                   key={category.type}
-                  className="text-center p-6 rounded-lg bg-muted/30 hover-lift cursor-pointer animate-fade-in"
+                  className="text-center p-3 sm:p-4 md:p-6 rounded-lg bg-muted/30 hover-lift cursor-pointer animate-fade-in"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <div className="text-4xl mb-3">{category.icon}</div>
-                  <h4 className="font-semibold mb-2">{category.label}</h4>
-                  <p className="text-sm text-muted-foreground mb-3">
+                  <div className="text-2xl sm:text-3xl md:text-4xl mb-2 sm:mb-3">{category.icon}</div>
+                  <h4 className="font-semibold text-xs sm:text-sm md:text-base mb-1 sm:mb-2">{category.label}</h4>
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground mb-2 sm:mb-3">
                     {category.count}{" "}
                     {category.count === 1
                       ? t("gallery.photo")
                       : t("gallery.photos")}
                   </p>
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-[10px] sm:text-xs">
                     {t("gallery.viewAll")}
                   </Badge>
                 </div>

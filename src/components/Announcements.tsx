@@ -69,64 +69,64 @@ const Announcements = ({announcements}) => {
   };
 
   return (
-    <section className="py-12 bg-primary/5 border-y border-primary/10">
-      <div className="container mx-auto px-4">
+    <section className="py-8 sm:py-10 md:py-12 bg-primary/5 border-y border-primary/10">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center mb-12 animate-fade-in">
-          <h2 className="text-3xl font-bold mb-4 text-gradient">
+        <div className="text-center mb-8 sm:mb-10 md:mb-12 animate-fade-in">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 text-gradient">
             {t('announcements.title')}
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
             {t('announcements.description')}
           </p>
         </div>
 
         {/* Announcements Carousel */}
-        <div className="max-w-4xl mx-auto px-4">
+        <div className="max-w-4xl mx-auto px-2 sm:px-4">
           <Carousel className="w-full" opts={{ align: "start", loop: true }}>
-            <CarouselContent className="-ml-2 md:-ml-4">
+            <CarouselContent className="-ml-2 sm:-ml-3 md:-ml-4">
               {announcements
                 .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                 .map((announcement, index) => (
-                  <CarouselItem key={announcement.id} className="pl-2 md:pl-4">
+                  <CarouselItem key={announcement.id} className="pl-2 sm:pl-3 md:pl-4">
                     <Card className="card-elegant hover-lift">
-                      <CardContent className="p-6">
-                        <div className="flex flex-col md:flex-row md:items-start gap-4">
+                      <CardContent className="p-4 sm:p-5 md:p-6">
+                        <div className="flex flex-col md:flex-row md:items-start gap-3 sm:gap-4">
                           {/* Icon and Priority */}
-                          <div className="flex items-center gap-3 md:flex-col md:items-center md:min-w-[80px]">
-                            <div className={`p-3 rounded-full bg-primary/10 ${getTypeColor(announcement.type)}`}>
+                          <div className="flex items-center gap-2 sm:gap-3 md:flex-col md:items-center md:min-w-[70px] sm:md:min-w-[80px]">
+                            <div className={`p-2 sm:p-3 rounded-full bg-primary/10 ${getTypeColor(announcement.type)}`}>
                               {getTypeIcon(announcement.type)}
                             </div>
-                            <Badge className={getPriorityColor(announcement.priority)}>
+                            <Badge className={`text-[10px] sm:text-xs ${getPriorityColor(announcement.priority)}`}>
                               {announcement.priority}
                             </Badge>
                           </div>
 
                           {/* Content */}
                           <div className="flex-1 min-w-0">
-                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
-                              <h3 className="text-xl font-bold text-foreground leading-tight">
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2 mb-2 sm:mb-3">
+                              <h3 className="text-base sm:text-lg md:text-xl font-bold text-foreground leading-tight">
                                 {announcement.title}
                               </h3>
                               
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground whitespace-nowrap">
-                                <Calendar className="h-4 w-4" />
+                              <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
+                                <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                                 <span>{formatDate(announcement.date)}</span>
                               </div>
                             </div>
 
-                            <p className="text-muted-foreground leading-relaxed mb-4">
+                            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-3 sm:mb-4">
                               {announcement.content}
                             </p>
 
-                            <div className="flex flex-wrap items-center justify-between gap-4">
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Clock className="h-4 w-4" />
+                            <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+                              <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs md:text-sm text-muted-foreground">
+                                <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
                                 <span>{t('announcements.published')}: {formatFullDate(announcement.date)}</span>
                               </div>
 
                               {announcement.type === "meeting" && (
-                                <Button size="sm" variant="outline">
+                                <Button size="sm" variant="outline" className="text-xs sm:text-sm">
                                   {t('announcements.addToCalendar')}
                                 </Button>
                               )}
@@ -138,8 +138,8 @@ const Announcements = ({announcements}) => {
                   </CarouselItem>
                 ))}
             </CarouselContent>
-            <CarouselPrevious className="left-0 -translate-x-1/2" />
-            <CarouselNext className="right-0 translate-x-1/2" />
+            <CarouselPrevious className="left-0 -translate-x-1/2 h-8 w-8 sm:h-10 sm:w-10" />
+            <CarouselNext className="right-0 translate-x-1/2 h-8 w-8 sm:h-10 sm:w-10" />
           </Carousel>
         </div>
 

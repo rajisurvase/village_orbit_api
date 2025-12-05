@@ -50,17 +50,17 @@ const Hero = ({ village, panchayat }: HeroProps) => {
       </div>
 
       {/* Content */}
-      <div className="relative container mx-auto px-4 py-20">
+      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 md:py-20">
         <div className="max-w-4xl mx-auto text-center">
           {/* Hero Text */}
           <div className="animate-fade-in">
-            <h1 className="text-xl md:text-5xl font-bold mb-6 leading-tight text-primary-foreground drop-shadow-lg">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 leading-tight text-primary-foreground drop-shadow-lg">
               {t("hero.title")}
             </h1>
 
-            <p className="text-lg md:text-xl mb-4 text-primary-foreground/95 drop-shadow-md">{t("hero.subtitle")}</p>
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-3 sm:mb-4 text-primary-foreground/95 drop-shadow-md">{t("hero.subtitle")}</p>
 
-            <p className="text-sm mb-8 text-primary-foreground/90 max-w-3xl mx-auto leading-relaxed drop-shadow-md">
+            <p className="text-sm sm:text-base md:text-lg mb-6 sm:mb-8 text-primary-foreground/90 max-w-3xl mx-auto leading-relaxed drop-shadow-md px-2">
               {t("hero.description")}
             </p>
 
