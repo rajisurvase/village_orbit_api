@@ -154,21 +154,19 @@ const Header = () => {
         )}
         <div className="flex items-center justify-between py-2.5 sm:py-3 md:py-4">
           {/* Logo & Title */}
-        <Link to={CUSTOM_ROUTES.HOME}>
-<<<<<<< HEAD
+      <Link to={CUSTOM_ROUTES.HOME}>
   <div className="flex items-center gap-4">
-<div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-md p-1">
-=======
-  <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-  <div className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center shadow-sm">
->>>>>>> 53132e5551e24d752b268353b18e77134c802f90
-  <LazyLoadImage
-    src="/logo.png"
-    alt="Logo"
-    effect="blur"
-    className="w-full h-full object-contain"
-  />
-</div>
+
+   
+      <div className="w-12 h-12 sm:w-10 sm:h-10 md:w-14 md:h-14 rounded-lg flex items-center justify-center shadow-sm">
+        <LazyLoadImage
+          src="/logo.png"
+          alt="Logo"
+          effect="blur"
+          className="w-full h-full object-contain"
+        />
+      </div>
+
 
     <div>
       <h1 className="text-base sm:text-lg md:text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
@@ -181,6 +179,7 @@ const Header = () => {
         </p>
       )}
     </div>
+
   </div>
 </Link>
 
