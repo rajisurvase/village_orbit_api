@@ -158,7 +158,7 @@ const Header = () => {
   <div className="flex items-center gap-4">
   <div className="w-12 h-12 rounded-lg flex items-center justify-center shadow-sm">
   <LazyLoadImage
-    src="/logo1.png"
+    src="/logo.png"
     alt="Logo"
     effect="blur"
     style={{ width: '100%', height: '100%', objectFit: 'contain' }}

@@ -1,23 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Main App Theme -->
+    <!-- Main app theme -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
-    <!-- No Action Bar Theme -->
-    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="android:windowActionBar">false</item>
-        <item name="android:windowNoTitle">true</item>
-        <item name="android:windowBackground">@null</item>
+    <!-- Splash Theme for Android 12+ -->
+    <style name="Theme.MyApp.Splash" parent="Theme.SplashScreen">
+        <!-- Fullscreen white background -->
+        <item name="windowSplashScreenBackground">@drawable/splash_background</item>
+
+        <!-- Splash logo (PNG in drawable folders) -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash</item>
+
+        <!-- No icon overlay -->
+        <item name="windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
+
+        <!-- After splash → go to normal app theme -->
+        <item name="postSplashScreenTheme">@style/AppTheme</item>
     </style>
 
-    <!-- Splash Screen Theme (Android < 12) -->
+    <!-- Splash screen for Android 11 and below -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="android:windowBackground">@drawable/splash</item>
+        <item name="android:windowBackground">@drawable/splash_background</item>
     </style>
 
 </resources>
