@@ -89,20 +89,20 @@ const Services = ({ services }: ServicesProps) => {
   };
 
   return (
-    <section id="services" className="py-20 bg-muted/30">
-      <div className="container mx-auto px-4">
+    <section id="services" className="py-10 sm:py-14 md:py-16 lg:py-20 bg-muted/30">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center mb-16 animate-fade-in">
-          <h2 className="text-4xl font-bold mb-4 text-gradient">
+        <div className="text-center mb-8 sm:mb-12 md:mb-16 animate-fade-in">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-gradient">
             {t('services.title')}
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-2">
             {t('services.description')}
           </p>
         </div>
 
         {/* Services Categories */}
-        <div className="space-y-12">
+        <div className="space-y-8 sm:space-y-10 md:space-y-12">
           {services.map((category, categoryIndex) => {
             const IconComponent = getCategoryIcon(category.category);
             
@@ -112,16 +112,16 @@ const Services = ({ services }: ServicesProps) => {
                 className="animate-fade-in"
                 style={{ animationDelay: `${categoryIndex * 200}ms` }}
               >
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-primary text-primary-foreground rounded-lg flex items-center justify-center">
-                    <IconComponent className="h-5 w-5" />
+                <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary text-primary-foreground rounded-lg flex items-center justify-center">
+                    <IconComponent className="h-4 w-4 sm:h-5 sm:w-5" />
                   </div>
-                  <h3 className="text-2xl font-bold text-gradient">
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gradient">
                     {t(`services.category.${category.category.toLowerCase().replace(/[^a-z0-9]/g, '')}`)}
                   </h3>
                 </div>
                 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {category.items.map((service, serviceIndex) => {
                     const serviceKey = `${category.category}-${serviceIndex}`;
                     const photos = getServicePhotos(service);

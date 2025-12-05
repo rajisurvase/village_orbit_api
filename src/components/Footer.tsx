@@ -29,10 +29,10 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-primary text-primary-foreground">
+    <footer className="bg-primary text-primary-foreground safe-area-bottom">
       {/* Main Footer Content */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 lg:py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {/* Village Information */}
           <div className="space-y-6">
             <div>
@@ -163,18 +163,18 @@ const Footer = () => {
       <Separator className="bg-primary-foreground/20" />
 
       {/* Bottom Footer */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-3 sm:gap-4">
           <div className="text-center md:text-left">
-            <p className="text-primary-foreground/70 text-sm">
+            <p className="text-primary-foreground/70 text-xs sm:text-sm">
               {t('footer.copyright', { year: currentYear, village: village.name })}
             </p>
-            <p className="text-primary-foreground/50 text-xs mt-1">
+            <p className="text-primary-foreground/50 text-[10px] sm:text-xs mt-1">
               {t('footer.tagline')}
             </p>
           </div>
 
-          <div className="flex items-center gap-6 text-sm">
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm">
             <a
               href="#privacy"
               className="text-primary-foreground/70 hover:text-primary-foreground transition-colors"

@@ -33,20 +33,20 @@ const PeopleSection = ({ title, description, people, sectionId }: PeopleSectionP
 
   return (
     <>
-      <section id={sectionId} className="py-20 bg-gradient-to-b from-background to-muted/30">
-        <div className="container mx-auto px-4">
+      <section id={sectionId} className="py-10 sm:py-14 md:py-16 lg:py-20 bg-gradient-to-b from-background to-muted/30">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
-          <div className="text-center mb-16 animate-fade-in">
-            <h2 className="text-4xl font-bold mb-4 text-gradient">
+          <div className="text-center mb-8 sm:mb-12 md:mb-16 animate-fade-in">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-gradient">
               {title}
             </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-2">
               {description}
             </p>
           </div>
 
           {/* People Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {people.map((person, index) => (
               <Card 
                 key={`${person.name}-${index}`}
@@ -54,8 +54,8 @@ const PeopleSection = ({ title, description, people, sectionId }: PeopleSectionP
                 style={{ animationDelay: `${index * 100}ms` }}
                 onClick={() => handleMemberClick(person)}
               >
-                <CardHeader className="text-center">
-                  <div className="w-24 h-24 mx-auto mb-3 rounded-full overflow-hidden border-2 border-accent cursor-pointer hover:border-primary transition-colors">
+              <CardHeader className="text-center p-3 sm:p-4 md:p-6">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mx-auto mb-2 sm:mb-3 rounded-full overflow-hidden border-2 border-accent cursor-pointer hover:border-primary transition-colors">
                     <img 
                       src={person.image} 
                       alt={person.name}
@@ -63,9 +63,9 @@ const PeopleSection = ({ title, description, people, sectionId }: PeopleSectionP
                       loading="lazy"
                     />
                   </div>
-                  <CardTitle className="text-lg">{person.name}</CardTitle>
-                  <Badge variant="outline" className="mx-auto text-xs">
-                    <Briefcase className="h-3 w-3 mr-1" />
+                  <CardTitle className="text-base sm:text-lg">{person.name}</CardTitle>
+                  <Badge variant="outline" className="mx-auto text-[10px] sm:text-xs">
+                    <Briefcase className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
                     {person.profession}
                   </Badge>
                 </CardHeader>

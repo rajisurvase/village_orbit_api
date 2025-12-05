@@ -57,19 +57,19 @@ const About = ({ village }: AboutProps) => {
   ];
 
   return (
-    <section id="about" className="py-20 bg-gradient-subtle">
-      <div className="container mx-auto px-4">
+    <section id="about" className="py-10 sm:py-14 md:py-16 lg:py-20 bg-gradient-subtle">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center mb-16 animate-fade-in">
-          <h2 className="text-4xl font-bold mb-4 text-gradient">
+        <div className="text-center mb-8 sm:mb-12 md:mb-16 animate-fade-in">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-gradient">
             {t('about.title')}
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-2">
             {t('about.description')}
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-12 mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 md:gap-10 lg:gap-12 mb-8 sm:mb-12 md:mb-16">
           {/* Village Information */}
           <div className="space-y-8 animate-slide-up">
             <Card className="card-elegant">
@@ -94,9 +94,9 @@ const About = ({ village }: AboutProps) => {
                   ))}
                 </div>
                 
-                <div className="p-4 rounded-lg bg-primary/5 border-l-4 border-primary animate-slide-up">
-                  <p className="text-sm text-muted-foreground mb-2">{t('common.administrativeDetails')}</p>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="p-3 sm:p-4 rounded-lg bg-primary/5 border-l-4 border-primary animate-slide-up">
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-2">{t('common.administrativeDetails')}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
                     <div>
                       <span className="font-medium">{t('common.district')}:</span> {village.district}
                     </div>
@@ -125,23 +125,23 @@ const About = ({ village }: AboutProps) => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
                   {demographics.map((stat, index) => (
                     <div 
                       key={stat.label} 
-                      className="text-center p-4 rounded-lg hover-lift transition-all duration-300 animate-fade-in"
+                      className="text-center p-2 sm:p-3 md:p-4 rounded-lg hover-lift transition-all duration-300 animate-fade-in"
                       style={{ 
                         animationDelay: `${(index + 1) * 100}ms`,
                         background: `hsl(var(--muted) / 0.5)` 
                       }}
                     >
-                      <div className={`w-12 h-12 ${stat.color} text-white rounded-full flex items-center justify-center mx-auto mb-3 transition-transform duration-300 hover:scale-110`}>
-                        <stat.icon className="h-6 w-6" />
+                      <div className={`w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 ${stat.color} text-white rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 transition-transform duration-300 hover:scale-110`}>
+                        <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
                       </div>
-                      <p className="text-2xl font-bold text-foreground mb-1">
+                      <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-0.5 sm:mb-1">
                         {stat.value}
                       </p>
-                      <p className="text-sm text-muted-foreground font-medium">
+                      <p className="text-xs sm:text-sm text-muted-foreground font-medium">
                         {stat.label}
                       </p>
                     </div>
