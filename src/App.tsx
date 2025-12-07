@@ -50,6 +50,7 @@ const AdminExamQuestions = lazy(() => import("./pages/AdminExamQuestions"));
 const AddService = lazy(() => import("./pages/AddService"));
 const ManageCategories = lazy(() => import("./pages/ManageCategories"));
 const ServicesAdminDashboard = lazy(() => import("./pages/ServicesAdminDashboard"));
+const NavigationConfigEditor = lazy(() => import("./pages/NavigationConfigEditor"));
 
 const queryClient = new QueryClient();
 
@@ -160,6 +161,7 @@ const App = () => (
             <Route path={CUSTOM_ROUTES.ADD_SERVICE} element={<AddService />} />
             <Route path={CUSTOM_ROUTES.MANAGE_CATEGORIES} element={<ManageCategories />} />
             <Route path={CUSTOM_ROUTES.SERVICES_ADMIN} element={<ServicesAdminDashboard />} />
+            <Route path={CUSTOM_ROUTES.NAVIGATION_CONFIG} element={<NavigationConfigEditor />} />
                 </Routes>
               </Layout>
             }
