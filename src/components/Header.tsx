@@ -1,4 +1,4 @@
-import { useState, useContext, memo } from "react";
+import { useState, useContext, useMemo, memo } from "react";
 import { createPortal } from "react-dom";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { LazyLoadImage } from 'react-lazy-load-image-component';
@@ -6,8 +6,6 @@ import 'react-lazy-load-image-component/src/effects/blur.css';
 import {
   Menu,
   X,
-  Phone,
-  Mail,
   Shield,
   LogIn,
   LogOut,
@@ -31,95 +29,62 @@ import { supabase } from "@/integrations/supabase/client";
 import { CUSTOM_ROUTES } from "@/custom-routes";
 import { VillageContext } from "@/context/VillageContextConfig";
 import { cn } from "@/lib/utils";
+import { getDefaultNavigationConfig } from "@/hooks/useNavigationConfig";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [desktopHomeOpen, setDesktopHomeOpen] = useState(false);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, isAdmin, isSubAdmin } = useAuth();
   const { isPageVisible } = usePageVisibility();
   const navigate = useNavigate();
   const location = useLocation();
   const { config } = useContext(VillageContext);
+  
+  // Get navigation config from village config if available
+  const navConfig = (config as any)?.navigationConfig || null;
+  const currentLang = (i18n.language?.split('-')[0] || 'en') as 'en' | 'hi' | 'mr';
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setIsMenuOpen(false);
   };
 
-  // Standalone navigation items (not in HOME dropdown)
-  const standaloneNavItems = [
-    { name: "Notices", href: CUSTOM_ROUTES.NOTICES, pageKey: "notices" },
-    {
-      name: "Market Prices",
-      href: CUSTOM_ROUTES.MARKET_PRICES,
-      pageKey: "market_prices",
-    },
-    { name: "Buy & Sell", href: CUSTOM_ROUTES.BUY_SELL, pageKey: "buy_sell" },
-    { name: "Online Exam", href: "/exam", pageKey: "exam" },
-    { name: "Forum", href: CUSTOM_ROUTES.FORUM, pageKey: "forum" },
-    {
-      name: "Pay Taxes",
-      href: CUSTOM_ROUTES.TAX_PAYMENT,
-      pageKey: "tax_payment",
-    },
-    {
-      name: t("header.contact"),
-      href: CUSTOM_ROUTES.CONTACT_US,
-      pageKey: "contact",
-    },
-  ].filter((item) => isPageVisible(item.pageKey));
+  // Get navigation items from config or use defaults
+  const navigationData = useMemo(() => {
+    const configToUse = navConfig || getDefaultNavigationConfig();
+    
+    // Standalone navigation items (not in HOME dropdown)
+    const standaloneNavItems = configToUse.standaloneItems
+      .filter(item => item.isVisible && isPageVisible(item.pageKey))
+      .sort((a, b) => a.order - b.order)
+      .map(item => ({
+        name: item.label[currentLang] || item.label.en,
+        href: item.href,
+        pageKey: item.pageKey
+      }));
 
-  // HOME dropdown menu structure
-  const homeMenuSections = [
-    {
-      title: "About Village",
-      items: [
-        { name: "History", href: CUSTOM_ROUTES.ABOUT, pageKey: "about" },
-        { name: "Village Map", href: CUSTOM_ROUTES.ABOUT + "#map", pageKey: "about" },
-        { name: "Festivals & Culture", href: CUSTOM_ROUTES.ABOUT + "#culture", pageKey: "about" },
-      ],
-    },
-    {
-      title: "Government & Administration",
-      items: [
-        { name: "Panchayat Representatives", href: CUSTOM_ROUTES.PANCHAYAT, pageKey: "panchayat" },
-        { name: "Ward Members", href: CUSTOM_ROUTES.PANCHAYAT + "#ward", pageKey: "panchayat" },
-        { name: "Panchayat Staff", href: CUSTOM_ROUTES.PANCHAYAT + "#staff", pageKey: "panchayat" },
-        { name: "Government Staff", href: CUSTOM_ROUTES.PANCHAYAT + "#govt", pageKey: "panchayat" },
-      ],
-    },
-    {
-      title: "Services",
-      items: [
-        { name: "Shops / Business", href: CUSTOM_ROUTES.SERVICES + "#shops", pageKey: "services" },
-        { name: "Health", href: CUSTOM_ROUTES.SERVICES + "#health", pageKey: "services" },
-        { name: "Education", href: CUSTOM_ROUTES.SERVICES + "#education", pageKey: "services" },
-        { name: "Transportation", href: CUSTOM_ROUTES.SERVICES + "#transport", pageKey: "services" },
-        { name: "Food & Dining", href: CUSTOM_ROUTES.SERVICES + "#food", pageKey: "services" },
-      ],
-    },
-    {
-      title: "Women & Child Care",
-      items: [
-        { name: "Asha Workers", href: "/people#asha", pageKey: "people" },
-        { name: "Anganwadi Karyakarta", href: "/people#anganwadi", pageKey: "people" },
-      ],
-    },
-    {
-      title: "Documents & Certificates",
-      items: [
-        { name: "Birth Certificate", href: CUSTOM_ROUTES.SERVICES + "#birth-cert", pageKey: "services" },
-        { name: "Death Certificate", href: CUSTOM_ROUTES.SERVICES + "#death-cert", pageKey: "services" },
-        { name: "Property Tax Form", href: CUSTOM_ROUTES.TAX_PAYMENT, pageKey: "tax_payment" },
-        { name: "RTI Application", href: CUSTOM_ROUTES.SERVICES + "#rti", pageKey: "services" },
-        { name: "Gram Sabha Resolution 2024", href: CUSTOM_ROUTES.NOTICES, pageKey: "notices" },
-      ],
-    },
-  ].map(section => ({
-    ...section,
-    items: section.items.filter(item => isPageVisible(item.pageKey))
-  })).filter(section => section.items.length > 0);
+    // HOME dropdown menu structure
+    const homeMenuSections = configToUse.homeMenuSections
+      .filter(section => section.isVisible)
+      .sort((a, b) => a.order - b.order)
+      .map(section => ({
+        title: section.title[currentLang] || section.title.en,
+        items: section.items
+          .filter(item => item.isVisible && isPageVisible(item.pageKey))
+          .sort((a, b) => a.order - b.order)
+          .map(item => ({
+            name: item.label[currentLang] || item.label.en,
+            href: item.href,
+            pageKey: item.pageKey
+          }))
+      }))
+      .filter(section => section.items.length > 0);
+
+    return { standaloneNavItems, homeMenuSections };
+  }, [navConfig, currentLang, isPageVisible]);
+
+  const { standaloneNavItems, homeMenuSections } = navigationData;
 
   return (
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border shadow-sm safe-area-top">

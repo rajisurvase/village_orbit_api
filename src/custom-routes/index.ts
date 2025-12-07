@@ -6,6 +6,7 @@ export const CUSTOM_ROUTES = {
     ADMIN_DASHBOARD: "/admin/dashboard",
     VILLAGE_MANAGEMENT: "/admin/village-management",
     JSON_CONFIG: "/admin/json-config",
+    NAVIGATION_CONFIG: "/admin/navigation-config",
     CONTACT_MESSAGE : "/admin/messages",
     USER_MANAGEMENT: "/admin/users",
     ADMIN_MARKETPLACE: "/admin/marketplace",
