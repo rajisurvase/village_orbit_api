@@ -11,6 +11,12 @@ import {
   LogOut,
   User,
   ChevronRight,
+   Phone,
+  Mail,
+  Instagram,
+  Facebook,
+  Youtube,
+  Share2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -91,32 +97,85 @@ const Header = () => {
       <div className="container mx-auto px-3 sm:px-4 lg:px-6">
         {/* Main Header email contact number social icons */}
 
-        {config?.contact?.office && (
-          <div className="hidden sm:flex flex-col sm:flex-row items-center justify-between py-2 text-sm text-muted-foreground border-b border-border/50 gap-2">
-           
-           {/*} <div className="sm:flex items-center gap-6">
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                <a 
-                  href={`tel:${config.contact.office.phone}`}
-                  className="hover:text-primary transition-colors"
-                >
-                  {config.contact.office.phone}
-                </a>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                <span>{config.contact.office.email}</span>
-              </div>
-            </div>*/}
-            {/* Social Media Icons 
-            <SocialMediaButtons
-              social={config?.social}
-              className="hidden lg:flex"
-            />*/}
-            {/*<div className="text-sm">{config.contact.office.hours}</div>*/}
-          </div>
-        )}
+{config?.contact?.office && (
+  <div
+    className="
+      flex flex-col lg:flex-row 
+      w-full 
+      text-black
+    "
+  >
+
+{/* LEFT HALF (Yellow) */}
+<div
+  className="
+    flex flex-col sm:flex-row 
+    items-center justify-between 
+    bg-[#F2CB4A]
+    py-2 px-4 
+    flex-1
+    gap-3
+  "
+>
+  {/* Phone */}
+  <div className="flex items-center gap-2">
+    <Phone className="h-4 w-4" />
+    <a href={`tel:${config.contact.office.phone}`}>
+      {config.contact.office.phone}
+    </a>
+  </div>
+
+  {/* Email */}
+  <div className="flex items-center gap-2">
+    <Mail className="h-4 w-4" />
+    <span>{config.contact.office.email}</span>
+  </div>
+</div>
+
+{/* RIGHT HALF (Gray — Social icons) */}
+<div
+  className="
+    flex items-center justify-end 
+    bg-[#D3D7DF]
+    py-2 px-4 
+    flex-1
+    gap-4
+  "
+>
+  {config?.social?.instagram && (
+    <a href={config.social.instagram} target="_blank">
+      <Instagram className="h-6 w-6 text-black" />
+    </a>
+  )}
+
+  {config?.social?.facebook && (
+    <a href={config.social.facebook} target="_blank">
+      <Facebook className="h-6 w-6 text-black" />
+    </a>
+  )}
+
+  {config?.social?.youtube && (
+    <a href={config.social.youtube} target="_blank">
+      <Youtube className="h-6 w-6 text-black" />
+    </a>
+  )}
+
+  {/* Share Button */}
+  <button
+    onClick={() =>
+      navigator.share && navigator.share({ url: window.location.href })
+    }
+  >
+    <Share2 className="h-6 w-6 text-black" />
+  </button>
+</div>
+
+
+  </div>
+)}
+
+
+
         <div className="flex items-center justify-between py-2.5 sm:py-3 md:py-4">
           {/* Logo & Title */}
       <Link to={CUSTOM_ROUTES.HOME}>
@@ -224,7 +283,7 @@ const Header = () => {
           <div className="flex items-center gap-1">
             <ThemeToggle />
             <LanguageToggle />
-            {/* <SocialMediaButtons social={config?.social} className="hidden lg:flex" /> */}
+           
           </div>
             {/* Auth Buttons */}
             <div className="hidden lg:flex items-center gap-2">
@@ -342,6 +401,7 @@ const Header = () => {
                   </Accordion>
                 </div>
 
+
                 {/* Standalone Navigation Items for Mobile */}
                 {standaloneNavItems.map((item) => (
                   <Button
@@ -411,18 +471,24 @@ const Header = () => {
                   )}
                 </div>
 
-                {/* Mobile Social Media */}
-                {config?.social && (
-                  <div className="flex justify-center gap-4 pt-4 border-t border-border">
-                    <div className="flex items-center gap-3">
-                      <ThemeToggle />
-                      <SocialMediaButtons
-                        social={config.social}
-                        className="flex"
-                      />
-                    </div>
-                  </div>
-                )}
+                {/* Mobile Social Media
+             <div className="flex justify-center gap-6 pt-4 border-t border-border">
+  <a href={config?.social?.instagram} target="_blank">
+    <Instagram className="h-6 w-6" />
+  </a>
+  <a href={config?.social?.facebook} target="_blank">
+    <Facebook className="h-6 w-6" />
+  </a>
+   <a href={config?.social?.youtube} target="_blank">
+    <Youtube className="h-6 w-6" />
+  </a>
+  <button
+    onClick={() => navigator.share && navigator.share({ url: window.location.href })}
+  >
+    <Share2 className="h-6 w-6" />
+  </button>
+</div>
+*/}
               </div>
             </nav>
           </>,

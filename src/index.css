@@ -273,6 +273,9 @@ All colors MUST be HSL format for theming support.
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+.clip-path-diagonal {
+  clip-path: polygon(30% 0, 100% 0, 100% 100%, 0 100%);
+}
 
   .safe-area-top {
     padding-top: env(safe-area-inset-top, 0px);
