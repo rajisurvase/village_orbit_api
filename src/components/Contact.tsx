@@ -8,6 +8,8 @@ import { Link } from "react-router-dom";
 import DocumentsModal from "./DocumentsModal";
 import { useState } from "react";
 
+
+
 const Contact = ({contact, documents=[], quickServices=[]}) => {
   const { t } = useTranslation();
   const [isDocsModalOpen, setIsDocsModalOpen] = useState(false);
@@ -36,13 +38,13 @@ const Contact = ({contact, documents=[], quickServices=[]}) => {
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-16 animate-fade-in">
-          <h2 className="text-4xl font-bold mb-4 text-gradient">
-            Contact Us
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Get in touch with your Gram Panchayat for any queries, complaints, 
-            or assistance with government services and village development matters.
-          </p>
+         <h2 className="text-4xl font-bold mb-4 text-gradient">
+  {t("contact.title")}
+</h2>
+<p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+  {t("contact.description")}
+</p>
+
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12">
@@ -53,7 +55,7 @@ const Contact = ({contact, documents=[], quickServices=[]}) => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-3 text-2xl">
                   <MapPin className="h-6 w-6 text-primary" />
-                  Panchayat Office
+                  {t("contact.office")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -107,7 +109,7 @@ const Contact = ({contact, documents=[], quickServices=[]}) => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-3 text-2xl">
                   <AlertCircle className="h-6 w-6 text-destructive" />
-                  Emergency Contacts
+              {t('contact.getDirections')}
                 </CardTitle>
               </CardHeader>
               <CardContent>

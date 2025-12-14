@@ -114,6 +114,23 @@ const resources = {
 "proudPeople.description":
   "Celebrating individuals who have made our village proud through their achievements and contributions",
 
+
+  // Asha Workers
+"ashaWorkers.title": "Asha Workers",
+"ashaWorkers.description":
+  "Dedicated health workers serving our community with care and compassion",
+
+// Anganwadi Workers
+"anganwadiWorkers.title": "Anganwadi Karyakarti",
+"anganwadiWorkers.description":
+  "Committed workers ensuring child development and women welfare in our village",
+
+  // Development Works
+"developmentWorks.title": "Development Works",
+"developmentWorks.description":
+  "Track the progress of ongoing and completed development projects that enhance infrastructure and improve quality of life in our village.",
+
+  
       // Gallery
       "gallery.title": "Village Gallery",
       "gallery.description": "Explore memorable moments from our village life, festivals, development projects, and community events that showcase our rich heritage and progress.",
@@ -266,9 +283,25 @@ const resources = {
       
 
       // Proud People
-"proudPeople.title": "हमारे गौरवशाली लोग",
+"proudPeople.title": "गौरवशाली लोग",
 "proudPeople.description":
   "उन व्यक्तियों का सम्मान जो अपनी उपलब्धियों और योगदान से हमारे गांव का नाम रोशन कर रहे हैं",
+
+
+  // आशा कार्यकर्ता
+"ashaWorkers.title": "आशा कार्यकर्ता",
+"ashaWorkers.description":
+  "समुदाय के स्वास्थ्य और जागरूकता के लिए समर्पित आशा कार्यकर्ता",
+
+// आंगनवाड़ी कार्यकर्ता
+"anganwadiWorkers.title": "आंगनवाड़ी कार्यकर्ता",
+"anganwadiWorkers.description":
+  "बाल विकास और महिला कल्याण के लिए कार्यरत समर्पित आंगनवाड़ी कार्यकर्ता",
+
+  // विकास कार्य
+"developmentWorks.title": "विकास कार्य",
+"developmentWorks.description":
+  "गांव की बुनियादी सुविधाओं को सशक्त करने और जीवन स्तर सुधारने वाले जारी एवं पूर्ण विकास कार्यों की प्रगति देखें।",
 
       // Services
       "services.title": "गांव की सेवाएं",
@@ -422,10 +455,23 @@ const resources = {
       
 
       // Proud People
-"proudPeople.title": "आमच्या गावाचा अभिमान",
+"proudPeople.title": "गौरवशाली व्यक्ती",
 "proudPeople.description":
   "आपल्या कर्तृत्व व योगदानातून गावाचा मान वाढवणाऱ्या व्यक्तींचा गौरव",
 
+// आशा सेविका
+"ashaWorkers.title": "आशा सेविका",
+"ashaWorkers.description":
+  "गावातील आरोग्य सेवा व जनजागृतीसाठी समर्पितपणे कार्य करणाऱ्या आशा सेविका",
+
+// अंगणवाडी कार्यकर्त्या
+"anganwadiWorkers.title": "अंगणवाडी कार्यकर्त्या",
+"anganwadiWorkers.description":
+  "बालविकास व महिलांच्या कल्याणासाठी कार्य करणाऱ्या समर्पित अंगणवाडी कार्यकर्त्या",
+// विकास कामे
+"developmentWorks.title": "विकास कामे",
+"developmentWorks.description":
+  "गावातील पायाभूत सुविधा सुधारण्यासाठी व जीवनमान उंचावण्यासाठी सुरू असलेल्या व पूर्ण झालेल्या विकास कामांचा आढावा घ्या.",
 
       // Hero
       "hero.title": "शिवनखेड (खु) गावात आपले स्वागत आहे",
@@ -569,7 +615,7 @@ const resources = {
       "contact.subject": "विषय",
       "contact.message": "संदेश",
       "contact.submit": "संदेश पाठवा",
-      "contact.quickServices": "द्रुत सेवा",
+      "contact.quickServices": "त्वरित सेवाएँ",
       "contact.apply": "अर्ज करा",
       "contact.officeHours": "कार्यालय वेळ",
       "contact.phone2": "फोन",

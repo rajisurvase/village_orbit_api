@@ -41,7 +41,22 @@ import { cn } from "@/lib/utils";
 import { getDefaultNavigationConfig } from "@/hooks/useNavigationConfig";
 
 
-const Header = () => {
+// Header.tsx (top)
+type Visible =
+  | "proudPeople"
+  | "ashaWorkers"
+  | "anganwadiWorkers"
+  | "about"
+  | "panchayat"
+  | "schemes"
+  | "services"
+  | "development"
+  // "gallery"
+  | "contact"
+  | "announcement";
+
+
+const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [desktopHomeOpen, setDesktopHomeOpen] = useState(false);
 
@@ -50,7 +65,7 @@ const Header = () => {
   const { isPageVisible } = usePageVisibility();
   const navigate = useNavigate();
   const location = useLocation();
-  const { config } = useContext(VillageContext);
+  const { config, } = useContext(VillageContext);
 
   const navConfig = (config as any)?.navigationConfig || null;
   const currentLang = (i18n.language?.split('-')[0] || 'en') as 'en' | 'hi' | 'mr';
@@ -64,7 +79,7 @@ const Header = () => {
     const configToUse = navConfig || getDefaultNavigationConfig();
 
     const standaloneNavItems = configToUse.standaloneItems
-      .filter(item => item.isVisible && isPageVisible(item.pageKey))
+        .filter(item => item.isVisible && isPageVisible(item.pageKey)) 
       .sort((a, b) => a.order - b.order)
       .map(item => ({
         name: item.label[currentLang] || item.label.en,
@@ -147,7 +162,19 @@ const Header = () => {
     )
   );
 
-
+const sections: Visible[] = [ 
+    "about",
+    "panchayat",
+    "schemes",
+    "services",
+    "development",
+    //"gallery",
+    "contact",
+    "announcement",
+    "proudPeople",
+    "ashaWorkers",
+    "anganwadiWorkers",
+  ];
   // ------------------------------------------------------------------
   // WHITE HEADER (STICKY)
   // ------------------------------------------------------------------
@@ -362,7 +389,8 @@ const Header = () => {
                         value={`section-${idx}`}
                         className="border-b border-border last:border-0"
                       >
-                        <AccordionTrigger className="py-3 px-2 text-foreground hover:text-primary [&[data-state=open]>svg]:rotate-90">
+                        <AccordionTrigger className="py-3 px-2 text-foreground hover:text-primary [&[data-state=open]>svg]:rotate-90"
+                        >
                           <div className="flex items-center gap-2 text-sm">
                             <ChevronRight className="h-4 w-4" />
                             <span>{section.title}</span>

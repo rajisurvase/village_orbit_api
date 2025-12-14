@@ -29,7 +29,7 @@ const ContactUsPage = lazy(() => import("./pages/ContactUsPage"));
 
 const SchemePage = lazy(() => import("./pages/SchemePage"));
 const DevelopmentPage = lazy(() => import("./pages/DevelopmentPage"));
-const GalleryPage = lazy(() => import("./pages/GalleryPage"));
+//const GalleryPage = lazy(() => import("./pages/GalleryPage"));
 const AnnouncementsPage = lazy(() => import("./pages/AnnouncementsPage"));
 const NoticesPage = lazy(() => import("./pages/NoticesPage"));
 const MarketPricesPage = lazy(() => import("./pages/MarketPricesPage"));
@@ -93,10 +93,10 @@ const App = () => (
                     path={CUSTOM_ROUTES.DEVELOPMENT}
                     element={<DevelopmentPage />}
                   />
-                  <Route
+                  {/*<Route
                     path={CUSTOM_ROUTES.GALLERY}
                     element={<GalleryPage />}
-                  />
+                  />*/}
                   <Route
                     path={CUSTOM_ROUTES.ANNOUNCEMENTS}
                     element={<AnnouncementsPage />}

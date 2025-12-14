@@ -2,13 +2,15 @@ import { Calendar, IndianRupee, CheckCircle, Clock, AlertCircle, Calendar as Cal
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import i18n from "@/i18n"; // ✅ correct
+
 
 interface DevelopmentProps {
   developmentWorks: any[];
 }
 
 const Development = ({ developmentWorks }: DevelopmentProps) => {
-
+   const { t } = i18n; 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "Completed":
@@ -55,14 +57,16 @@ const Development = ({ developmentWorks }: DevelopmentProps) => {
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-16 animate-fade-in">
-          <h2 className="text-4xl font-bold mb-4 text-gradient">
-            Development Works
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Track the progress of ongoing and completed development projects that 
-            enhance infrastructure and improve quality of life in our village.
-          </p>
-        </div>
+ <h2 className="text-4xl font-bold mb-4 text-gradient">
+  {t("developmentWorks.title")}
+</h2>
+
+<p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+  {t("developmentWorks.description")}
+</p>
+
+</div>
+
 
         {/* Development Projects Grid */}
         <div className="grid lg:grid-cols-2 gap-8 mb-16">
