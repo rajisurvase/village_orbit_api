@@ -167,7 +167,7 @@ const Header = () => {
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 sm:w-12 sm:h-12 md:w-16 md:h-16 rounded-full overflow-hidden">
                   <LazyLoadImage
-                    src="/logo1.png"
+                    src="/favicon.ico"
                     alt="Logo"
                     effect="blur"
                     className="w-full h-full object-cover"

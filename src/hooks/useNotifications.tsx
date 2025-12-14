@@ -45,8 +45,8 @@ export const useNotifications = () => {
   const showNotification = (title: string, options?: NotificationOptions) => {
     if (permission === "granted") {
       new Notification(title, {
-        icon: "/placeholder.svg",
-        badge: "/placeholder.svg",
+        icon: "/favicon.ico",
+        badge: "/favicon.ico",
         ...options
       });
     }

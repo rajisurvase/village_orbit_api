@@ -1,7 +1,7 @@
 {
-  "name": "Village Vista - Gram Panchayat Portal",
-  "short_name": "Village Vista",
-  "description": "Official Gram Panchayat website for accessing government schemes, development projects, and village services",
+  "name": "Shivankhed Khurd - Gram Panchayat Portal",
+  "short_name": "Shivankhed Khurd",
+  "description": "Official Shivankhed Khurd Gram Panchayat website for accessing government schemes, development projects, and village services etc.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1a4d2e",
@@ -9,19 +9,19 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/placeholder.svg",
+      "src": "/favicon.ico",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     },
     {
-      "src": "/placeholder.svg",
+      "src": "/favicon.ico",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ],
-  "categories": ["government", "utilities", "lifestyle"],
+  "categories": ["government", "utilities", "lifestyle","local services"],
   "lang": "en-IN",
   "dir": "ltr"
 }
