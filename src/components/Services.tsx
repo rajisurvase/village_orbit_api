@@ -1,4 +1,7 @@
 import { useState, memo, useContext } from 'react';
+import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
+
 import { Phone, Clock, MapPin, Store, Car, User, GraduationCap, Coffee, Heart, ChevronLeft, ChevronRight, Image as ImageIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,11 +12,32 @@ import GalleryModal from './GalleryModal';
 import StarRating from './StarRating';
 import { VillageContext } from '@/context/VillageContextConfig';
 
+const CATEGORY_ID_MAP: Record<string, string> = {
+  "Retail & Grocery": "shops",
+  "Healthcare": "health",
+  "Education": "education",
+  "Transportation": "transport",
+  "Food & Dining": "food",
+};
+
+
 interface ServicesProps {
   services: any[];
 }
 
 const Services = ({ services }: ServicesProps) => {
+  const location = useLocation();
+
+useEffect(() => {
+  if (location.hash) {
+    const id = location.hash.replace("#", "");
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+}, [location]);
+
   const { t } = useTranslation();
   const { config } = useContext(VillageContext);
   const [selectedMember, setSelectedMember] = useState<any>(null);
@@ -69,9 +93,11 @@ const Services = ({ services }: ServicesProps) => {
     }));
   };
 
+
+
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
-      case "retail & grocery":
+      case "retails & grocery":
         return Store;
       case "transportation":
         return Car;
@@ -87,8 +113,32 @@ const Services = ({ services }: ServicesProps) => {
         return Store;
     }
   };
+  
+  
+// ✅ Navigation hash → service category mapping
+
+const SERVICE_CATEGORY_MAP: Record<string, string> = {
+  shops: "Retails & Grocery",
+  health: "Healthcare",
+  education: "Education",
+  transport: "Transportation",
+  food: "Food & Dining",
+};
+
+
+const activeHash = location.hash?.replace("#", "");
+
+const filteredServices =
+  activeHash && SERVICE_CATEGORY_MAP[activeHash]
+    ? services.filter(
+        (cat) => cat.category === SERVICE_CATEGORY_MAP[activeHash]
+      )
+    : services;
+
+
 
   return (
+    
     <section id="services" className="py-10 sm:py-14 md:py-16 lg:py-20 bg-muted/30">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
@@ -103,15 +153,21 @@ const Services = ({ services }: ServicesProps) => {
 
         {/* Services Categories */}
         <div className="space-y-8 sm:space-y-10 md:space-y-12">
-          {services.map((category, categoryIndex) => {
-            const IconComponent = getCategoryIcon(category.category);
+       
+
+          
+             {filteredServices.map((category, categoryIndex) => {
             
-            return (
-              <div 
-                key={category.category}
-                className="animate-fade-in"
-                style={{ animationDelay: `${categoryIndex * 200}ms` }}
-              >
+             const IconComponent = getCategoryIcon(category.category);
+return (
+             <div
+ id={CATEGORY_ID_MAP[category.category]}
+
+  key={category.category}
+  className="animate-fade-in"
+  style={{ animationDelay: `${categoryIndex * 200}ms` }}
+>
+
                 <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
                   <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary text-primary-foreground rounded-lg flex items-center justify-center">
                     <IconComponent className="h-4 w-4 sm:h-5 sm:w-5" />

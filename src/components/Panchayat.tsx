@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+
 import { Phone, Mail, MapPin, Clock, User, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +14,8 @@ interface PanchayatProps {
 
 const Panchayat = ({ panchayat }: PanchayatProps) => {
   const { t } = useTranslation();
+  const location = useLocation();
+
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -19,6 +23,19 @@ const Panchayat = ({ panchayat }: PanchayatProps) => {
     setSelectedMember(member);
     setIsModalOpen(true);
   };
+  useEffect(() => {
+  if (location.hash) {
+    const id = location.hash.replace('#', '');
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
+  }
+}, [location]);
+
 
   return (
     <section id="panchayat" className="py-20 bg-background">
@@ -229,7 +246,8 @@ const Panchayat = ({ panchayat }: PanchayatProps) => {
         </div>
 
         {/* Ward Members Section */}
-        <div className="mb-16">
+       <div id="ward" className="mb-16 scroll-mt-24">
+
   <h3 className="text-4xl font-bold text-center mb-8 text-gradient">
     {t('panchayat.wardMembers')}
   </h3>
@@ -291,7 +309,7 @@ const Panchayat = ({ panchayat }: PanchayatProps) => {
 
 
         {/* Staff Section */}
-        <div className="mb-16">
+     <div id="staff" className="mb-16 scroll-mt-24">
           <h3 className="text-4xl font-bold text-center mb-8 text-gradient">
             {t('panchayat.staff')}
           </h3>
