@@ -191,7 +191,13 @@ const ExamDashboard = () => {
     
     const hasAttempt = pastAttempts.some(attempt => attempt.exam_id === exam.id);
     
-    return !hasAttempt && !isPast(ends) && !isFuture(scheduled);
+    // Check if exam is within the valid time window (started but not ended)
+    const isWithinTimeWindow = now >= scheduled && now <= ends;
+    
+    // Check if exam status allows taking (scheduled or active)
+    const isStatusValid = exam.status === "scheduled" || exam.status === "active";
+    
+    return !hasAttempt && isWithinTimeWindow && isStatusValid;
   };
 
   const handleStartExam = (examId: string) => {
