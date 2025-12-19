@@ -21,6 +21,7 @@ export const CUSTOM_ROUTES = {
     CONTACT_US: "/contact-us",
     
     SCHEME: "/scheme",
+    GOVT_SCHEMES: "/govt-schemes",
     DEVELOPMENT: "/development",
     GALLERY: "/gallery",
     ANNOUNCEMENTS: "/announcements",

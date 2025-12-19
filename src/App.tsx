@@ -28,6 +28,7 @@ const ContactUsPage = lazy(() => import("./pages/ContactUsPage"));
 
 
 const SchemePage = lazy(() => import("./pages/SchemePage"));
+const GovtSchemesPage = lazy(() => import("./pages/GovtSchemesPage"));
 const DevelopmentPage = lazy(() => import("./pages/DevelopmentPage"));
 //const GalleryPage = lazy(() => import("./pages/GalleryPage"));
 const AnnouncementsPage = lazy(() => import("./pages/AnnouncementsPage"));
@@ -89,6 +90,7 @@ const App = () => (
                
 
                   <Route path={CUSTOM_ROUTES.SCHEME} element={<SchemePage />} />
+                  <Route path={CUSTOM_ROUTES.GOVT_SCHEMES} element={<GovtSchemesPage />} />
                   <Route
                     path={CUSTOM_ROUTES.DEVELOPMENT}
                     element={<DevelopmentPage />}
