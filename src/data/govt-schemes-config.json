@@ -1,0 +1,218 @@
+{
+  "governmentSchemes": {
+    "title": {
+      "en": "Government Schemes",
+      "hi": "शासकीय योजनाएं",
+      "mr": "शासकीय योजना"
+    },
+    "description": {
+      "en": "Information about various government welfare schemes. Click on 'More Info' to visit official government portals.",
+      "hi": "विभिन्न सरकारी कल्याणकारी योजनाओं की जानकारी। अधिकृत सरकारी पोर्टल पर जाने के लिए 'अधिक जानकारी' पर क्लिक करें।",
+      "mr": "विविध शासकीय कल्याणकारी योजनांची माहिती. अधिकृत शासकीय पोर्टलवर जाण्यासाठी 'अधिक माहिती' वर क्लिक करा."
+    },
+    "columns": {
+      "schemeName": { "en": "Scheme Name", "hi": "योजना का नाम", "mr": "योजना नाव" },
+      "department": { "en": "Department", "hi": "विभाग", "mr": "विभाग" },
+      "briefInfo": { "en": "Brief Information", "hi": "संक्षिप्त जानकारी", "mr": "थोडक्यात माहिती" },
+      "moreInfo": { "en": "More Info", "hi": "अधिक जानकारी", "mr": "अधिक माहिती" }
+    },
+    "schemes": [
+      {
+        "id": "pmkisan",
+        "name": { "en": "PM-KISAN Samman Nidhi", "hi": "पीएम-किसान सम्मान निधि", "mr": "पीएम-किसान सन्मान निधी" },
+        "department": { "en": "Agriculture", "hi": "कृषि", "mr": "कृषी" },
+        "briefInfo": { "en": "₹6000 per year financial assistance to farmers in 3 installments", "hi": "किसानों को 3 किस्तों में ₹6000 प्रति वर्ष वित्तीय सहायता", "mr": "शेतकऱ्यांना 3 हप्त्यांमध्ये ₹6000 प्रति वर्ष आर्थिक सहाय्य" },
+        "link": "https://pmkisan.gov.in/",
+        "isActive": true
+      },
+      {
+        "id": "pmay",
+        "name": { "en": "Pradhan Mantri Awas Yojana", "hi": "प्रधानमंत्री आवास योजना", "mr": "प्रधानमंत्री आवास योजना" },
+        "department": { "en": "Housing", "hi": "आवास", "mr": "गृहनिर्माण" },
+        "briefInfo": { "en": "Housing for All - Financial assistance for construction of pucca houses", "hi": "सभी के लिए आवास - पक्के घरों के निर्माण हेतु वित्तीय सहायता", "mr": "सर्वांसाठी घरे - पक्के घर बांधण्यासाठी आर्थिक सहाय्य" },
+        "link": "https://pmaymis.gov.in/",
+        "isActive": true
+      },
+      {
+        "id": "ayushman",
+        "name": { "en": "Ayushman Bharat - PMJAY", "hi": "आयुष्मान भारत - पीएमजेएवाई", "mr": "आयुष्मान भारत - पीएमजेएवाय" },
+        "department": { "en": "Health", "hi": "स्वास्थ्य", "mr": "आरोग्य" },
+        "briefInfo": { "en": "Health insurance of ₹5 lakh per family per year for secondary and tertiary care hospitalization", "hi": "माध्यमिक और तृतीयक देखभाल अस्पताल में भर्ती के लिए प्रति परिवार प्रति वर्ष ₹5 लाख का स्वास्थ्य बीमा", "mr": "माध्यमिक आणि तृतीयक काळजी रुग्णालयात दाखल होण्यासाठी प्रति कुटुंब प्रति वर्ष ₹5 लाख आरोग्य विमा" },
+        "link": "https://pmjay.gov.in/",
+        "isActive": true
+      },
+      {
+        "id": "mgnrega",
+        "name": { "en": "MGNREGA", "hi": "मनरेगा", "mr": "मनरेगा" },
+        "department": { "en": "Rural Development", "hi": "ग्रामीण विकास", "mr": "ग्रामीण विकास" },
+        "briefInfo": { "en": "100 days of guaranteed wage employment to every rural household", "hi": "हर ग्रामीण परिवार को 100 दिनों के गारंटीकृत रोजगार", "mr": "प्रत्येक ग्रामीण कुटुंबाला 100 दिवसांच्या हमी रोजगार" },
+        "link": "https://nrega.nic.in/",
+        "isActive": true
+      },
+      {
+        "id": "pmuy",
+        "name": { "en": "Pradhan Mantri Ujjwala Yojana", "hi": "प्रधानमंत्री उज्ज्वला योजना", "mr": "प्रधानमंत्री उज्ज्वला योजना" },
+        "department": { "en": "Petroleum & Natural Gas", "hi": "पेट्रोलियम और प्राकृतिक गैस", "mr": "पेट्रोलियम आणि नैसर्गिक वायू" },
+        "briefInfo": { "en": "Free LPG connection to BPL households", "hi": "बीपीएल परिवारों को मुफ्त एलपीजी कनेक्शन", "mr": "बीपीएल कुटुंबांना मोफत एलपीजी कनेक्शन" },
+        "link": "https://www.pmuy.gov.in/",
+        "isActive": true
+      },
+      {
+        "id": "pmsby",
+        "name": { "en": "Pradhan Mantri Suraksha Bima Yojana", "hi": "प्रधानमंत्री सुरक्षा बीमा योजना", "mr": "प्रधानमंत्री सुरक्षा बीमा योजना" },
+        "department": { "en": "Financial Services", "hi": "वित्तीय सेवाएं", "mr": "आर्थिक सेवा" },
+        "briefInfo": { "en": "Accident insurance cover of ₹2 lakh at ₹20 premium per year", "hi": "₹20 प्रति वर्ष प्रीमियम पर ₹2 लाख का दुर्घटना बीमा कवर", "mr": "₹20 प्रति वर्ष प्रीमियम वर ₹2 लाख अपघात विमा कव्हर" },
+        "link": "https://www.jansuraksha.gov.in/",
+        "isActive": true
+      },
+      {
+        "id": "pmjjby",
+        "name": { "en": "Pradhan Mantri Jeevan Jyoti Bima Yojana", "hi": "प्रधानमंत्री जीवन ज्योति बीमा योजना", "mr": "प्रधानमंत्री जीवन ज्योती बीमा योजना" },
+        "department": { "en": "Financial Services", "hi": "वित्तीय सेवाएं", "mr": "आर्थिक सेवा" },
+        "briefInfo": { "en": "Life insurance cover of ₹2 lakh at ₹436 premium per year", "hi": "₹436 प्रति वर्ष प्रीमियम पर ₹2 लाख का जीवन बीमा कवर", "mr": "₹436 प्रति वर्ष प्रीमियम वर ₹2 लाख जीवन विमा कव्हर" },
+        "link": "https://www.jansuraksha.gov.in/",
+        "isActive": true
+      },
+      {
+        "id": "jsy",
+        "name": { "en": "Janani Suraksha Yojana", "hi": "जननी सुरक्षा योजना", "mr": "जननी सुरक्षा योजना" },
+        "department": { "en": "Health & Family Welfare", "hi": "स्वास्थ्य और परिवार कल्याण", "mr": "आरोग्य आणि कुटुंब कल्याण" },
+        "briefInfo": { "en": "Cash assistance to pregnant women for institutional delivery", "hi": "संस्थागत प्रसव के लिए गर्भवती महिलाओं को नकद सहायता", "mr": "संस्थात्मक प्रसूतीसाठी गर्भवती महिलांना रोख सहाय्य" },
+        "link": "https://nhm.gov.in/index1.php?lang=1&level=3&sublinkid=842&lid=309",
+        "isActive": true
+      },
+      {
+        "id": "kcc",
+        "name": { "en": "Kisan Credit Card", "hi": "किसान क्रेडिट कार्ड", "mr": "किसान क्रेडिट कार्ड" },
+        "department": { "en": "Agriculture & Farmer Welfare", "hi": "कृषि और किसान कल्याण", "mr": "कृषी आणि शेतकरी कल्याण" },
+        "briefInfo": { "en": "Credit facility to farmers for agricultural and allied activities", "hi": "कृषि और संबद्ध गतिविधियों के लिए किसानों को ऋण सुविधा", "mr": "शेती आणि संबंधित उपक्रमांसाठी शेतकऱ्यांना पत सुविधा" },
+        "link": "https://pmkisan.gov.in/KCC.aspx",
+        "isActive": true
+      },
+      {
+        "id": "sukanya",
+        "name": { "en": "Sukanya Samriddhi Yojana", "hi": "सुकन्या समृद्धि योजना", "mr": "सुकन्या समृद्धी योजना" },
+        "department": { "en": "Women & Child Development", "hi": "महिला एवं बाल विकास", "mr": "महिला आणि बाल विकास" },
+        "briefInfo": { "en": "Small savings scheme for girl child with attractive interest rate", "hi": "आकर्षक ब्याज दर के साथ बालिकाओं के लिए लघु बचत योजना", "mr": "आकर्षक व्याज दरासह मुलींसाठी लघु बचत योजना" },
+        "link": "https://www.nsiindia.gov.in/",
+        "isActive": true
+      },
+      {
+        "id": "sbm",
+        "name": { "en": "Swachh Bharat Mission", "hi": "स्वच्छ भारत मिशन", "mr": "स्वच्छ भारत मिशन" },
+        "department": { "en": "Jal Shakti", "hi": "जल शक्ति", "mr": "जल शक्ती" },
+        "briefInfo": { "en": "Financial assistance for construction of household toilets", "hi": "घरेलू शौचालय निर्माण हेतु वित्तीय सहायता", "mr": "घरगुती शौचालय बांधण्यासाठी आर्थिक सहाय्य" },
+        "link": "https://swachhbharatmission.gov.in/sbmcms/index.htm",
+        "isActive": true
+      },
+      {
+        "id": "jjm",
+        "name": { "en": "Jal Jeevan Mission", "hi": "जल जीवन मिशन", "mr": "जल जीवन मिशन" },
+        "department": { "en": "Jal Shakti", "hi": "जल शक्ति", "mr": "जल शक्ती" },
+        "briefInfo": { "en": "Piped water supply to every rural household", "hi": "हर ग्रामीण घर में नल से जल आपूर्ति", "mr": "प्रत्येक ग्रामीण घरात नळाने पाणीपुरवठा" },
+        "link": "https://jaljeevanmission.gov.in/",
+        "isActive": true
+      }
+    ]
+  },
+  "beneficiarySchemes": {
+    "title": {
+      "en": "Beneficiary Schemes",
+      "hi": "लाभार्थी योजनाएं",
+      "mr": "लाभार्थी योजना"
+    },
+    "description": {
+      "en": "Direct benefit transfer and welfare schemes for eligible beneficiaries. Apply through official portals.",
+      "hi": "पात्र लाभार्थियों के लिए प्रत्यक्ष लाभ हस्तांतरण और कल्याणकारी योजनाएं। आधिकारिक पोर्टल के माध्यम से आवेदन करें।",
+      "mr": "पात्र लाभार्थ्यांसाठी थेट लाभ हस्तांतरण आणि कल्याणकारी योजना. अधिकृत पोर्टलद्वारे अर्ज करा."
+    },
+    "columns": {
+      "schemeName": { "en": "Scheme Name", "hi": "योजना का नाम", "mr": "योजना नाव" },
+      "eligibility": { "en": "Eligibility", "hi": "पात्रता", "mr": "पात्रता" },
+      "applyLink": { "en": "Apply", "hi": "आवेदन करें", "mr": "अर्ज करा" },
+      "officialWebsite": { "en": "Official Website", "hi": "आधिकारिक वेबसाइट", "mr": "अधिकृत वेबसाइट" }
+    },
+    "schemes": [
+      {
+        "id": "widow_pension",
+        "name": { "en": "Widow Pension Scheme", "hi": "विधवा पेंशन योजना", "mr": "विधवा पेंशन योजना" },
+        "eligibility": { "en": "Widows aged 18-65 with annual income less than ₹21,000", "hi": "18-65 वर्ष की विधवाएं जिनकी वार्षिक आय ₹21,000 से कम हो", "mr": "18-65 वर्षे वयाच्या विधवा ज्यांचे वार्षिक उत्पन्न ₹21,000 पेक्षा कमी आहे" },
+        "applyLink": "https://mahadbt.maharashtra.gov.in/",
+        "officialWebsite": "https://sjsa.maharashtra.gov.in/",
+        "isActive": true
+      },
+      {
+        "id": "disability_pension",
+        "name": { "en": "Disability Pension Scheme", "hi": "विकलांग पेंशन योजना", "mr": "दिव्यांग पेंशन योजना" },
+        "eligibility": { "en": "Persons with 40% or more disability", "hi": "40% या अधिक विकलांगता वाले व्यक्ति", "mr": "40% किंवा त्याहून अधिक दिव्यांगत्व असलेल्या व्यक्ती" },
+        "applyLink": "https://mahadbt.maharashtra.gov.in/",
+        "officialWebsite": "https://sjsa.maharashtra.gov.in/",
+        "isActive": true
+      },
+      {
+        "id": "old_age_pension",
+        "name": { "en": "Old Age Pension (Indira Gandhi)", "hi": "वृद्धावस्था पेंशन (इंदिरा गांधी)", "mr": "वृद्धापकाळ पेंशन (इंदिरा गांधी)" },
+        "eligibility": { "en": "BPL citizens aged 65 and above", "hi": "65 वर्ष या उससे अधिक आयु के बीपीएल नागरिक", "mr": "65 वर्षे व त्याहून अधिक वयाचे बीपीएल नागरिक" },
+        "applyLink": "https://mahadbt.maharashtra.gov.in/",
+        "officialWebsite": "https://nsap.nic.in/",
+        "isActive": true
+      },
+      {
+        "id": "ramai_awas",
+        "name": { "en": "Ramai Awas Yojana", "hi": "रमाई आवास योजना", "mr": "रमाई आवास योजना" },
+        "eligibility": { "en": "SC/ST/NT families for housing assistance", "hi": "आवास सहायता के लिए अनुसूचित जाति/जनजाति/विमुक्त जाति परिवार", "mr": "घरांसाठी अनुसूचित जाती/जमाती/विमुक्त जाती कुटुंबे" },
+        "applyLink": "https://mahadbt.maharashtra.gov.in/",
+        "officialWebsite": "https://sjsa.maharashtra.gov.in/",
+        "isActive": true
+      },
+      {
+        "id": "majhi_kanya",
+        "name": { "en": "Majhi Kanya Bhagyashree", "hi": "माझी कन्या भाग्यश्री", "mr": "माझी कन्या भाग्यश्री" },
+        "eligibility": { "en": "Families with annual income less than ₹7.5 lakh with girl child", "hi": "₹7.5 लाख से कम वार्षिक आय वाले परिवार जिनके बालिका संतान है", "mr": "₹7.5 लाख पेक्षा कमी वार्षिक उत्पन्न असलेली मुलगी असलेली कुटुंबे" },
+        "applyLink": "https://mahadbt.maharashtra.gov.in/",
+        "officialWebsite": "https://womenchild.maharashtra.gov.in/",
+        "isActive": true
+      },
+      {
+        "id": "ladki_bahin",
+        "name": { "en": "Ladki Bahin Yojana", "hi": "लाडकी बहीण योजना", "mr": "लाडकी बहीण योजना" },
+        "eligibility": { "en": "Women aged 21-65 with annual family income less than ₹2.5 lakh", "hi": "21-65 वर्ष की महिलाएं जिनकी पारिवारिक वार्षिक आय ₹2.5 लाख से कम हो", "mr": "21-65 वर्षे वयाच्या महिला ज्यांचे कौटुंबिक वार्षिक उत्पन्न ₹2.5 लाख पेक्षा कमी आहे" },
+        "applyLink": "https://ladkibahin.maharashtra.gov.in/",
+        "officialWebsite": "https://womenchild.maharashtra.gov.in/",
+        "isActive": true
+      },
+      {
+        "id": "sanjay_gandhi",
+        "name": { "en": "Sanjay Gandhi Niradhar Yojana", "hi": "संजय गांधी निराधार योजना", "mr": "संजय गांधी निराधार योजना" },
+        "eligibility": { "en": "Destitute persons without any means of livelihood", "hi": "आजीविका के साधन रहित निराश्रित व्यक्ति", "mr": "उपजीविकेचे साधन नसलेले निराधार व्यक्ती" },
+        "applyLink": "https://mahadbt.maharashtra.gov.in/",
+        "officialWebsite": "https://sjsa.maharashtra.gov.in/",
+        "isActive": true
+      },
+      {
+        "id": "gopinath_munde",
+        "name": { "en": "Gopinath Munde Shetkari Apghat Vima", "hi": "गोपीनाथ मुंडे शेतकरी अपघात विमा", "mr": "गोपीनाथ मुंडे शेतकरी अपघात विमा" },
+        "eligibility": { "en": "Registered farmers aged 10-75 years", "hi": "10-75 वर्ष आयु के पंजीकृत किसान", "mr": "10-75 वर्षे वयाचे नोंदणीकृत शेतकरी" },
+        "applyLink": "https://krishi.maharashtra.gov.in/",
+        "officialWebsite": "https://krishi.maharashtra.gov.in/",
+        "isActive": true
+      },
+      {
+        "id": "nps_traders",
+        "name": { "en": "PM-SYM (Shram Yogi)", "hi": "पीएम-श्रम योगी मानधन", "mr": "पीएम-श्रम योगी मानधन" },
+        "eligibility": { "en": "Unorganized workers aged 18-40 with income less than ₹15,000/month", "hi": "18-40 वर्ष के असंगठित श्रमिक जिनकी आय ₹15,000/माह से कम हो", "mr": "18-40 वर्षे वयाचे असंघटित कामगार ज्यांचे उत्पन्न ₹15,000/महिना पेक्षा कमी आहे" },
+        "applyLink": "https://maandhan.in/",
+        "officialWebsite": "https://labour.gov.in/pm-sym",
+        "isActive": true
+      },
+      {
+        "id": "ration_card",
+        "name": { "en": "Ration Card (APL/BPL)", "hi": "राशन कार्ड (एपीएल/बीपीएल)", "mr": "रेशन कार्ड (एपीएल/बीपीएल)" },
+        "eligibility": { "en": "All citizens based on income criteria", "hi": "आय मानदंड के आधार पर सभी नागरिक", "mr": "उत्पन्न निकषांवर आधारित सर्व नागरिक" },
+        "applyLink": "https://rcms.mahafood.gov.in/",
+        "officialWebsite": "https://mahafood.gov.in/",
+        "isActive": true
+      }
+    ]
+  }
+}

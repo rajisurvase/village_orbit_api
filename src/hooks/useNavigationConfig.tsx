@@ -65,6 +65,8 @@ export const getDefaultNavigationConfig = (): NavigationConfig => ({
         { id: "ward_members", key: "ward_members", label: { en: "Ward Members", hi: "वार्ड सदस्य", mr: "वॉर्ड सदस्य" }, href: "/panchayat#ward", pageKey: "panchayat", isVisible: true, order: 2 },
         { id: "panchayat_staff", key: "panchayat_staff", label: { en: "Panchayat Staff", hi: "पंचायत कर्मचारी", mr: "पंचायत कर्मचारी" }, href: "/panchayat#staff", pageKey: "panchayat", isVisible: true, order: 3 },
         { id: "govt_staff", key: "govt_staff", label: { en: "Government Staff", hi: "सरकारी कर्मचारी", mr: "शासकीय कर्मचारी" }, href: "/panchayat#govt", pageKey: "panchayat", isVisible: true, order: 4 },
+        { id: "govt_schemes", key: "govt_schemes", label: { en: "Government Schemes", hi: "शासकीय योजनाएं", mr: "शासकीय योजना" }, href: "/govt-schemes", pageKey: "govt_schemes", isVisible: true, order: 5 },
+        { id: "beneficiary_schemes", key: "beneficiary_schemes", label: { en: "Beneficiary Schemes", hi: "लाभार्थी योजनाएं", mr: "लाभार्थी योजना" }, href: "/govt-schemes?tab=beneficiary", pageKey: "govt_schemes", isVisible: true, order: 6 },
       ]
     },
     {
