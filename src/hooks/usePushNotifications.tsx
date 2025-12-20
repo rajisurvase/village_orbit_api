@@ -12,21 +12,30 @@ export const usePushNotifications = () => {
   const { toast } = useToast();
   const { user, isAdmin } = useAuth();
 
-  // Fetch VAPID public key from edge function
+  // Fetch VAPID public key from edge function with retry
   useEffect(() => {
-    const fetchVapidKey = async () => {
+    const fetchVapidKey = async (retryCount = 0) => {
+      const maxRetries = 3;
       try {
         const { data, error } = await supabase.functions.invoke("get-vapid-key");
         if (error) {
-          console.error("Error fetching VAPID key:", error);
+          console.error("[Push] Error fetching VAPID key:", error);
+          if (retryCount < maxRetries) {
+            console.log(`[Push] Retrying... (${retryCount + 1}/${maxRetries})`);
+            setTimeout(() => fetchVapidKey(retryCount + 1), 1000 * (retryCount + 1));
+          }
           return;
         }
         if (data?.publicKey) {
           setVapidPublicKey(data.publicKey);
-          console.log("[Push] VAPID public key loaded");
+          console.log("[Push] VAPID public key loaded successfully");
         }
       } catch (error) {
-        console.error("Error fetching VAPID key:", error);
+        console.error("[Push] Error fetching VAPID key:", error);
+        if (retryCount < maxRetries) {
+          console.log(`[Push] Retrying... (${retryCount + 1}/${maxRetries})`);
+          setTimeout(() => fetchVapidKey(retryCount + 1), 1000 * (retryCount + 1));
+        }
       }
     };
 
