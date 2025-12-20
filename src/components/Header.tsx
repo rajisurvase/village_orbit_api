@@ -31,6 +31,7 @@ import {
 import { useTranslation } from "react-i18next";
 import LanguageToggle from "./LanguageToggle";
 import ThemeToggle from "./ThemeToggle";
+import { PushNotificationToggle } from "./PushNotificationToggle";
 
 import { useAuth } from "@/hooks/useAuth";
 import { usePageVisibility } from "@/hooks/usePageVisibility";
@@ -292,8 +293,9 @@ const sections: Visible[] = [
 
               </nav>
 
-              {/* Language + Theme */}
+              {/* Language + Theme + Notifications */}
               <div className="flex items-center gap-1">
+                <PushNotificationToggle />
                 <ThemeToggle />
                 <LanguageToggle />
               </div>
