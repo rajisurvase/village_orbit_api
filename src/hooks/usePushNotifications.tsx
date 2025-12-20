@@ -3,15 +3,35 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-
 export const usePushNotifications = () => {
   const [permission, setPermission] = useState<NotificationPermission>("default");
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
+  const [vapidPublicKey, setVapidPublicKey] = useState<string | null>(null);
   const { toast } = useToast();
   const { user, isAdmin } = useAuth();
+
+  // Fetch VAPID public key from edge function
+  useEffect(() => {
+    const fetchVapidKey = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("get-vapid-key");
+        if (error) {
+          console.error("Error fetching VAPID key:", error);
+          return;
+        }
+        if (data?.publicKey) {
+          setVapidPublicKey(data.publicKey);
+          console.log("[Push] VAPID public key loaded");
+        }
+      } catch (error) {
+        console.error("Error fetching VAPID key:", error);
+      }
+    };
+
+    fetchVapidKey();
+  }, []);
 
   // Check current permission and subscription status
   useEffect(() => {
@@ -54,7 +74,7 @@ export const usePushNotifications = () => {
 
   // Subscribe to push notifications
   const subscribe = useCallback(async () => {
-    if (!registration || !VAPID_PUBLIC_KEY) {
+    if (!registration || !vapidPublicKey) {
       toast({
         title: "सूचना",
         description: "Push notifications are not configured",
@@ -83,7 +103,7 @@ export const usePushNotifications = () => {
       }
 
       // Convert VAPID key
-      const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+      const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
 
       // Subscribe to push
       const subscription = await registration.pushManager.subscribe({
@@ -127,7 +147,7 @@ export const usePushNotifications = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [registration, user, isAdmin, toast]);
+  }, [registration, user, isAdmin, toast, vapidPublicKey]);
 
   // Unsubscribe from push notifications
   const unsubscribe = useCallback(async () => {
