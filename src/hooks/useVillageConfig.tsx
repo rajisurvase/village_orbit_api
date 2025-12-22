@@ -68,6 +68,16 @@ export interface QuickService {
   buttonText: string;
 }
 
+export interface Notice {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  date: string;
+  attachmentUrl?: string;
+  isActive?: boolean;
+}
+
 export interface VillageConfig {
   village: VillageData;
   panchayat: {
@@ -95,6 +105,7 @@ export interface VillageConfig {
   documents: any[];
   quickServices?: QuickService[];
   services: any[];
+  notices?: Notice[];
   social?: {
     facebook?: string;
     instagram?: string;
