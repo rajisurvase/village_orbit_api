@@ -1,0 +1,1208 @@
+openapi: 3.0.3
+info:
+  title: VillageOrbit API
+  description: |
+    Smart Village Management System API Documentation.
+    
+    This API is powered by Supabase and includes:
+    - Edge Functions for custom business logic
+    - PostgREST for database operations
+    - Supabase Auth for authentication
+    - Supabase Storage for file uploads
+  version: 1.0.0
+  contact:
+    name: VillageOrbit Support
+    email: support@villageorbit.com
+
+servers:
+  - url: https://eapbulrifjyhlxpsydin.supabase.co
+    description: Production Supabase Server
+
+tags:
+  - name: Auth
+    description: Authentication endpoints
+  - name: Edge Functions
+    description: Serverless functions
+  - name: Database
+    description: PostgREST database operations
+  - name: Storage
+    description: File storage operations
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase JWT token
+    apiKey:
+      type: apiKey
+      in: header
+      name: apikey
+      description: Supabase anonymous key
+
+  schemas:
+    # Auth Schemas
+    SignUpRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          minLength: 6
+          example: password123
+        options:
+          type: object
+          properties:
+            data:
+              type: object
+              properties:
+                full_name:
+                  type: string
+                  example: John Doe
+                mobile:
+                  type: string
+                  pattern: '^[0-9]{10}$'
+                  example: '9876543210'
+                aadhar_number:
+                  type: string
+                  pattern: '^[0-9]{12}$'
+                  example: '123456789012'
+            emailRedirectTo:
+              type: string
+              format: uri
+
+    SignInRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        session:
+          $ref: '#/components/schemas/Session'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        user_metadata:
+          type: object
+
+    Session:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        expires_in:
+          type: integer
+          example: 3600
+        token_type:
+          type: string
+          example: bearer
+
+    # Edge Function Schemas
+    CreateTaxPaymentRequest:
+      type: object
+      required:
+        - taxType
+        - amount
+        - payerName
+        - payerMobile
+      properties:
+        taxType:
+          type: string
+          example: Property Tax
+        amount:
+          type: number
+          example: 5000
+        payerName:
+          type: string
+          example: John Doe
+        payerMobile:
+          type: string
+          pattern: '^[0-9]{10}$'
+          example: '9876543210'
+        payerEmail:
+          type: string
+          format: email
+        villageAccount:
+          type: string
+        villageId:
+          type: string
+          format: uuid
+
+    CreateTaxPaymentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        orderId:
+          type: string
+        paymentSessionId:
+          type: string
+        paymentUrl:
+          type: string
+          format: uri
+
+    VerifyTaxPaymentRequest:
+      type: object
+      required:
+        - orderId
+      properties:
+        orderId:
+          type: string
+
+    VerifyTaxPaymentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        payment:
+          $ref: '#/components/schemas/TaxPayment'
+        cashfreeStatus:
+          type: object
+
+    SendUserStatusEmailRequest:
+      type: object
+      required:
+        - email
+        - fullName
+        - status
+      properties:
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+        status:
+          type: string
+          enum: [approved, rejected]
+        rejectionReason:
+          type: string
+
+    ChatbotRequest:
+      type: object
+      required:
+        - messages
+        - language
+        - villageConfig
+      properties:
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+                enum: [user, assistant]
+              content:
+                type: string
+        language:
+          type: string
+          example: en
+        villageConfig:
+          type: object
+
+    # Database Schemas
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+        mobile:
+          type: string
+        aadhar_number:
+          type: string
+        approval_status:
+          type: string
+          enum: [pending, approved, rejected]
+        approved_by:
+          type: string
+          format: uuid
+        approved_at:
+          type: string
+          format: date-time
+        rejection_reason:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    UserRole:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum: [admin, user, gramsevak, sub_admin]
+        created_at:
+          type: string
+          format: date-time
+
+    Village:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        state:
+          type: string
+        district:
+          type: string
+        pincode:
+          type: string
+        established:
+          type: string
+        area:
+          type: string
+        latitude:
+          type: string
+        longitude:
+          type: string
+        altitude:
+          type: string
+        description:
+          type: string
+        vision:
+          type: string
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Item:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        seller_name:
+          type: string
+        item_name:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        village:
+          type: string
+        contact:
+          type: string
+        image_urls:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        rejection_reason:
+          type: string
+        sold:
+          type: boolean
+        is_available:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Exam:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        village_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        subject:
+          type: string
+          enum: [GK, Science, Math, English]
+        total_questions:
+          type: integer
+        total_marks:
+          type: integer
+        pass_marks:
+          type: integer
+        duration_minutes:
+          type: integer
+        scheduled_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [draft, scheduled, active, completed, cancelled]
+        is_active:
+          type: boolean
+        created_by:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ExamQuestion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        exam_id:
+          type: string
+          format: uuid
+        question:
+          type: string
+        option_a:
+          type: string
+        option_b:
+          type: string
+        option_c:
+          type: string
+        option_d:
+          type: string
+        correct_option:
+          type: string
+        subject:
+          type: string
+          enum: [GK, Science, Math, English]
+        explanation:
+          type: string
+        difficulty:
+          type: string
+        class:
+          type: string
+        topic:
+          type: string
+        marks_per_question:
+          type: integer
+
+    ExamAttempt:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        exam_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        student_name:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        score:
+          type: integer
+        total_questions:
+          type: integer
+        correct_answers:
+          type: integer
+        wrong_answers:
+          type: integer
+        unanswered:
+          type: integer
+        integrity_pledge_accepted:
+          type: boolean
+
+    TaxPayment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        order_id:
+          type: string
+        payment_id:
+          type: string
+        tax_type:
+          type: string
+        amount:
+          type: number
+        payer_name:
+          type: string
+        payer_mobile:
+          type: string
+        payer_email:
+          type: string
+        payment_status:
+          type: string
+          enum: [pending, success, failed]
+        payment_date:
+          type: string
+          format: date-time
+        village_id:
+          type: string
+          format: uuid
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        village_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        content:
+          type: string
+        image_url:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        post_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Announcement:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        village_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        content:
+          type: string
+        type:
+          type: string
+        priority:
+          type: string
+        announcement_date:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+
+    Notice:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        village_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        notice_date:
+          type: string
+          format: date
+        attachment_url:
+          type: string
+        is_active:
+          type: boolean
+
+    FeedbackSubmission:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        village_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        mobile:
+          type: string
+        type:
+          type: string
+        message:
+          type: string
+        status:
+          type: string
+
+    ContactFormSubmission:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        village_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        mobile:
+          type: string
+        email:
+          type: string
+        subject:
+          type: string
+        message:
+          type: string
+        status:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+
+paths:
+  # Auth Endpoints
+  /auth/v1/signup:
+    post:
+      tags:
+        - Auth
+      summary: Sign up new user
+      security:
+        - apiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpRequest'
+      responses:
+        '200':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/v1/token:
+    post:
+      tags:
+        - Auth
+      summary: Sign in with email/password
+      security:
+        - apiKey: []
+      parameters:
+        - name: grant_type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [password]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignInRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+
+  /auth/v1/logout:
+    post:
+      tags:
+        - Auth
+      summary: Sign out current user
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      responses:
+        '204':
+          description: Logged out successfully
+
+  # Edge Functions
+  /functions/v1/create-tax-payment:
+    post:
+      tags:
+        - Edge Functions
+      summary: Create tax payment order
+      security:
+        - apiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaxPaymentRequest'
+      responses:
+        '200':
+          description: Payment order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateTaxPaymentResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /functions/v1/verify-tax-payment:
+    post:
+      tags:
+        - Edge Functions
+      summary: Verify tax payment status
+      security:
+        - apiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyTaxPaymentRequest'
+      responses:
+        '200':
+          description: Payment verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyTaxPaymentResponse'
+        '500':
+          description: Server error
+
+  /functions/v1/send-user-status-email:
+    post:
+      tags:
+        - Edge Functions
+      summary: Send user approval/rejection email
+      security:
+        - apiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendUserStatusEmailRequest'
+      responses:
+        '200':
+          description: Email sent
+        '500':
+          description: Server error
+
+  /functions/v1/village-chatbot:
+    post:
+      tags:
+        - Edge Functions
+      summary: AI chatbot for village queries
+      security:
+        - apiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatbotRequest'
+      responses:
+        '200':
+          description: Streaming response
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        '429':
+          description: Rate limited
+        '500':
+          description: Server error
+
+  # Database REST API
+  /rest/v1/profiles:
+    get:
+      tags:
+        - Database
+      summary: Get user profiles
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: string
+          description: Filter by ID (eq, neq, gt, etc.)
+        - name: approval_status
+          in: query
+          schema:
+            type: string
+          description: Filter by approval status
+      responses:
+        '200':
+          description: List of profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Profile'
+
+  /rest/v1/user_roles:
+    get:
+      tags:
+        - Database
+      summary: Get user roles
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      responses:
+        '200':
+          description: List of user roles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserRole'
+
+  /rest/v1/villages:
+    get:
+      tags:
+        - Database
+      summary: Get villages
+      security:
+        - apiKey: []
+      responses:
+        '200':
+          description: List of villages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Village'
+
+  /rest/v1/items:
+    get:
+      tags:
+        - Database
+      summary: Get marketplace items
+      security:
+        - apiKey: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Item'
+    post:
+      tags:
+        - Database
+      summary: Create marketplace item
+      security:
+        - apiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Item'
+      responses:
+        '201':
+          description: Item created
+
+  /rest/v1/exams:
+    get:
+      tags:
+        - Database
+      summary: Get exams
+      security:
+        - apiKey: []
+      responses:
+        '200':
+          description: List of exams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Exam'
+
+  /rest/v1/exam_questions:
+    get:
+      tags:
+        - Database
+      summary: Get exam questions
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: exam_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of questions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExamQuestion'
+
+  /rest/v1/exam_attempts:
+    get:
+      tags:
+        - Database
+      summary: Get exam attempts
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      responses:
+        '200':
+          description: List of attempts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExamAttempt'
+    post:
+      tags:
+        - Database
+      summary: Create exam attempt
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExamAttempt'
+      responses:
+        '201':
+          description: Attempt created
+
+  /rest/v1/posts:
+    get:
+      tags:
+        - Database
+      summary: Get forum posts
+      security:
+        - apiKey: []
+      responses:
+        '200':
+          description: List of posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+    post:
+      tags:
+        - Database
+      summary: Create forum post
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Post'
+      responses:
+        '201':
+          description: Post created
+
+  /rest/v1/comments:
+    get:
+      tags:
+        - Database
+      summary: Get comments
+      security:
+        - apiKey: []
+      parameters:
+        - name: post_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Comment'
+    post:
+      tags:
+        - Database
+      summary: Create comment
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Comment'
+      responses:
+        '201':
+          description: Comment created
+
+  /rest/v1/announcements:
+    get:
+      tags:
+        - Database
+      summary: Get announcements
+      security:
+        - apiKey: []
+      responses:
+        '200':
+          description: List of announcements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Announcement'
+
+  /rest/v1/notices:
+    get:
+      tags:
+        - Database
+      summary: Get notices
+      security:
+        - apiKey: []
+      responses:
+        '200':
+          description: List of notices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notice'
+
+  /rest/v1/feedback_submissions:
+    get:
+      tags:
+        - Database
+      summary: Get feedback submissions (admin only)
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      responses:
+        '200':
+          description: List of feedback
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FeedbackSubmission'
+    post:
+      tags:
+        - Database
+      summary: Submit feedback
+      security:
+        - apiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackSubmission'
+      responses:
+        '201':
+          description: Feedback submitted
+
+  /rest/v1/contact_form_submissions:
+    post:
+      tags:
+        - Database
+      summary: Submit contact form
+      security:
+        - apiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactFormSubmission'
+      responses:
+        '201':
+          description: Form submitted
+
+  /rest/v1/tax_payments:
+    get:
+      tags:
+        - Database
+      summary: Get tax payments
+      security:
+        - apiKey: []
+      responses:
+        '200':
+          description: List of payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxPayment'
+
+  # Storage
+  /storage/v1/object/items/{path}:
+    post:
+      tags:
+        - Storage
+      summary: Upload file to items bucket
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: path
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: File uploaded
+
+  /storage/v1/object/public/items/{path}:
+    get:
+      tags:
+        - Storage
+      summary: Get public file URL
+      parameters:
+        - name: path
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File content
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
