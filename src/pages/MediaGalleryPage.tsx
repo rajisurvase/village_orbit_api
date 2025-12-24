@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext } from "react";
 import { useSearchParams } from "react-router-dom";
 import { VillageContext } from "@/context/VillageContextConfig";
 import { usePageSEO } from "@/hooks/usePageSEO";
@@ -9,23 +9,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChevronLeft, ChevronRight, X, Image as ImageIcon, Video, Play } from "lucide-react";
 import SectionSkeleton from "@/components/ui/skeletons/SectionSkeleton";
-
-interface GalleryItem {
-  id?: string;
-  title: string;
-  image?: string;
-  category?: string;
-  date?: string;
-  description?: string;
-}
-
-interface VideoItem {
-  id: string;
-  title: string;
-  youtubeUrl: string;
-  category?: string;
-  description?: string;
-}
+import { GalleryItem, VideoItem } from "@/hooks/useVillageConfig";
 
 const MediaGalleryPage = () => {
   const { config, loading } = useContext(VillageContext);
@@ -43,13 +27,14 @@ const MediaGalleryPage = () => {
     keywords: ["village gallery", "photos", "videos", "events", "festivals", "development projects"]
   });
 
-  // Get gallery data from config
-  const gallery: GalleryItem[] = config?.gallery || [];
-  const videos: VideoItem[] = (config as any)?.videos || [
-    // Default demo videos if none configured
-    { id: "1", title: "गाव सौंदर्य", youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", category: "Village Tour" },
-    { id: "2", title: "ग्रामपंचायत विकास कामे", youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ", category: "Development" },
-  ];
+  // Get gallery data from config - use type as category if category not provided
+  const gallery: GalleryItem[] = (config?.gallery || []).map((item, index) => ({
+    ...item,
+    id: item.id || `gallery-${index}`,
+    category: item.category || item.type,
+  }));
+  
+  const videos: VideoItem[] = config?.videos || [];
 
   // Get unique categories for images
   const imageCategories = ["all", ...new Set(gallery?.map((item) => item.category).filter(Boolean))];

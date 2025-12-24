@@ -78,6 +78,25 @@ export interface Notice {
   isActive?: boolean;
 }
 
+export interface GalleryItem {
+  id?: string;
+  title: string;
+  image?: string;
+  type?: string;
+  category?: string;
+  date?: string;
+  description?: string;
+}
+
+export interface VideoItem {
+  id: string;
+  title: string;
+  youtubeUrl: string;
+  thumbnail?: string;
+  category?: string;
+  description?: string;
+}
+
 export interface VillageConfig {
   village: VillageData;
   panchayat: {
@@ -86,18 +105,17 @@ export interface VillageConfig {
     secretary: PersonProfile;
     wardMembers: PersonProfile[];
     staff: PersonProfile[];
-    
-    
   };
   
-    proudPeople?: PersonProfile[];
+  proudPeople?: PersonProfile[];
   ashaWorkers?: PersonProfile[];
   anganwadiWorkers?: PersonProfile[];
 
   announcements: any[];
   schemes: any[];
   developmentWorks: any;
-  gallery: any[];
+  gallery: GalleryItem[];
+  videos?: VideoItem[];
   contact: {
     office: Office;
     emergency: Emergency;
