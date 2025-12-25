@@ -1,7 +1,7 @@
 {
-  "name": "शिवनखेड (खु) ग्रामपंचायत - Gram Panchayat Portal",
-  "short_name": "शिवनखेड (खु)",
-  "description": "Official Shivankhed Khurd Gram Panchayat website for accessing government schemes, development projects, marketplace, and village services.",
+  "name": "Shivankhed Khurd - Gram Panchayat Portal",
+  "short_name": "Shivankhed Khurd",
+  "description": "Official Shivankhed Khurd Gram Panchayat website for accessing government schemes, development projects, and village services etc.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1a4d2e",
@@ -11,29 +11,17 @@
     {
       "src": "/favicon.ico",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     },
     {
       "src": "/favicon.ico",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ],
-  "categories": ["government", "utilities", "lifestyle", "local services"],
+  "categories": ["government", "utilities", "lifestyle","local services"],
   "lang": "en-IN",
-  "dir": "ltr",
-  "shortcuts": [
-    {
-      "name": "Marketplace",
-      "url": "/buy-sell",
-      "description": "Buy and sell items in your village"
-    },
-    {
-      "name": "Exams",
-      "url": "/exam",
-      "description": "Take online exams"
-    }
-  ]
+  "dir": "ltr"
 }

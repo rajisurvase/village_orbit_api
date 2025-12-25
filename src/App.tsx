@@ -9,7 +9,6 @@ import Layout from "./components/Layout";
 import SectionSkeleton from "./components/ui/skeletons/SectionSkeleton";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { UpdateNotification } from "@/components/UpdateNotification";
-import { PushNotificationPrompt } from "@/components/PushNotificationPrompt";
 
 // Lazy load pages for code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -66,7 +65,6 @@ const App = () => (
         <Toaster />
         <Sonner />
         <UpdateNotification />
-        <PushNotificationPrompt />
         <BrowserRouter>
         <Suspense fallback={<SectionSkeleton />}>
           <Routes>
