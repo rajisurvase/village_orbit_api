@@ -14,10 +14,15 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.ts",
       registerType: "prompt",
+      injectRegister: false,
       includeAssets: ["favicon.ico", "robots.txt", "placeholder.svg"],
       devOptions: {
-        enabled: false
+        enabled: false,
+        type: "module",
       },
       manifest: {
         name: "शिवनखेड (खु) ग्रामपंचायत",
@@ -33,17 +38,17 @@ export default defineConfig(({ mode }) => ({
           {
             src: "/favicon.ico",
             sizes: "192x192",
-            type: "image/svg+xml",
-            purpose: "any maskable"
+            type: "image/png",
+            purpose: "any"
           },
           {
             src: "/favicon.ico",
             sizes: "512x512",
-            type: "image/svg+xml",
-            purpose: "any maskable"
+            type: "image/png",
+            purpose: "maskable"
           }
         ],
-        categories: ["education", "government", "utilities"],
+        categories: ["education", "government", "utilities", "lifestyle"],
         shortcuts: [
           {
             name: "Take Exam",
@@ -51,78 +56,15 @@ export default defineConfig(({ mode }) => ({
             description: "Access online exams"
           },
           {
-            name: "Exam Rules",
-            url: "/exam/rules",
-            description: "Read exam guidelines"
+            name: "Buy & Sell",
+            url: "/buy-sell",
+            description: "Village marketplace"
           }
         ]
       },
-      workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp}"],
-        navigateFallback: null,
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "google-fonts-cache",
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "cdn-cache",
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
-              }
-            }
-          },
-          {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "images-cache",
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
-              }
-            }
-          },
-          {
-            urlPattern: /\/exam\/rules/,
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "exam-instructions-cache",
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 days
-              },
-              networkTimeoutSeconds: 10
-            }
-          },
-          {
-            urlPattern: /\/api\/.*/,
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "api-cache",
-              networkTimeoutSeconds: 10,
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 5 // 5 minutes
-              }
-            }
-          }
-        ]
-      }
+      injectManifest: {
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp,woff,woff2}"],
+      },
     })
   ].filter(Boolean),
   resolve: {
