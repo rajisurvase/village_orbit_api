@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
 // VAPID public key - must match the one used to generate push subscriptions
-const VAPID_PUBLIC_KEY = "BNQfWg8sYT7sRmTNYQxB4V5cXWg9WZvP5H5UG0kGkF4N1Y7pQDnqLnR8wT5zY4kM6xP2hQ9sA1bC3dE5fG7hI9jK";
+const VAPID_PUBLIC_KEY = "BKeeemIYegVXOgB5euV_68Kl1ln39kwgqNnJOiX_51_DFriIS3dz6SSVYKBNlNYC2TugaS8hBJp-pyPCbMBY2KE";
 
 interface PushNotificationState {
   permission: NotificationPermission;
