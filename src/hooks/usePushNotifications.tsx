@@ -30,12 +30,18 @@ export const usePushNotifications = () => {
 
   // Check if push notifications are supported
   const checkSupport = useCallback(() => {
-    const isSupported =
-      "Notification" in window &&
-      "serviceWorker" in navigator &&
-      "PushManager" in window;
+    const hasNotification = "Notification" in window;
+    const hasServiceWorker = "serviceWorker" in navigator;
+    const hasPushManager = "PushManager" in window;
+    
+    console.log("[PUSH DEBUG] Support check:", {
+      hasNotification,
+      hasServiceWorker,
+      hasPushManager,
+      isSupported: hasNotification && hasServiceWorker && hasPushManager,
+    });
 
-    return isSupported;
+    return hasNotification && hasServiceWorker && hasPushManager;
   }, []);
 
   // Convert VAPID key to Uint8Array
@@ -54,16 +60,24 @@ export const usePushNotifications = () => {
 
   // Check existing subscription
   const checkSubscription = useCallback(async () => {
+    console.log("[PUSH DEBUG] Checking existing subscription...");
     try {
-      if (!checkSupport()) return false;
+      if (!checkSupport()) {
+        console.log("[PUSH DEBUG] Not supported, skipping subscription check");
+        return false;
+      }
 
       const registration = await navigator.serviceWorker.getRegistration(PUSH_SW_SCOPE);
+      console.log("[PUSH DEBUG] Service worker registration for scope:", PUSH_SW_SCOPE, registration ? "FOUND" : "NOT FOUND");
+      
       if (!registration) return false;
 
       const subscription = await registration.pushManager.getSubscription();
+      console.log("[PUSH DEBUG] Existing subscription:", subscription ? "EXISTS" : "NONE");
+      
       return !!subscription;
     } catch (error) {
-      console.error("Error checking subscription:", error);
+      console.error("[PUSH DEBUG] Error checking subscription:", error);
       return false;
     }
   }, [checkSupport]);
@@ -71,15 +85,18 @@ export const usePushNotifications = () => {
   // Initialize state
   useEffect(() => {
     const init = async () => {
+      console.log("[PUSH DEBUG] Initializing push notifications...");
       const isSupported = checkSupport();
       let permission: NotificationPermission = "default";
       let isSubscribed = false;
 
       if (isSupported) {
         permission = Notification.permission;
+        console.log("[PUSH DEBUG] Current permission:", permission);
         isSubscribed = await checkSubscription();
       }
 
+      console.log("[PUSH DEBUG] Initial state:", { isSupported, permission, isSubscribed });
       setState({
         permission,
         isSubscribed,
@@ -93,21 +110,40 @@ export const usePushNotifications = () => {
 
   // Register service worker for push
   const registerServiceWorker = useCallback(async () => {
+    console.log("[PUSH DEBUG] Registering service worker:", PUSH_SW_URL, "with scope:", PUSH_SW_SCOPE);
     try {
       const registration = await navigator.serviceWorker.register(PUSH_SW_URL, {
         scope: PUSH_SW_SCOPE,
       });
-      console.log("Push SW registered:", registration.scope);
+      console.log("[PUSH DEBUG] ✅ Push SW registered successfully:", registration.scope);
+      
+      // Wait for the service worker to be ready
+      if (registration.installing) {
+        console.log("[PUSH DEBUG] Service worker is installing...");
+        await new Promise<void>((resolve) => {
+          registration.installing!.addEventListener("statechange", (e) => {
+            const sw = e.target as ServiceWorker;
+            console.log("[PUSH DEBUG] SW state changed to:", sw.state);
+            if (sw.state === "activated") {
+              resolve();
+            }
+          });
+        });
+      }
+      
       return registration;
     } catch (error) {
-      console.error("SW registration failed:", error);
+      console.error("[PUSH DEBUG] ❌ SW registration failed:", error);
       throw error;
     }
   }, []);
 
   // Subscribe to push notifications
   const subscribe = useCallback(async (): Promise<boolean> => {
+    console.log("[PUSH DEBUG] ========== SUBSCRIBE FLOW STARTED ==========");
+    
     if (!checkSupport()) {
+      console.log("[PUSH DEBUG] ❌ Push not supported");
       toast({
         title: "Not Supported",
         description: "Push notifications are not supported in this browser",
@@ -117,11 +153,16 @@ export const usePushNotifications = () => {
     }
 
     try {
-      // Request permission
+      // Step 1: Request permission
+      console.log("[PUSH DEBUG] Step 1: Requesting notification permission...");
+      console.log("[PUSH DEBUG] Current permission before request:", Notification.permission);
+      
       const permission = await Notification.requestPermission();
+      console.log("[PUSH DEBUG] Permission result:", permission);
       setState((prev) => ({ ...prev, permission }));
 
       if (permission !== "granted") {
+        console.log("[PUSH DEBUG] ❌ Permission denied or dismissed");
         toast({
           title: "Permission Denied",
           description: "Please enable notifications in your browser settings",
@@ -129,15 +170,26 @@ export const usePushNotifications = () => {
         });
         return false;
       }
+      console.log("[PUSH DEBUG] ✅ Permission granted!");
 
-      // Register / get push service worker (separate scope so we don't overwrite the PWA SW)
+      // Step 2: Register service worker
+      console.log("[PUSH DEBUG] Step 2: Getting/registering service worker...");
       let registration = await navigator.serviceWorker.getRegistration(PUSH_SW_SCOPE);
+      console.log("[PUSH DEBUG] Existing registration:", registration ? registration.scope : "NONE");
+      
       if (!registration) {
+        console.log("[PUSH DEBUG] No existing registration, registering new SW...");
         registration = await registerServiceWorker();
       }
+      console.log("[PUSH DEBUG] ✅ Service worker ready:", registration.scope);
 
-      // Subscribe to push
+      // Step 3: Subscribe to push
+      console.log("[PUSH DEBUG] Step 3: Subscribing to push manager...");
+      console.log("[PUSH DEBUG] Using VAPID key:", VAPID_PUBLIC_KEY.substring(0, 20) + "...");
+      
       const vapidKeyArray = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+      console.log("[PUSH DEBUG] VAPID key converted, length:", vapidKeyArray.length);
+      
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: vapidKeyArray.buffer.slice(
@@ -145,15 +197,20 @@ export const usePushNotifications = () => {
           vapidKeyArray.byteOffset + vapidKeyArray.byteLength
         ) as ArrayBuffer,
       });
+      console.log("[PUSH DEBUG] ✅ Push subscription created!");
 
-      // Extract subscription data
+      // Step 4: Extract and save subscription data
+      console.log("[PUSH DEBUG] Step 4: Saving subscription to database...");
       const subscriptionData = subscription.toJSON();
       const endpoint = subscriptionData.endpoint!;
       const p256dh = subscriptionData.keys?.p256dh!;
       const auth = subscriptionData.keys?.auth!;
+      
+      console.log("[PUSH DEBUG] Subscription endpoint:", endpoint.substring(0, 50) + "...");
+      console.log("[PUSH DEBUG] Has p256dh:", !!p256dh);
+      console.log("[PUSH DEBUG] Has auth:", !!auth);
 
-      // Save to database
-      const { error } = await supabase.from("push_subscriptions").upsert(
+      const { error, data } = await supabase.from("push_subscriptions").upsert(
         {
           endpoint,
           p256dh,
@@ -165,9 +222,13 @@ export const usePushNotifications = () => {
         {
           onConflict: "endpoint",
         }
-      );
+      ).select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("[PUSH DEBUG] ❌ Database save failed:", error);
+        throw error;
+      }
+      console.log("[PUSH DEBUG] ✅ Subscription saved to database:", data);
 
       setState((prev) => ({ ...prev, isSubscribed: true }));
 
@@ -176,9 +237,13 @@ export const usePushNotifications = () => {
         description: "You'll receive notifications for marketplace updates",
       });
 
+      console.log("[PUSH DEBUG] ========== SUBSCRIBE FLOW COMPLETED SUCCESSFULLY ==========");
       return true;
     } catch (error: any) {
-      console.error("Subscribe error:", error);
+      console.error("[PUSH DEBUG] ❌ Subscribe error:", error);
+      console.error("[PUSH DEBUG] Error name:", error.name);
+      console.error("[PUSH DEBUG] Error message:", error.message);
+      console.error("[PUSH DEBUG] Error stack:", error.stack);
       toast({
         title: "Subscription Failed",
         description: error.message || "Could not enable notifications",
