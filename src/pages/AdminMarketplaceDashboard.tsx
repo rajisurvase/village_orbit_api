@@ -7,12 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowLeft, CheckCircle, XCircle, Trash2, TrendingUp, CheckSquare, Square } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, Trash2, TrendingUp, CheckSquare, Square, Bell } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import CustomLoader from "@/components/CustomLoader";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import NotificationSettings from "@/components/NotificationSettings";
 
 interface Item {
   id: string;
@@ -28,10 +30,12 @@ interface Item {
   reviewed_at?: string;
   rejection_reason?: string;
   is_available: boolean;
+  user_id?: string;
+  seller_name?: string;
 }
 
 export default function AdminMarketplaceDashboard() {
-  const { isAdmin, loading: authLoading } = useAuth();
+  const { isAdmin, loading: authLoading, user } = useAuth();
   const navigate = useNavigate();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,6 +43,7 @@ export default function AdminMarketplaceDashboard() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const { sendNotification } = usePushNotifications();
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -69,16 +74,34 @@ export default function AdminMarketplaceDashboard() {
 
   const handleApprove = async (itemId: string) => {
     try {
+      const item = items.find(i => i.id === itemId);
+      
       const { error } = await supabase
         .from("items")
         .update({
           status: "approved",
           reviewed_at: new Date().toISOString(),
-          reviewed_by: (await supabase.auth.getUser()).data.user?.id,
+          reviewed_by: user?.id,
         })
         .eq("id", itemId);
 
       if (error) throw error;
+      
+      // Send push notification to all users about new available item
+      try {
+        await sendNotification(
+          "New Item Available! 🛒",
+          `${item?.item_name} is now available for purchase - ₹${item?.price}`,
+          {
+            url: "/buy-sell",
+            tag: `item-approved-${itemId}`,
+            targetAdminsOnly: false,
+          }
+        );
+      } catch (notifError) {
+        console.log("Push notification failed:", notifError);
+      }
+      
       toast.success("Item approved successfully");
       fetchItems();
     } catch (error) {
@@ -99,12 +122,30 @@ export default function AdminMarketplaceDashboard() {
         .update({
           status: "rejected",
           reviewed_at: new Date().toISOString(),
-          reviewed_by: (await supabase.auth.getUser()).data.user?.id,
+          reviewed_by: user?.id,
           rejection_reason: rejectionReason,
         })
         .eq("id", selectedItem.id);
 
       if (error) throw error;
+      
+      // Send push notification to the seller about rejection
+      if (selectedItem.user_id) {
+        try {
+          await sendNotification(
+            "Item Rejected",
+            `Your item "${selectedItem.item_name}" was rejected. Reason: ${rejectionReason}`,
+            {
+              url: "/seller-dashboard",
+              tag: `item-rejected-${selectedItem.id}`,
+              userIds: [selectedItem.user_id],
+            }
+          );
+        } catch (notifError) {
+          console.log("Push notification failed:", notifError);
+        }
+      }
+      
       toast.success("Item rejected");
       setShowRejectDialog(false);
       setRejectionReason("");
