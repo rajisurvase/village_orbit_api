@@ -768,6 +768,47 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_queue: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          item_id: string | null
+          payload: Json
+          processed_at: string | null
+          status: string | null
+          target_admins_only: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          item_id?: string | null
+          payload: Json
+          processed_at?: string | null
+          status?: string | null
+          target_admins_only?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          item_id?: string | null
+          payload?: Json
+          processed_at?: string | null
+          status?: string | null
+          target_admins_only?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_queue_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       page_visibility: {
         Row: {
           id: string
@@ -1511,6 +1552,15 @@ export type Database = {
           user_role: Database["public"]["Enums"]["app_role"]
         }
         Returns: undefined
+      }
+      get_push_subscriptions: {
+        Args: { target_admins_only?: boolean }
+        Returns: {
+          auth: string
+          endpoint: string
+          p256dh: string
+          user_id: string
+        }[]
       }
       has_role: {
         Args: {

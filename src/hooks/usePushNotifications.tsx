@@ -9,8 +9,12 @@ interface PushSubscriptionState {
   isLoading: boolean;
 }
 
-// VAPID public key from environment
+// VAPID public key - This is safe to expose (it's a public key)
+// Get this from your Supabase secrets or generate with: npx web-push generate-vapid-keys
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || '';
+
+// Check if VAPID key is configured
+const isVapidConfigured = Boolean(VAPID_PUBLIC_KEY);
 
 function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -39,10 +43,10 @@ export const usePushNotifications = () => {
   const checkSupport = useCallback(() => {
     const isSupported = 'serviceWorker' in navigator && 
                        'PushManager' in window && 
-                       'Notification' in window;
+                       'Notification' in window &&
+                       isVapidConfigured;
     return isSupported;
   }, []);
-
   // Get existing subscription
   const getExistingSubscription = useCallback(async (): Promise<PushSubscription | null> => {
     try {
