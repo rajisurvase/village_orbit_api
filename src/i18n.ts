@@ -114,6 +114,18 @@ const resources = {
       "schemes.downloadForms": "Download Forms",
       "schemes.contactOffice": "Contact Office",
       
+      //buy and sell page 
+      // Marketplace
+"marketplace.title": "Buy & Sell – Market",
+"marketplace.subtitle": "Buy and sell items in your village community",
+"marketplace.settings": "Settings",
+"marketplace.browse": "Browse",
+"marketplace.sellItem": "Sell Item",
+"marketplace.myListings": "My Listings",
+"marketplace.loginRequired": "Login Required",
+"marketplace.loginMessage": "Please login to post items for sale in the marketplace.",
+"marketplace.loginToSell": "Login to Sell",
+
       // Development
       "development.title": "Development Works",
       "development.description": "Track the progress of various development projects undertaken in our village.",
@@ -296,6 +308,18 @@ const resources = {
     "header.adminDashboard": "एडमिन डैशबोर्ड",
     "header.logout": "लॉगआउट",
 
+
+    //buy and sell page 
+    // Marketplace
+"marketplace.title": "खरीदें और बेचें – बाजार",
+"marketplace.subtitle": "अपने गाँव के समुदाय में वस्तुएँ खरीदें और बेचें",
+"marketplace.settings": "सेटिंग्स",
+"marketplace.browse": "देखें",
+"marketplace.sellItem": "वस्तु बेचें",
+"marketplace.myListings": "मेरी सूचियाँ",
+"marketplace.loginRequired": "लॉगिन आवश्यक",
+"marketplace.loginMessage": "मार्केटप्लेस में वस्तु बेचने के लिए कृपया लॉगिन करें।",
+"marketplace.loginToSell": "बेचने के लिए लॉगिन करें",
 
       // Media Gallery (Hindi)
   "mediaGallery.title": "मीडिया गैलरी",
@@ -558,6 +582,17 @@ const resources = {
 "header.login": "लॉगिन",
 "header.adminDashboard": "प्रशासन डॅशबोर्ड",
 "header.logout": "लॉगआउट",
+//buy and sell 
+// Marketplace
+"marketplace.title": "खरेदी व विक्री – बाजार",
+"marketplace.subtitle": "आपल्या गावाच्या समुदायात वस्तू खरेदी व विक्री करा",
+"marketplace.settings": "सेटिंग्स",
+"marketplace.browse": "ब्राउज करा",
+"marketplace.sellItem": "वस्तू विक्री करा",
+"marketplace.myListings": "माझ्या सूची",
+"marketplace.loginRequired": "लॉगिन आवश्यक",
+"marketplace.loginMessage": "मार्केटप्लेसमध्ये वस्तू विकण्यासाठी कृपया लॉगिन करा.",
+"marketplace.loginToSell": "विक्रीसाठी लॉगिन करा",
 
 
 

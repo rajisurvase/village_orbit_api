@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useTranslation } from 'react-i18next';
 
 const BuySellPage = () => {
   const { user } = useAuth();
@@ -22,6 +23,7 @@ const BuySellPage = () => {
     keywords: ["buy", "sell", "marketplace", "village market", "OLX", "local sellers", "Shivankhed Khurd"],
     canonical: window.location.origin + "/buy-sell"
   });
+const { t } = useTranslation();
 
   const handleLoginRedirect = () => {
     toast.info("Please login to sell items");
@@ -37,10 +39,11 @@ const BuySellPage = () => {
             <div className="text-center flex-1">
               <h1 className="text-xl md:text-3xl font-bold text-foreground mb-1 md:mb-2 flex items-center justify-center gap-2">
                 <ShoppingBag className="h-5 w-5 md:h-6 md:w-6" />
-                Buy & Sell – Market
+              <span>{t("marketplace.title")}</span>
+
               </h1>
               <p className="text-xs md:text-sm text-muted-foreground">
-                Buy and sell items in your village community
+               {t("marketplace.subtitle")}
               </p>
             </div>
             <Sheet>
@@ -51,7 +54,7 @@ const BuySellPage = () => {
               </SheetTrigger>
               <SheetContent>
                 <SheetHeader>
-                  <SheetTitle>Settings</SheetTitle>
+              <SheetTitle>{t("marketplace.settings")}</SheetTitle>
                 </SheetHeader>
                 <div className="mt-6">
                   <NotificationSettings />
@@ -68,17 +71,20 @@ const BuySellPage = () => {
           <TabsList className={`grid w-full max-w-2xl mx-auto mb-4 md:mb-8 h-auto ${user ? 'grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'}`}>
             <TabsTrigger value="browse" className="text-xs md:text-sm py-2 md:py-3 gap-1 md:gap-2">
               <ShoppingBag className="h-4 w-4" />
-              <span>Browse</span>
+           <span>{t("marketplace.browse")}</span>
+
             </TabsTrigger>
             {user ? (
               <>
                 <TabsTrigger value="sell" className="text-xs md:text-sm py-2 md:py-3 gap-1 md:gap-2">
                   <Plus className="h-4 w-4" />
-                  <span>Sell Item</span>
+              <span>{t("marketplace.sellItem")}</span>
+
                 </TabsTrigger>
                 <TabsTrigger value="mylistings" className="text-xs md:text-sm py-2 md:py-3 gap-1 md:gap-2">
                   <Package className="h-4 w-4" />
-                  <span>My Listings</span>
+                <span>{t("marketplace.myListings")}</span>
+
                 </TabsTrigger>
               </>
             ) : (
@@ -91,7 +97,7 @@ const BuySellPage = () => {
                 }}
               >
                 <Plus className="h-4 w-4" />
-                <span>Sell Item</span>
+             <span>{t("marketplace.sellItem")}</span>
               </TabsTrigger>
             )}
           </TabsList>
@@ -121,13 +127,14 @@ const BuySellPage = () => {
               <Card className="max-w-md mx-auto">
                 <CardContent className="flex flex-col items-center justify-center py-12 px-4 text-center">
                   <LogIn className="h-16 w-16 text-muted-foreground mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">Login Required</h3>
+                  <h3 className="text-xl font-semibold mb-2">{t("marketplace.loginRequired")}</h3>
                   <p className="text-muted-foreground mb-6">
-                    Please login to post items for sale in the marketplace.
+             {t("marketplace.loginMessage")}
+
                   </p>
                   <Button onClick={handleLoginRedirect} size="lg">
                     <LogIn className="h-5 w-5 mr-2" />
-                    Login to Sell
+                   {t("marketplace.loginToSell")}
                   </Button>
                 </CardContent>
               </Card>
