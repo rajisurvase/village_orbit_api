@@ -167,7 +167,33 @@ const resources = {
       "gallery.uploadDescription": "Have photos or videos from village events? Share them with us to be featured in our community gallery. Help us document our village's journey and celebrate our achievements together.",
       "gallery.acceptedTypes": "Photos & Videos Welcome",
       "gallery.moderation": "Community Moderated",
-      
+      //notices board 
+     
+  "notices.title": "Notice Board",
+  "notices.subtitle": "Latest official notices and announcements",
+  "notices.metaDescription": "View the latest official notices and announcements from the Gram Panchayat.",
+
+  "notices.search": "Search notices...",
+  "notices.none": "No notices available",
+  "notices.checkBack": "Please check back later",
+
+  "notices.category": "Category",
+  "notices.date": "Date",
+  "notices.readMore": "Read More",
+  "notices.attachment": "View Attachment",
+  "notices.viewAttachment": "Open Attachment",
+
+  "notices.active": "Active",
+  "notices.inactive": "Expired Notice",
+
+  "notices.all": "All",
+  "notices.general": "General",
+  "notices.meeting": "Meeting",
+  "notices.urgent": "Urgent",
+  "notices.tender": "Tender",
+  "notices.scheme": "Scheme",
+  "notices.election": "Election",
+
       // Contact
       "contact.title": "Contact Us",
       "contact.description": "Get in touch with your Gram Panchayat for any queries, complaints, or assistance with government services and village development matters.",
@@ -196,7 +222,7 @@ const resources = {
       "contact.fire": "Fire",
       "contact.ambulance": "Ambulance",
       "contact.localEmergency": "Local Emergency",
-      
+   
       // Footer
       "footer.aboutDescription": "A progressive village committed to sustainable development, transparent governance, and inclusive growth for all residents.",
       "footer.quickLinks": "Quick Links",
@@ -464,6 +490,31 @@ const resources = {
       "contact.ambulance": "एम्बुलेंस",
       "contact.localEmergency": "स्थानीय आपातकाल",
       
+      // notice board 
+  "notices.title": "सूचना पटल",
+  "notices.subtitle": "नवीनतम आधिकारिक सूचनाएँ और घोषणाएँ",
+  "notices.metaDescription": "ग्राम पंचायत की नवीनतम आधिकारिक सूचनाएँ देखें।",
+
+  "notices.search": "सूचनाएँ खोजें...",
+  "notices.none": "कोई सूचना उपलब्ध नहीं है",
+  "notices.checkBack": "कृपया बाद में दुबारा देखें",
+
+  "notices.category": "श्रेणी",
+  "notices.date": "तारीख",
+  "notices.readMore": "और पढ़ें",
+  "notices.attachment": "संलग्नक देखें",
+  "notices.viewAttachment": "संलग्नक खोलें",
+
+  "notices.active": "सक्रिय",
+  "notices.inactive": "समाप्त सूचना",
+
+  "notices.all": "सभी",
+  "notices.general": "सामान्य",
+  "notices.meeting": "बैठक",
+  "notices.urgent": "जरूरी",
+  "notices.tender": "निविदा",
+  "notices.scheme": "योजना",
+  "notices.election": "चुनाव",
       // Common
       "common.district": "जिला",
       "common.state": "राज्य",
@@ -649,7 +700,32 @@ const resources = {
       "schemes.freeVerification": "मोफत पडताळणी",
       "schemes.downloadForms": "फॉर्म डाउनलोड करा",
       "schemes.contactOffice": "कार्यालयाशी संपर्क साधा",
+      //notice board 
       
+  "notices.title": "सूचना फलक",
+  "notices.subtitle": "नवीन अधिकृत सूचना आणि घोषणा",
+  "notices.metaDescription": "ग्रामपंचायतीच्या ताज्या अधिकृत सूचना पहा.",
+
+  "notices.search": "सूचना शोधा...",
+  "notices.none": "कोणतीही सूचना उपलब्ध नाही",
+  "notices.checkBack": "कृपया नंतर पुन्हा पहा",
+
+  "notices.category": "विभाग",
+  "notices.date": "तारीख",
+  "notices.readMore": "अधिक वाचा",
+  "notices.attachment": "संलग्नक पहा",
+  "notices.viewAttachment": "संलग्नक उघडा",
+
+  "notices.active": "सक्रिय",
+  "notices.inactive": "कालबाह्य सूचना",
+
+  "notices.all": "सर्व",
+  "notices.general": "सामान्य",
+  "notices.meeting": "बैठक",
+  "notices.urgent": "त्वरित",
+  "notices.tender": "टेंडर",
+  "notices.scheme": "योजना",
+  "notices.election": "निवडणूक",
       // Development
       "development.title": "विकास कामे",
       "development.description": "आमच्या गावात केलेल्या विविध विकास प्रकल्पांची प्रगती ट्रॅक करा।",
