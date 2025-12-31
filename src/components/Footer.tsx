@@ -57,10 +57,10 @@ const Footer = () => {
               <h4 className="font-semibold mb-3">{t('footer.followUs')}</h4>
               <div className="flex gap-2">
                 {[
-                  { icon: Facebook, href: "https://www.facebook.com/profile.php?id=61582823893113&mibextid=rS40aB7S9Ucbxw6v" },
+                  { icon: Facebook, href: "https://www.facebook.com/groups/673158324075461" },
               
-                  { icon: Instagram, href: "https://www.instagram.com/shivankhed_khurd?utm_source=qr&igsh=cjIyNTE0cm41YThm " },
-                  { icon: Youtube, href: "#" }
+                  { icon: Instagram, href: "https://www.instagram.com/shivankhedkhurd/" },
+                  { icon: Youtube, href: "https://youtube.com/@shivankhedkhurd?si=LH83a-cus6k1K-IS" }
                 ].map((social, index) => (
                   <Button
                     key={index}
