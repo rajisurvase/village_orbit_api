@@ -9,6 +9,7 @@ export const useAuth = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isGramsevak, setIsGramsevak] = useState(false);
   const [isSubAdmin, setIsSubAdmin] = useState(false);
+  const [isStudent, setIsStudent] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
 
   useEffect(() => {
@@ -51,6 +52,7 @@ export const useAuth = () => {
           setIsAdmin(false);
           setIsGramsevak(false);
           setIsSubAdmin(false);
+          setIsStudent(false);
           setIsApproved(false);
         }
       }
@@ -80,12 +82,14 @@ export const useAuth = () => {
       const hasAdmin = roles.includes("admin");
       const hasGramsevak = roles.includes("gramsevak");
       const hasSubAdmin = roles.includes("sub_admin");
+      const hasStudent = roles.includes("student");
       
-      console.log("👤 User roles:", { hasAdmin, hasGramsevak, hasSubAdmin });
+      console.log("👤 User roles:", { hasAdmin, hasGramsevak, hasSubAdmin, hasStudent });
       
       setIsAdmin(hasAdmin);
       setIsGramsevak(hasGramsevak);
       setIsSubAdmin(hasSubAdmin);
+      setIsStudent(hasStudent);
 
       // Check approval status
       const { data: profileData, error: profileError } = await supabase
@@ -105,9 +109,10 @@ export const useAuth = () => {
       setIsAdmin(false);
       setIsGramsevak(false);
       setIsSubAdmin(false);
+      setIsStudent(false);
       setIsApproved(false);
     }
   };
 
-  return { user, session, loading, isAdmin, isGramsevak, isSubAdmin, isApproved };
+  return { user, session, loading, isAdmin, isGramsevak, isSubAdmin, isStudent, isApproved };
 };

@@ -64,6 +64,7 @@ const STANDARDS = [
 
 const ROLES = [
   { value: "user", label: "User" },
+  { value: "student", label: "Student" },
   { value: "admin", label: "Admin" },
   { value: "sub_admin", label: "Sub Admin" },
   { value: "gramsevak", label: "Gramsevak" },
