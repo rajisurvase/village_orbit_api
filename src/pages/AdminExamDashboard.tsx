@@ -382,14 +382,14 @@ const AdminExamDashboard = () => {
                       <div>
                         <Label htmlFor="from_standard">From Standard</Label>
                         <Select
-                          value={formData.from_standard}
-                          onValueChange={(value) => setFormData({ ...formData, from_standard: value })}
+                          value={formData.from_standard || "none"}
+                          onValueChange={(value) => setFormData({ ...formData, from_standard: value === "none" ? "" : value })}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select minimum standard" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">No restriction</SelectItem>
+                            <SelectItem value="none">No restriction</SelectItem>
                             {STANDARDS.map((std) => (
                               <SelectItem key={std.value} value={std.value}>
                                 {std.label}
@@ -405,14 +405,14 @@ const AdminExamDashboard = () => {
                       <div>
                         <Label htmlFor="to_standard">To Standard</Label>
                         <Select
-                          value={formData.to_standard}
-                          onValueChange={(value) => setFormData({ ...formData, to_standard: value })}
+                          value={formData.to_standard || "none"}
+                          onValueChange={(value) => setFormData({ ...formData, to_standard: value === "none" ? "" : value })}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select maximum standard" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">No restriction</SelectItem>
+                            <SelectItem value="none">No restriction</SelectItem>
                             {STANDARDS.map((std) => (
                               <SelectItem key={std.value} value={std.value}>
                                 {std.label}
