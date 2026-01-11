@@ -293,6 +293,7 @@ export type Database = {
           is_correct: boolean | null
           question_id: string
           selected_option: string | null
+          time_taken_seconds: number | null
         }
         Insert: {
           answered_at?: string | null
@@ -301,6 +302,7 @@ export type Database = {
           is_correct?: boolean | null
           question_id: string
           selected_option?: string | null
+          time_taken_seconds?: number | null
         }
         Update: {
           answered_at?: string | null
@@ -309,6 +311,7 @@ export type Database = {
           is_correct?: boolean | null
           question_id?: string
           selected_option?: string | null
+          time_taken_seconds?: number | null
         }
         Relationships: [
           {
@@ -329,6 +332,7 @@ export type Database = {
       }
       exam_attempts: {
         Row: {
+          can_reattempt: boolean | null
           correct_answers: number | null
           created_at: string
           end_snapshot_url: string | null
@@ -336,9 +340,13 @@ export type Database = {
           exam_id: string
           id: string
           integrity_pledge_accepted: boolean
+          last_activity_at: string | null
+          remaining_time_seconds: number | null
           score: number | null
+          shuffled_question_order: string[] | null
           start_snapshot_url: string | null
           start_time: string
+          status: string | null
           student_name: string
           total_questions: number
           unanswered: number | null
@@ -346,6 +354,7 @@ export type Database = {
           wrong_answers: number | null
         }
         Insert: {
+          can_reattempt?: boolean | null
           correct_answers?: number | null
           created_at?: string
           end_snapshot_url?: string | null
@@ -353,9 +362,13 @@ export type Database = {
           exam_id: string
           id?: string
           integrity_pledge_accepted?: boolean
+          last_activity_at?: string | null
+          remaining_time_seconds?: number | null
           score?: number | null
+          shuffled_question_order?: string[] | null
           start_snapshot_url?: string | null
           start_time?: string
+          status?: string | null
           student_name: string
           total_questions: number
           unanswered?: number | null
@@ -363,6 +376,7 @@ export type Database = {
           wrong_answers?: number | null
         }
         Update: {
+          can_reattempt?: boolean | null
           correct_answers?: number | null
           created_at?: string
           end_snapshot_url?: string | null
@@ -370,9 +384,13 @@ export type Database = {
           exam_id?: string
           id?: string
           integrity_pledge_accepted?: boolean
+          last_activity_at?: string | null
+          remaining_time_seconds?: number | null
           score?: number | null
+          shuffled_question_order?: string[] | null
           start_snapshot_url?: string | null
           start_time?: string
+          status?: string | null
           student_name?: string
           total_questions?: number
           unanswered?: number | null
@@ -461,13 +479,16 @@ export type Database = {
           description: string | null
           duration_minutes: number
           ends_at: string
+          from_standard: string | null
           id: string
           is_active: boolean | null
           pass_marks: number | null
           scheduled_at: string
+          shuffle_questions: boolean | null
           status: Database["public"]["Enums"]["exam_status"]
           subject: Database["public"]["Enums"]["exam_subject"]
           title: string
+          to_standard: string | null
           total_marks: number | null
           total_questions: number
           updated_at: string
@@ -479,13 +500,16 @@ export type Database = {
           description?: string | null
           duration_minutes?: number
           ends_at: string
+          from_standard?: string | null
           id?: string
           is_active?: boolean | null
           pass_marks?: number | null
           scheduled_at: string
+          shuffle_questions?: boolean | null
           status?: Database["public"]["Enums"]["exam_status"]
           subject: Database["public"]["Enums"]["exam_subject"]
           title: string
+          to_standard?: string | null
           total_marks?: number | null
           total_questions?: number
           updated_at?: string
@@ -497,13 +521,16 @@ export type Database = {
           description?: string | null
           duration_minutes?: number
           ends_at?: string
+          from_standard?: string | null
           id?: string
           is_active?: boolean | null
           pass_marks?: number | null
           scheduled_at?: string
+          shuffle_questions?: boolean | null
           status?: Database["public"]["Enums"]["exam_status"]
           subject?: Database["public"]["Enums"]["exam_subject"]
           title?: string
+          to_standard?: string | null
           total_marks?: number | null
           total_questions?: number
           updated_at?: string
@@ -983,6 +1010,8 @@ export type Database = {
           id: string
           mobile: string | null
           rejection_reason: string | null
+          school_name: string | null
+          standard: string | null
           updated_at: string | null
         }
         Insert: {
@@ -998,6 +1027,8 @@ export type Database = {
           id: string
           mobile?: string | null
           rejection_reason?: string | null
+          school_name?: string | null
+          standard?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1013,6 +1044,8 @@ export type Database = {
           id?: string
           mobile?: string | null
           rejection_reason?: string | null
+          school_name?: string | null
+          standard?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -1553,6 +1586,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_or_create_exam_attempt: {
+        Args: { p_exam_id: string; p_student_name: string; p_user_id: string }
+        Returns: string
+      }
       get_push_subscriptions: {
         Args: { target_admins_only?: boolean }
         Returns: {
@@ -1569,7 +1606,25 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_exam_within_schedule: { Args: { p_exam_id: string }; Returns: boolean }
+      is_student_eligible_for_exam: {
+        Args: { p_exam_id: string; p_user_id: string }
+        Returns: boolean
+      }
       is_user_approved: { Args: { user_id: string }; Returns: boolean }
+      reset_exam_attempt: {
+        Args: { p_admin_user_id: string; p_attempt_id: string }
+        Returns: boolean
+      }
+      save_exam_answer: {
+        Args: {
+          p_attempt_id: string
+          p_question_id: string
+          p_selected_option: string
+          p_time_taken_seconds?: number
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "user" | "gramsevak" | "sub_admin"
