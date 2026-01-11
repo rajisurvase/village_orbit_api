@@ -1586,6 +1586,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      can_attempt_exam: {
+        Args: { p_exam_id: string; p_user_id: string }
+        Returns: boolean
+      }
       get_or_create_exam_attempt: {
         Args: { p_exam_id: string; p_student_name: string; p_user_id: string }
         Returns: string
@@ -1607,6 +1611,7 @@ export type Database = {
         Returns: boolean
       }
       is_exam_within_schedule: { Args: { p_exam_id: string }; Returns: boolean }
+      is_student: { Args: { _user_id: string }; Returns: boolean }
       is_student_eligible_for_exam: {
         Args: { p_exam_id: string; p_user_id: string }
         Returns: boolean
@@ -1627,7 +1632,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "user" | "gramsevak" | "sub_admin"
+      app_role: "admin" | "user" | "gramsevak" | "sub_admin" | "student"
       approval_status: "pending" | "approved" | "rejected"
       exam_status: "draft" | "scheduled" | "active" | "completed" | "cancelled"
       exam_subject: "GK" | "Science" | "Math" | "English"
@@ -1758,7 +1763,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user", "gramsevak", "sub_admin"],
+      app_role: ["admin", "user", "gramsevak", "sub_admin", "student"],
       approval_status: ["pending", "approved", "rejected"],
       exam_status: ["draft", "scheduled", "active", "completed", "cancelled"],
       exam_subject: ["GK", "Science", "Math", "English"],

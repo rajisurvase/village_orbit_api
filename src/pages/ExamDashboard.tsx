@@ -54,6 +54,11 @@ interface StudentProfile {
   full_name: string | null;
 }
 
+interface UserRoles {
+  isStudent: boolean;
+  isAdmin: boolean;
+}
+
 const ExamDashboard = () => {
   usePageSEO({
     title: "ऑनलाइन परीक्षा प्रणाली - Shivankhed Khurd",
@@ -67,6 +72,7 @@ const ExamDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
+  const [userRoles, setUserRoles] = useState<UserRoles>({ isStudent: false, isAdmin: false });
   const [inProgressAttempts, setInProgressAttempts] = useState<ExamAttempt[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -89,6 +95,28 @@ const ExamDashboard = () => {
     }
     setUser(session.user);
     
+    // Check user roles
+    const { data: rolesData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", session.user.id);
+    
+    const roles = rolesData?.map(r => r.role) || [];
+    const isStudent = roles.includes("student");
+    const isAdmin = roles.includes("admin") || roles.includes("sub_admin");
+    setUserRoles({ isStudent, isAdmin });
+    
+    // If not a student and not an admin, show error
+    if (!isStudent && !isAdmin) {
+      toast({
+        title: "प्रवेश नाकारला",
+        description: "परीक्षा देण्यासाठी तुम्हाला 'विद्यार्थी' भूमिका आवश्यक आहे. कृपया प्रशासकाशी संपर्क साधा.",
+        variant: "destructive"
+      });
+      navigate("/");
+      return;
+    }
+    
     // Fetch student profile
     const { data: profileData } = await supabase
       .from("profiles")
@@ -98,15 +126,20 @@ const ExamDashboard = () => {
     
     setStudentProfile(profileData);
     
-    fetchData(session.user.id, profileData?.standard);
-    
-    // Check for upcoming exams and set up notifications
-    checkUpcomingExams(session.user.id);
-    const channel = await subscribeToExamReminders(session.user.id);
-    
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    // Only fetch exam data for students
+    if (isStudent) {
+      fetchData(session.user.id, profileData?.standard);
+      
+      // Check for upcoming exams and set up notifications
+      checkUpcomingExams(session.user.id);
+      const channel = await subscribeToExamReminders(session.user.id);
+      
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    } else {
+      setLoading(false);
+    }
   };
 
   const fetchData = async (userId: string, studentStandard: string | null) => {
@@ -285,6 +318,33 @@ const ExamDashboard = () => {
     return <CustomLoader />;
   }
 
+  // Show message for non-student users
+  if (!userRoles.isStudent && !userRoles.isAdmin) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md mx-4">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-6 w-6" />
+              प्रवेश नाकारला
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground">
+              परीक्षा प्रणाली वापरण्यासाठी तुम्हाला 'विद्यार्थी' भूमिका आवश्यक आहे.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              कृपया प्रशासकाशी संपर्क साधून तुम्हाला विद्यार्थी म्हणून नोंदणी करा.
+            </p>
+            <Button onClick={() => navigate("/")} className="w-full">
+              मुख्यपृष्ठावर परत जा
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -297,12 +357,12 @@ const ExamDashboard = () => {
             <p className="text-muted-foreground mb-2">
               GK, विज्ञान, गणित आणि इंग्रजीमध्ये तुमचे ज्ञान तपासा
             </p>
-            {studentProfile?.standard && (
+            {userRoles.isStudent && studentProfile?.standard && (
               <Badge variant="outline" className="mb-4">
                 इयत्ता: {studentProfile.standard}
               </Badge>
             )}
-            {!studentProfile?.standard && (
+            {userRoles.isStudent && !studentProfile?.standard && (
               <div className="flex items-center justify-center gap-2 text-yellow-600 mb-4">
                 <AlertTriangle className="h-4 w-4" />
                 <span className="text-sm">तुमची इयत्ता सेट केलेली नाही. कृपया प्रशासकाशी संपर्क साधा.</span>

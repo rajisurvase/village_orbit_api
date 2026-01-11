@@ -141,6 +141,25 @@ const ExamTake = () => {
       }
       setUser(session.user);
 
+      // Check if user has student role (backend enforcement)
+      const { data: rolesData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session.user.id);
+      
+      const roles = rolesData?.map(r => r.role) || [];
+      const isStudent = roles.includes("student");
+      
+      if (!isStudent) {
+        toast({
+          title: "प्रवेश नाकारला",
+          description: "परीक्षा देण्यासाठी तुम्हाला 'विद्यार्थी' भूमिका आवश्यक आहे. कृपया प्रशासकाशी संपर्क साधा.",
+          variant: "destructive"
+        });
+        navigate("/exam");
+        return;
+      }
+
       // Fetch exam details
       const { data: examData, error: examError } = await supabase
         .from("exams")
@@ -183,15 +202,26 @@ const ExamTake = () => {
         .eq("id", session.user.id)
         .single();
 
-      if (examData.from_standard && examData.to_standard && profileData?.standard) {
+      // Validate standard eligibility
+      if (examData.from_standard || examData.to_standard) {
+        if (!profileData?.standard) {
+          toast({
+            title: "तुमची इयत्ता सेट केलेली नाही",
+            description: "कृपया प्रशासकाशी संपर्क साधून तुमची इयत्ता सेट करा",
+            variant: "destructive"
+          });
+          navigate("/exam");
+          return;
+        }
+        
         const studentStandard = parseInt(profileData.standard.replace(/[^0-9]/g, '')) || 0;
-        const fromStandard = parseInt(examData.from_standard.replace(/[^0-9]/g, '')) || 0;
-        const toStandard = parseInt(examData.to_standard.replace(/[^0-9]/g, '')) || 12;
+        const fromStandard = examData.from_standard ? parseInt(examData.from_standard.replace(/[^0-9]/g, '')) || 0 : 0;
+        const toStandard = examData.to_standard ? parseInt(examData.to_standard.replace(/[^0-9]/g, '')) || 12 : 12;
 
         if (studentStandard < fromStandard || studentStandard > toStandard) {
           toast({
             title: "तुम्ही या परीक्षेसाठी पात्र नाही",
-            description: `ही परीक्षा ${examData.from_standard} ते ${examData.to_standard} इयत्तेच्या विद्यार्थ्यांसाठी आहे`,
+            description: `ही परीक्षा ${examData.from_standard || "1st"} ते ${examData.to_standard || "12th"} इयत्तेच्या विद्यार्थ्यांसाठी आहे. तुमची इयत्ता: ${profileData.standard}`,
             variant: "destructive"
           });
           navigate("/exam");
