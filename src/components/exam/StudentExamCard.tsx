@@ -28,16 +28,24 @@ interface StudentExamCardProps {
   exam: Exam;
   studentStandard?: string | null;
   attemptInfo?: AttemptInfo | null;
-  onStartExam: (examId: string) => void;
-  onResumeExam: (examId: string, attemptId: string) => void;
+  status?: string;
+  canTake?: boolean;
+  onStartExam?: (examId: string) => void;
+  onResumeExam?: (examId: string, attemptId: string) => void;
+  onStart?: () => void;
+  onResume?: () => void;
 }
 
 const StudentExamCard = ({
   exam,
   studentStandard,
   attemptInfo,
+  status,
+  canTake,
   onStartExam,
   onResumeExam,
+  onStart,
+  onResume,
 }: StudentExamCardProps) => {
   const getSubjectColor = (subject: string) => {
     const colors: Record<string, string> = {
@@ -92,6 +100,17 @@ const StudentExamCard = ({
   };
 
   const renderActionButton = () => {
+    // Support both old and new prop patterns
+    const handleStart = () => {
+      if (onStart) onStart();
+      else if (onStartExam) onStartExam(exam.id);
+    };
+    
+    const handleResume = () => {
+      if (onResume) onResume();
+      else if (onResumeExam && attemptInfo) onResumeExam(exam.id, attemptInfo.id);
+    };
+
     if (!isEligible()) {
       return (
         <Button className="w-full mt-4" variant="outline" disabled>
@@ -101,21 +120,23 @@ const StudentExamCard = ({
       );
     }
 
-    if (attemptInfo?.status === "SUBMITTED") {
+    // Handle status prop from ExamDashboard
+    if (status === "completed" || attemptInfo?.status === "SUBMITTED") {
       return (
         <Button className="w-full mt-4" variant="secondary" disabled>
           <CheckCircle2 className="h-4 w-4 mr-2" />
-          पूर्ण झाली ({attemptInfo.score}%)
+          पूर्ण झाली {attemptInfo?.score !== undefined ? `(${attemptInfo.score}%)` : ""}
         </Button>
       );
     }
 
-    if (attemptInfo?.status === "IN_PROGRESS") {
-      if (canTakeExam()) {
+    if (status === "resume" || attemptInfo?.status === "IN_PROGRESS") {
+      const canResume = canTake !== undefined ? canTake : canTakeExam();
+      if (canResume) {
         return (
           <Button
             className="w-full mt-4 bg-orange-600 hover:bg-orange-700"
-            onClick={() => onResumeExam(exam.id, attemptInfo.id)}
+            onClick={handleResume}
           >
             <Play className="h-4 w-4 mr-2" />
             परीक्षा चालू ठेवा
@@ -130,9 +151,10 @@ const StudentExamCard = ({
       );
     }
 
-    if (canTakeExam()) {
+    const canStart = canTake !== undefined ? canTake : canTakeExam();
+    if (canStart) {
       return (
-        <Button className="w-full mt-4" onClick={() => onStartExam(exam.id)}>
+        <Button className="w-full mt-4" onClick={handleStart}>
           <Play className="h-4 w-4 mr-2" />
           परीक्षा सुरू करा
         </Button>
@@ -143,7 +165,7 @@ const StudentExamCard = ({
     const scheduled = new Date(exam.scheduled_at);
     const ends = new Date(exam.ends_at);
 
-    if (isFuture(scheduled)) {
+    if (status === "upcoming" || isFuture(scheduled)) {
       return (
         <Button className="w-full mt-4" variant="outline" disabled>
           <Clock className="h-4 w-4 mr-2" />
@@ -152,7 +174,7 @@ const StudentExamCard = ({
       );
     }
 
-    if (isPast(ends)) {
+    if (status === "ended" || isPast(ends)) {
       return (
         <Button className="w-full mt-4" variant="outline" disabled>
           परीक्षा संपली

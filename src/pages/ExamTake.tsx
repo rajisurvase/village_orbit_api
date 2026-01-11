@@ -725,7 +725,7 @@ const ExamTake = () => {
               </p>
             </div>
             <div className="flex items-center gap-4">
-              <AutoSaveIndicator status={autoSaveStatus} lastSaveTime={lastSaveTime} />
+              <AutoSaveIndicator status={autoSaveStatus} lastSaved={lastSaveTime} />
               <div className="text-right">
                 <div className={`flex items-center gap-2 text-lg font-bold ${timeRemaining < 300 ? 'text-red-300 animate-pulse' : ''}`}>
                   <Clock className="h-5 w-5" />
