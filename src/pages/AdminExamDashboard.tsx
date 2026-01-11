@@ -650,7 +650,8 @@ const AdminExamDashboard = () => {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => navigate(`/admin/exam-questions/${exam.id}`)}
+                            onClick={() => navigate(`/admin/exam/${exam.id}/questions`)}
+                            title="Manage Questions"
                           >
                             <FileText className="h-4 w-4" />
                           </Button>
