@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Check, X, Edit, Trash2, Download, Search } from "lucide-react";
+import { ArrowLeft, Check, X, Edit, Trash2, Download, Search, GraduationCap, School, UserCog } from "lucide-react";
 import { usePageSEO } from "@/hooks/usePageSEO";
 
 interface UserProfile {
@@ -42,8 +42,32 @@ interface UserProfile {
   approval_status: "pending" | "approved" | "rejected";
   created_at: string;
   rejection_reason?: string;
+  standard?: string;
+  school_name?: string;
   roles?: string[];
 }
+
+const STANDARDS = [
+  { value: "1st", label: "1st" },
+  { value: "2nd", label: "2nd" },
+  { value: "3rd", label: "3rd" },
+  { value: "4th", label: "4th" },
+  { value: "5th", label: "5th" },
+  { value: "6th", label: "6th" },
+  { value: "7th", label: "7th" },
+  { value: "8th", label: "8th" },
+  { value: "9th", label: "9th" },
+  { value: "10th", label: "10th" },
+  { value: "11th", label: "11th" },
+  { value: "12th", label: "12th" },
+];
+
+const ROLES = [
+  { value: "user", label: "User" },
+  { value: "admin", label: "Admin" },
+  { value: "sub_admin", label: "Sub Admin" },
+  { value: "gramsevak", label: "Gramsevak" },
+];
 
 export default function UserManagementDashboard() {
   usePageSEO({ title: "User Management", description: "Manage user registrations and approvals" });
@@ -58,6 +82,13 @@ export default function UserManagementDashboard() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
+
+  // Edit form state
+  const [editForm, setEditForm] = useState({
+    standard: "",
+    school_name: "",
+    selectedRole: ""
+  });
 
   useEffect(() => {
     if (!authLoading) {
@@ -114,7 +145,6 @@ export default function UserManagementDashboard() {
 
   const handleApprove = async (userId: string) => {
     try {
-      // Get user details before approval
       const userProfile = users.find(u => u.id === userId);
       if (!userProfile) {
         throw new Error("User not found");
@@ -148,7 +178,6 @@ export default function UserManagementDashboard() {
         console.log("Approval email sent successfully");
       } catch (emailError: any) {
         console.error("Failed to send approval email:", emailError);
-        // Don't fail the approval if email fails
       }
 
       fetchUsers();
@@ -202,7 +231,6 @@ export default function UserManagementDashboard() {
         console.log("Rejection email sent successfully");
       } catch (emailError: any) {
         console.error("Failed to send rejection email:", emailError);
-        // Don't fail the rejection if email fails
       }
 
       setRejectDialogOpen(false);
@@ -217,11 +245,76 @@ export default function UserManagementDashboard() {
     }
   };
 
+  const handleEditClick = (userProfile: UserProfile) => {
+    setSelectedUser(userProfile);
+    setEditForm({
+      standard: userProfile.standard || "",
+      school_name: userProfile.school_name || "",
+      selectedRole: userProfile.roles?.[0] || "user"
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSave = async () => {
+    if (!selectedUser) return;
+
+    try {
+      // Update profile with standard and school name
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          standard: editForm.standard || null,
+          school_name: editForm.school_name || null,
+        })
+        .eq("id", selectedUser.id);
+
+      if (profileError) throw profileError;
+
+      // Update role if changed
+      const currentRole = selectedUser.roles?.[0] || "user";
+      if (editForm.selectedRole !== currentRole) {
+        // Delete existing roles
+        await supabase
+          .from("user_roles")
+          .delete()
+          .eq("user_id", selectedUser.id);
+
+        // Insert new role
+        const { error: roleError } = await supabase
+          .from("user_roles")
+          .insert({
+            user_id: selectedUser.id,
+            role: editForm.selectedRole as any
+          });
+
+        if (roleError) throw roleError;
+      }
+
+      toast({
+        title: "Success",
+        description: "User details updated successfully",
+      });
+
+      setEditDialogOpen(false);
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDelete = async (userId: string) => {
     if (!confirm("Are you sure you want to delete this user?")) return;
 
     try {
-      const { error } = await supabase.auth.admin.deleteUser(userId);
+      // Delete from profiles and user_roles (cascade will handle it)
+      const { error } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("id", userId);
 
       if (error) throw error;
 
@@ -242,13 +335,15 @@ export default function UserManagementDashboard() {
 
   const exportToCSV = () => {
     const csv = [
-      ["Name", "Email", "Mobile", "Aadhar", "Status", "Roles", "Created At"],
+      ["Name", "Email", "Mobile", "Aadhar", "Status", "Standard", "School", "Roles", "Created At"],
       ...filteredUsers.map((u) => [
         u.full_name,
         u.email,
         u.mobile,
         u.aadhar_number,
         u.approval_status,
+        u.standard || "",
+        u.school_name || "",
         u.roles?.join(", ") || "",
         new Date(u.created_at).toLocaleDateString(),
       ]),
@@ -292,7 +387,7 @@ export default function UserManagementDashboard() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4" />
@@ -305,8 +400,8 @@ export default function UserManagementDashboard() {
         </Button>
       </div>
 
-      <div className="flex gap-4 mb-6">
-        <div className="flex-1 relative">
+      <div className="flex gap-4 mb-6 flex-wrap">
+        <div className="flex-1 min-w-[200px] relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search by name, email, or mobile..."
@@ -328,14 +423,15 @@ export default function UserManagementDashboard() {
         </Select>
       </div>
 
-      <div className="bg-card rounded-lg border">
+      <div className="bg-card rounded-lg border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Mobile</TableHead>
-              <TableHead>Aadhar</TableHead>
+              <TableHead>Standard</TableHead>
+              <TableHead>School</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Roles</TableHead>
               <TableHead>Registered</TableHead>
@@ -348,7 +444,26 @@ export default function UserManagementDashboard() {
                 <TableCell className="font-medium">{userProfile.full_name}</TableCell>
                 <TableCell>{userProfile.email}</TableCell>
                 <TableCell>{userProfile.mobile}</TableCell>
-                <TableCell>{userProfile.aadhar_number}</TableCell>
+                <TableCell>
+                  {userProfile.standard ? (
+                    <Badge variant="outline" className="flex items-center gap-1 w-fit">
+                      <GraduationCap className="h-3 w-3" />
+                      {userProfile.standard}
+                    </Badge>
+                  ) : (
+                    <span className="text-muted-foreground text-sm">Not set</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {userProfile.school_name ? (
+                    <span className="text-sm flex items-center gap-1">
+                      <School className="h-3 w-3" />
+                      {userProfile.school_name}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground text-sm">Not set</span>
+                  )}
+                </TableCell>
                 <TableCell>{getStatusBadge(userProfile.approval_status)}</TableCell>
                 <TableCell>
                   {userProfile.roles?.map((role) => (
@@ -368,6 +483,7 @@ export default function UserManagementDashboard() {
                           size="sm"
                           variant="outline"
                           onClick={() => handleApprove(userProfile.id)}
+                          title="Approve"
                         >
                           <Check className="h-4 w-4" />
                         </Button>
@@ -378,16 +494,26 @@ export default function UserManagementDashboard() {
                             setSelectedUser(userProfile);
                             setRejectDialogOpen(true);
                           }}
+                          title="Reject"
                         >
                           <X className="h-4 w-4" />
                         </Button>
                       </>
                     )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEditClick(userProfile)}
+                      title="Edit User Details"
+                    >
+                      <UserCog className="h-4 w-4" />
+                    </Button>
                     {isAdmin && (
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant="destructive"
                         onClick={() => handleDelete(userProfile.id)}
+                        title="Delete"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -400,6 +526,95 @@ export default function UserManagementDashboard() {
         </Table>
       </div>
 
+      {/* Edit User Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserCog className="h-5 w-5" />
+              Edit User Details
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-muted-foreground text-sm">User</Label>
+              <p className="font-medium">{selectedUser?.full_name}</p>
+              <p className="text-sm text-muted-foreground">{selectedUser?.email}</p>
+            </div>
+
+            <div>
+              <Label htmlFor="standard" className="flex items-center gap-2">
+                <GraduationCap className="h-4 w-4" />
+                Standard / Class
+              </Label>
+              <Select 
+                value={editForm.standard} 
+                onValueChange={(value) => setEditForm({ ...editForm, standard: value })}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select standard" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Not set</SelectItem>
+                  {STANDARDS.map((std) => (
+                    <SelectItem key={std.value} value={std.value}>
+                      {std.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Required for exam eligibility
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="school_name" className="flex items-center gap-2">
+                <School className="h-4 w-4" />
+                School Name
+              </Label>
+              <Input
+                id="school_name"
+                value={editForm.school_name}
+                onChange={(e) => setEditForm({ ...editForm, school_name: e.target.value })}
+                placeholder="Enter school name"
+                className="mt-1"
+              />
+            </div>
+
+            {isAdmin && (
+              <div>
+                <Label htmlFor="role">Role</Label>
+                <Select 
+                  value={editForm.selectedRole} 
+                  onValueChange={(value) => setEditForm({ ...editForm, selectedRole: value })}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ROLES.map((role) => (
+                      <SelectItem key={role.value} value={role.value}>
+                        {role.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleEditSave}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Dialog */}
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <DialogContent>
           <DialogHeader>
