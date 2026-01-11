@@ -1,7 +1,22 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { AlertTriangle, Clock, Save, Wifi, CheckCircle2 } from "lucide-react";
 
-const ExamInstructionsMarathi = () => {
+interface ExamInstructionsMarathiProps {
+  examTitle?: string;
+  duration?: number;
+  totalQuestions?: number;
+  onAccept?: () => void;
+  onCancel?: () => void;
+}
+
+const ExamInstructionsMarathi = ({ 
+  examTitle, 
+  duration, 
+  totalQuestions, 
+  onAccept, 
+  onCancel 
+}: ExamInstructionsMarathiProps) => {
   return (
     <Card className="border-orange-500 bg-orange-50 dark:bg-orange-950/20">
       <CardHeader>
@@ -75,6 +90,32 @@ const ExamInstructionsMarathi = () => {
             <li>कोणाशीही बोलू नका किंवा मदत घेऊ नका.</li>
           </ul>
         </div>
+
+        {/* Exam Info */}
+        {(examTitle || duration || totalQuestions) && (
+          <div className="bg-blue-100 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-300 dark:border-blue-800 mt-4">
+            <p className="font-bold text-blue-900 dark:text-blue-100 mb-2">परीक्षा माहिती:</p>
+            {examTitle && <p className="text-sm text-blue-800 dark:text-blue-200">परीक्षा: {examTitle}</p>}
+            {duration && <p className="text-sm text-blue-800 dark:text-blue-200">कालावधी: {duration} मिनिटे</p>}
+            {totalQuestions && <p className="text-sm text-blue-800 dark:text-blue-200">एकूण प्रश्न: {totalQuestions}</p>}
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        {(onAccept || onCancel) && (
+          <div className="flex gap-4 mt-6">
+            {onCancel && (
+              <Button variant="outline" onClick={onCancel} className="flex-1">
+                रद्द करा
+              </Button>
+            )}
+            {onAccept && (
+              <Button onClick={onAccept} className="flex-1">
+                मी समजलो, पुढे चला
+              </Button>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
