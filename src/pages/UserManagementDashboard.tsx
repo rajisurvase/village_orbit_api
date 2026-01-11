@@ -548,14 +548,14 @@ export default function UserManagementDashboard() {
                 Standard / Class
               </Label>
               <Select 
-                value={editForm.standard} 
-                onValueChange={(value) => setEditForm({ ...editForm, standard: value })}
+                value={editForm.standard || "none"} 
+                onValueChange={(value) => setEditForm({ ...editForm, standard: value === "none" ? "" : value })}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select standard" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Not set</SelectItem>
+                  <SelectItem value="none">Not set</SelectItem>
                   {STANDARDS.map((std) => (
                     <SelectItem key={std.value} value={std.value}>
                       {std.label}
