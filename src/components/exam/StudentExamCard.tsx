@@ -58,7 +58,26 @@ const StudentExamCard = ({
   };
 
   const getStatusBadge = () => {
-    const now = new Date();
+    // Show submitted badge if attempt is submitted
+    if (attemptInfo?.status === "SUBMITTED" || status === "completed") {
+      return (
+        <Badge className="bg-green-700">
+          <CheckCircle2 className="h-3 w-3 mr-1" />
+          पूर्ण
+        </Badge>
+      );
+    }
+    
+    // Show in-progress badge
+    if (attemptInfo?.status === "IN_PROGRESS" || status === "resume") {
+      return (
+        <Badge className="bg-orange-500">
+          <Clock className="h-3 w-3 mr-1" />
+          सुरू
+        </Badge>
+      );
+    }
+    
     const scheduled = new Date(exam.scheduled_at);
     const ends = new Date(exam.ends_at);
 
