@@ -262,23 +262,18 @@ const ExamDashboard = () => {
     const now = new Date();
     const scheduled = new Date(exam.scheduled_at);
     const ends = new Date(exam.ends_at);
-    
+
     // Check if exam is within the valid time window
     const isWithinTimeWindow = now >= scheduled && now <= ends;
-    
+
     // Check if exam status allows taking
     const isStatusValid = exam.status === "scheduled" || exam.status === "active";
-    
-    // Check if student has already submitted or has a score (completed)
-    const hasCompletedAttempt = pastAttempts.some(attempt => 
-      attempt.exam_id === exam.id && (attempt.status === "SUBMITTED" || attempt.score !== null) && !attempt.can_reattempt
+
+    // STRICT: if the student has ANY completed attempt (SUBMITTED or has score), never allow starting again
+    const hasCompletedAttempt = pastAttempts.some(attempt =>
+      attempt.exam_id === exam.id && (attempt.status === "SUBMITTED" || attempt.score !== null)
     );
-    
-    // Check for in-progress attempt
-    const hasInProgressAttempt = inProgressAttempts.some(attempt => 
-      attempt.exam_id === exam.id
-    );
-    
+
     return !hasCompletedAttempt && isWithinTimeWindow && isStatusValid;
   };
 
