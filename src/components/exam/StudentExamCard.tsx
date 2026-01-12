@@ -58,8 +58,8 @@ const StudentExamCard = ({
   };
 
   const getStatusBadge = () => {
-    // Show submitted badge if attempt is submitted
-    if (attemptInfo?.status === "SUBMITTED" || status === "completed") {
+    // Show submitted badge if attempt has score or is submitted
+    if (attemptInfo?.status === "SUBMITTED" || attemptInfo?.score !== undefined || status === "completed") {
       return (
         <Badge className="bg-green-700">
           <CheckCircle2 className="h-3 w-3 mr-1" />
@@ -113,7 +113,8 @@ const StudentExamCard = ({
 
     const isWithinTimeWindow = now >= scheduled && now <= ends;
     const isStatusValid = exam.status === "scheduled" || exam.status === "active";
-    const hasNotCompleted = !attemptInfo || attemptInfo.status !== "SUBMITTED";
+    // Check both status and score for completion
+    const hasNotCompleted = !attemptInfo || (attemptInfo.status !== "SUBMITTED" && attemptInfo.score === undefined);
 
     return isWithinTimeWindow && isStatusValid && isEligible() && hasNotCompleted;
   };
@@ -139,8 +140,8 @@ const StudentExamCard = ({
       );
     }
 
-    // Handle status prop from ExamDashboard
-    if (status === "completed" || attemptInfo?.status === "SUBMITTED") {
+    // Handle completed status (SUBMITTED or has score)
+    if (status === "completed" || attemptInfo?.status === "SUBMITTED" || attemptInfo?.score !== undefined) {
       return (
         <Button className="w-full mt-4" variant="secondary" disabled>
           <CheckCircle2 className="h-4 w-4 mr-2" />

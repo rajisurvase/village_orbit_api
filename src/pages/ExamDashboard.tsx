@@ -199,11 +199,13 @@ const ExamDashboard = () => {
 
       if (attemptsError) throw attemptsError;
       
-      // Separate in-progress and completed attempts
+      // Separate completed attempts (SUBMITTED or has score) and in-progress
       const inProgress = (attemptsData || []).filter(a => 
-        a.status === "IN_PROGRESS" || a.status === "NOT_STARTED"
+        (a.status === "IN_PROGRESS" || a.status === "NOT_STARTED") && a.score === null
       );
-      const completed = (attemptsData || []).filter(a => a.status === "SUBMITTED");
+      const completed = (attemptsData || []).filter(a => 
+        a.status === "SUBMITTED" || a.score !== null
+      );
       
       setInProgressAttempts(inProgress);
       setPastAttempts(completed);
@@ -267,9 +269,9 @@ const ExamDashboard = () => {
     // Check if exam status allows taking
     const isStatusValid = exam.status === "scheduled" || exam.status === "active";
     
-    // Check if student has already submitted this exam
-    const hasSubmittedAttempt = pastAttempts.some(attempt => 
-      attempt.exam_id === exam.id && attempt.status === "SUBMITTED" && !attempt.can_reattempt
+    // Check if student has already submitted or has a score (completed)
+    const hasCompletedAttempt = pastAttempts.some(attempt => 
+      attempt.exam_id === exam.id && (attempt.status === "SUBMITTED" || attempt.score !== null) && !attempt.can_reattempt
     );
     
     // Check for in-progress attempt
@@ -277,7 +279,7 @@ const ExamDashboard = () => {
       attempt.exam_id === exam.id
     );
     
-    return !hasSubmittedAttempt && isWithinTimeWindow && isStatusValid;
+    return !hasCompletedAttempt && isWithinTimeWindow && isStatusValid;
   };
 
   const getExamStatus = (exam: Exam) => {
@@ -285,16 +287,18 @@ const ExamDashboard = () => {
     const scheduled = new Date(exam.scheduled_at);
     const ends = new Date(exam.ends_at);
     
+    // Check for submitted attempt (status SUBMITTED or has score)
+    const submittedAttempt = pastAttempts.find(a => 
+      a.exam_id === exam.id && (a.status === "SUBMITTED" || a.score !== null)
+    );
+    if (submittedAttempt) {
+      return "completed";
+    }
+    
     // Check for in-progress attempt
     const inProgressAttempt = inProgressAttempts.find(a => a.exam_id === exam.id);
     if (inProgressAttempt) {
       return "resume";
-    }
-    
-    // Check for submitted attempt
-    const submittedAttempt = pastAttempts.find(a => a.exam_id === exam.id && a.status === "SUBMITTED");
-    if (submittedAttempt) {
-      return "completed";
     }
     
     if (isFuture(scheduled)) {
@@ -449,12 +453,14 @@ const ExamDashboard = () => {
                 </Card>
               ) : (
                 eligibleExams.map((exam) => {
-                  // Find attempt info for this exam
-                  const submittedAttempt = pastAttempts.find(a => a.exam_id === exam.id && a.status === "SUBMITTED");
+                  // Find attempt info for this exam - check for completed (SUBMITTED or has score)
+                  const submittedAttempt = pastAttempts.find(a => 
+                    a.exam_id === exam.id && (a.status === "SUBMITTED" || a.score !== null)
+                  );
                   const inProgressAttempt = inProgressAttempts.find(a => a.exam_id === exam.id);
                   
                   const attemptInfo = submittedAttempt 
-                    ? { id: submittedAttempt.id, status: "SUBMITTED", score: submittedAttempt.score ?? undefined }
+                    ? { id: submittedAttempt.id, status: "SUBMITTED" as const, score: submittedAttempt.score ?? undefined }
                     : inProgressAttempt 
                     ? { id: inProgressAttempt.id, status: inProgressAttempt.status }
                     : undefined;
