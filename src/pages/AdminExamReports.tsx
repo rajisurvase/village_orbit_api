@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -21,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Download, Search, FileSpreadsheet, RefreshCw, RotateCcw } from "lucide-react";
+import { ArrowLeft, Search, FileSpreadsheet, RefreshCw, RotateCcw, Trophy, Medal, Award } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import CustomLoader from "@/components/CustomLoader";
 import { format } from "date-fns";
@@ -58,6 +59,19 @@ interface Exam {
   subject: string;
 }
 
+interface LeaderboardEntry {
+  rank: number;
+  student_name: string;
+  score: number;
+  correct_answers: number;
+  wrong_answers: number;
+  total_questions: number;
+  time_taken: number | null;
+  standard: string | null;
+  school_name: string | null;
+  end_time: string | null;
+}
+
 const AdminExamReports = () => {
   usePageSEO({
     title: "परीक्षा निकाल - Admin",
@@ -70,6 +84,9 @@ const AdminExamReports = () => {
   const [selectedExam, setSelectedExam] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardExam, setLeaderboardExam] = useState<string>("");
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -247,6 +264,92 @@ const AdminExamReports = () => {
     });
   };
 
+  const fetchLeaderboard = async (examId: string) => {
+    if (!examId) return;
+    
+    try {
+      setLoadingLeaderboard(true);
+      
+      const { data, error } = await supabase
+        .from("exam_attempts")
+        .select(`
+          student_name,
+          score,
+          correct_answers,
+          wrong_answers,
+          total_questions,
+          remaining_time_seconds,
+          end_time,
+          start_time,
+          user_id
+        `)
+        .eq("exam_id", examId)
+        .eq("status", "SUBMITTED")
+        .not("score", "is", null)
+        .order("score", { ascending: false });
+
+      if (error) throw error;
+
+      // Fetch profile data and calculate time taken
+      const leaderboardWithDetails = await Promise.all(
+        (data || []).map(async (entry, index) => {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("standard, school_name")
+            .eq("id", entry.user_id)
+            .single();
+          
+          // Calculate time taken in minutes
+          let timeTaken = null;
+          if (entry.start_time && entry.end_time) {
+            const start = new Date(entry.start_time).getTime();
+            const end = new Date(entry.end_time).getTime();
+            timeTaken = Math.round((end - start) / 60000); // Convert to minutes
+          }
+          
+          return {
+            rank: index + 1,
+            student_name: entry.student_name,
+            score: entry.score,
+            correct_answers: entry.correct_answers || 0,
+            wrong_answers: entry.wrong_answers || 0,
+            total_questions: entry.total_questions,
+            time_taken: timeTaken,
+            standard: profile?.standard || null,
+            school_name: profile?.school_name || null,
+            end_time: entry.end_time
+          };
+        })
+      );
+
+      setLeaderboard(leaderboardWithDetails);
+    } catch (error: any) {
+      toast({
+        title: "त्रुटी",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingLeaderboard(false);
+    }
+  };
+
+  const handleLeaderboardExamChange = (examId: string) => {
+    setLeaderboardExam(examId);
+    if (examId) {
+      fetchLeaderboard(examId);
+    } else {
+      setLeaderboard([]);
+    }
+  };
+
+  const getRankIcon = (rank: number) => {
+    if (rank === 1) return <Trophy className="h-5 w-5 text-yellow-500" />;
+    if (rank === 2) return <Medal className="h-5 w-5 text-gray-400" />;
+    if (rank === 3) return <Award className="h-5 w-5 text-orange-600" />;
+    return <span className="w-5 h-5 flex items-center justify-center font-bold text-muted-foreground">{rank}</span>;
+  };
+
   const filteredAttempts = attempts.filter((attempt) => {
     const matchesSearch =
       attempt.student_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -308,129 +411,295 @@ const AdminExamReports = () => {
       </section>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Filters */}
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="नाव, शाळा किंवा परीक्षा शोधा..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={selectedExam} onValueChange={setSelectedExam}>
-                <SelectTrigger>
-                  <SelectValue placeholder="परीक्षा निवडा" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">सर्व परीक्षा</SelectItem>
-                  {exams.map((exam) => (
-                    <SelectItem key={exam.id} value={exam.id}>
-                      {exam.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="स्थिती निवडा" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">सर्व स्थिती</SelectItem>
-                  <SelectItem value="SUBMITTED">पूर्ण</SelectItem>
-                  <SelectItem value="IN_PROGRESS">चालू</SelectItem>
-                  <SelectItem value="NOT_STARTED">सुरू नाही</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="text-sm text-muted-foreground flex items-center">
-                एकूण निकाल: {filteredAttempts.length}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="results" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="results">विद्यार्थी निकाल</TabsTrigger>
+            <TabsTrigger value="leaderboard">
+              <Trophy className="h-4 w-4 mr-2" />
+              लीडरबोर्ड
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Results Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>विद्यार्थी निकाल</CardTitle>
-            <CardDescription>
-              सर्व परीक्षांचे निकाल एका ठिकाणी
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>विद्यार्थी</TableHead>
-                    <TableHead>वर्ग</TableHead>
-                    <TableHead>शाळा</TableHead>
-                    <TableHead>परीक्षा</TableHead>
-                    <TableHead>गुण</TableHead>
-                    <TableHead>स्थिती</TableHead>
-                    <TableHead>तारीख</TableHead>
-                    <TableHead>कृती</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAttempts.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                        कोणतेही निकाल सापडले नाहीत
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredAttempts.map((attempt) => (
-                      <TableRow key={attempt.id}>
-                        <TableCell className="font-medium">{attempt.student_name}</TableCell>
-                        <TableCell>{attempt.profiles?.standard || "N/A"}</TableCell>
-                        <TableCell>{attempt.profiles?.school_name || "N/A"}</TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{attempt.exams.title}</div>
-                            <Badge variant="outline" className="text-xs">
-                              {attempt.exams.subject}
-                            </Badge>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-bold text-lg">
-                              {attempt.score !== null ? `${attempt.score}%` : "-"}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {attempt.correct_answers || 0}/{attempt.total_questions}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{getStatusBadge(attempt.status)}</TableCell>
-                        <TableCell>
-                          {attempt.start_time
-                            ? format(new Date(attempt.start_time), "dd/MM/yyyy")
-                            : "-"}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleReattempt(attempt.id)}
-                            disabled={attempt.status !== "SUBMITTED" || attempt.can_reattempt}
-                          >
-                            <RotateCcw className="h-4 w-4 mr-1" />
-                            परत परीक्षा
-                          </Button>
-                        </TableCell>
+          {/* Results Tab */}
+          <TabsContent value="results">
+            {/* Filters */}
+            <Card className="mb-6">
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="नाव, शाळा किंवा परीक्षा शोधा..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <Select value={selectedExam} onValueChange={setSelectedExam}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="परीक्षा निवडा" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">सर्व परीक्षा</SelectItem>
+                      {exams.map((exam) => (
+                        <SelectItem key={exam.id} value={exam.id}>
+                          {exam.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="स्थिती निवडा" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">सर्व स्थिती</SelectItem>
+                      <SelectItem value="SUBMITTED">पूर्ण</SelectItem>
+                      <SelectItem value="IN_PROGRESS">चालू</SelectItem>
+                      <SelectItem value="NOT_STARTED">सुरू नाही</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="text-sm text-muted-foreground flex items-center">
+                    एकूण निकाल: {filteredAttempts.length}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Results Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>विद्यार्थी निकाल</CardTitle>
+                <CardDescription>
+                  सर्व परीक्षांचे निकाल एका ठिकाणी
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>विद्यार्थी</TableHead>
+                        <TableHead>वर्ग</TableHead>
+                        <TableHead>शाळा</TableHead>
+                        <TableHead>परीक्षा</TableHead>
+                        <TableHead>गुण</TableHead>
+                        <TableHead>स्थिती</TableHead>
+                        <TableHead>तारीख</TableHead>
+                        <TableHead>कृती</TableHead>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredAttempts.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                            कोणतेही निकाल सापडले नाहीत
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredAttempts.map((attempt) => (
+                          <TableRow key={attempt.id}>
+                            <TableCell className="font-medium">{attempt.student_name}</TableCell>
+                            <TableCell>{attempt.profiles?.standard || "N/A"}</TableCell>
+                            <TableCell>{attempt.profiles?.school_name || "N/A"}</TableCell>
+                            <TableCell>
+                              <div>
+                                <div className="font-medium">{attempt.exams.title}</div>
+                                <Badge variant="outline" className="text-xs">
+                                  {attempt.exams.subject}
+                                </Badge>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <div className="font-bold text-lg">
+                                  {attempt.score !== null ? `${attempt.score}%` : "-"}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {attempt.correct_answers || 0}/{attempt.total_questions}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>{getStatusBadge(attempt.status)}</TableCell>
+                            <TableCell>
+                              {attempt.start_time
+                                ? format(new Date(attempt.start_time), "dd/MM/yyyy")
+                                : "-"}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleReattempt(attempt.id)}
+                                disabled={attempt.status !== "SUBMITTED" || attempt.can_reattempt}
+                              >
+                                <RotateCcw className="h-4 w-4 mr-1" />
+                                परत परीक्षा
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Leaderboard Tab */}
+          <TabsContent value="leaderboard">
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="h-6 w-6 text-yellow-500" />
+                  परीक्षा लीडरबोर्ड
+                </CardTitle>
+                <CardDescription>
+                  निवडलेल्या परीक्षेचे टॉप विद्यार्थी आणि तपशीलवार माहिती
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-6">
+                  <Select value={leaderboardExam} onValueChange={handleLeaderboardExamChange}>
+                    <SelectTrigger className="w-full md:w-80">
+                      <SelectValue placeholder="परीक्षा निवडा" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {exams.map((exam) => (
+                        <SelectItem key={exam.id} value={exam.id}>
+                          {exam.title} ({exam.subject})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {!leaderboardExam ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Trophy className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>लीडरबोर्ड पाहण्यासाठी परीक्षा निवडा</p>
+                  </div>
+                ) : loadingLeaderboard ? (
+                  <div className="flex justify-center py-12">
+                    <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : leaderboard.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <p>या परीक्षेसाठी अद्याप कोणतेही निकाल नाहीत</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-16">क्रमांक</TableHead>
+                          <TableHead>विद्यार्थ्याचे नाव</TableHead>
+                          <TableHead>वर्ग</TableHead>
+                          <TableHead>शाळा</TableHead>
+                          <TableHead className="text-center">गुण</TableHead>
+                          <TableHead className="text-center">बरोबर</TableHead>
+                          <TableHead className="text-center">चुकीची</TableHead>
+                          <TableHead className="text-center">वेळ (मिनिटे)</TableHead>
+                          <TableHead>पूर्ण केलेली तारीख</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {leaderboard.map((entry) => (
+                          <TableRow 
+                            key={entry.rank} 
+                            className={
+                              entry.rank === 1 ? "bg-yellow-500/10" :
+                              entry.rank === 2 ? "bg-gray-400/10" :
+                              entry.rank === 3 ? "bg-orange-600/10" : ""
+                            }
+                          >
+                            <TableCell>
+                              <div className="flex items-center justify-center">
+                                {getRankIcon(entry.rank)}
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-medium">{entry.student_name}</TableCell>
+                            <TableCell>{entry.standard || "N/A"}</TableCell>
+                            <TableCell>{entry.school_name || "N/A"}</TableCell>
+                            <TableCell className="text-center">
+                              <span className={`font-bold text-lg ${
+                                entry.score >= 80 ? "text-green-600" :
+                                entry.score >= 60 ? "text-yellow-600" :
+                                entry.score >= 40 ? "text-orange-600" : "text-red-600"
+                              }`}>
+                                {entry.score}%
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge className="bg-green-500">{entry.correct_answers}</Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge variant="destructive">{entry.wrong_answers}</Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {entry.time_taken !== null ? `${entry.time_taken} मि.` : "-"}
+                            </TableCell>
+                            <TableCell>
+                              {entry.end_time 
+                                ? format(new Date(entry.end_time), "dd/MM/yyyy HH:mm")
+                                : "-"
+                              }
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+
+                    {/* Summary Statistics */}
+                    {leaderboard.length > 0 && (
+                      <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <Card>
+                          <CardContent className="pt-4 pb-4">
+                            <div className="text-center">
+                              <p className="text-sm text-muted-foreground">एकूण सहभागी</p>
+                              <p className="text-2xl font-bold text-primary">{leaderboard.length}</p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card>
+                          <CardContent className="pt-4 pb-4">
+                            <div className="text-center">
+                              <p className="text-sm text-muted-foreground">सर्वोच्च गुण</p>
+                              <p className="text-2xl font-bold text-green-600">
+                                {Math.max(...leaderboard.map(e => e.score))}%
+                              </p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card>
+                          <CardContent className="pt-4 pb-4">
+                            <div className="text-center">
+                              <p className="text-sm text-muted-foreground">सरासरी गुण</p>
+                              <p className="text-2xl font-bold text-blue-600">
+                                {Math.round(leaderboard.reduce((acc, e) => acc + e.score, 0) / leaderboard.length)}%
+                              </p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card>
+                          <CardContent className="pt-4 pb-4">
+                            <div className="text-center">
+                              <p className="text-sm text-muted-foreground">किमान गुण</p>
+                              <p className="text-2xl font-bold text-orange-600">
+                                {Math.min(...leaderboard.map(e => e.score))}%
+                              </p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
