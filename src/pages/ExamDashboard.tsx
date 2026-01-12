@@ -433,8 +433,6 @@ const ExamDashboard = () => {
             <TabsTrigger value="scores">माझे गुण</TabsTrigger>
             <TabsTrigger value="leaderboard">लीडरबोर्ड</TabsTrigger>
           </TabsList>
-
-          {/* Upcoming Exams Tab */}
           <TabsContent value="upcoming" className="mt-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {eligibleExams.length === 0 ? (
@@ -458,9 +456,11 @@ const ExamDashboard = () => {
                     canTake={canTakeExam(exam)}
                     onStart={() => handleStartExam(exam.id)}
                     onResume={() => handleResumeExam(exam.id)}
+                    studentStandard={studentProfile?.standard || null}
                   />
                 ))
               )}
+              
             </div>
           </TabsContent>
 
