@@ -66,6 +66,7 @@ const ExamRules = lazyWithRetry(() => import("./pages/ExamRules"));
 const ExamAnalytics = lazyWithRetry(() => import("./pages/ExamAnalytics"));
 const AdminExamDashboard = lazyWithRetry(() => import("./pages/AdminExamDashboard"));
 const AdminExamQuestions = lazyWithRetry(() => import("./pages/AdminExamQuestions"));
+const AdminExamReports = lazyWithRetry(() => import("./pages/AdminExamReports"));
 const AddService = lazyWithRetry(() => import("./pages/AddService"));
 const ManageCategories = lazyWithRetry(() => import("./pages/ManageCategories"));
 const ServicesAdminDashboard = lazyWithRetry(() => import("./pages/ServicesAdminDashboard"));
@@ -166,6 +167,7 @@ const App = () => (
                   <Route path="/exam/:examId/results/:attemptId" element={<ExamResults />} />
                   <Route path="/admin/exam-management" element={<AdminExamDashboard />} />
                   <Route path="/admin/exam/:examId/questions" element={<AdminExamQuestions />} />
+                  <Route path="/admin/exam-reports" element={<AdminExamReports />} />
                   <Route
                     path={CUSTOM_ROUTES.NOT_FOUND}
                     element={<NotFound />}
