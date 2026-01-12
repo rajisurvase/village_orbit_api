@@ -2,75 +2,59 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Routes, Route } from "react-router-dom";
-import { lazy, Suspense, ComponentType } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import { CUSTOM_ROUTES } from "./custom-routes";
 import Layout from "./components/Layout";
 import SectionSkeleton from "./components/ui/skeletons/SectionSkeleton";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { UpdateNotification } from "@/components/UpdateNotification";
 
-// Helper function to retry failed dynamic imports (handles cache issues)
-const lazyWithRetry = <T extends ComponentType<any>>(
-  componentImport: () => Promise<{ default: T }>
-): React.LazyExoticComponent<T> =>
-  lazy(async () => {
-    try {
-      return await componentImport();
-    } catch (error) {
-      // If import fails, try to reload the page to get fresh assets
-      console.warn('Dynamic import failed, retrying...', error);
-      // Clear cache and retry once
-      return componentImport().catch(() => {
-        // If still failing, force reload
-        window.location.reload();
-        return { default: (() => null) as unknown as T };
-      });
-    }
-  });
+// Lazy load pages for code splitting
+const Index = lazy(() => import("./pages/Index"));
+const Auth = lazy(() => import("./pages/Auth"));
+const Admin = lazy(() => import("./pages/Admin"));
+const VillageManagement = lazy(() => import("./pages/VillageManagement"));
+const JsonConfigManager = lazy(() => import("./pages/JsonConfigManager"));
+const ContactMessagesAdmin = lazy(() => import("./pages/ContactMessagesAdmin"));
+const UserManagementDashboard = lazy(() => import("./pages/UserManagementDashboard"));
+const UserDashboard = lazy(() => import("./pages/UserDashboard"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+const ServicePage = lazy(() => import("./pages/ServicePage"));
+const PanchayatPage = lazy(() => import("./pages/PanchayatPage"));
+const ContactUsPage = lazy(() => import("./pages/ContactUsPage"));
+//const ProudPeoplePage = lazy(() => import("@/pages/ProudPeoplePage"));
+const DocumentsModel = lazy(() => import("./pages/DocumentsModel"));
 
-// Lazy load pages for code splitting with retry mechanism
-const Index = lazyWithRetry(() => import("./pages/Index"));
-const Auth = lazyWithRetry(() => import("./pages/Auth"));
-const Admin = lazyWithRetry(() => import("./pages/Admin"));
-const VillageManagement = lazyWithRetry(() => import("./pages/VillageManagement"));
-const JsonConfigManager = lazyWithRetry(() => import("./pages/JsonConfigManager"));
-const ContactMessagesAdmin = lazyWithRetry(() => import("./pages/ContactMessagesAdmin"));
-const UserManagementDashboard = lazyWithRetry(() => import("./pages/UserManagementDashboard"));
-const UserDashboard = lazyWithRetry(() => import("./pages/UserDashboard"));
-const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
-const AboutPage = lazyWithRetry(() => import("./pages/AboutPage"));
-const ServicePage = lazyWithRetry(() => import("./pages/ServicePage"));
-const PanchayatPage = lazyWithRetry(() => import("./pages/PanchayatPage"));
-const ContactUsPage = lazyWithRetry(() => import("./pages/ContactUsPage"));
-const DocumentsModel = lazyWithRetry(() => import("./pages/DocumentsModel"));
 
-const SchemePage = lazyWithRetry(() => import("./pages/SchemePage"));
-const GovtSchemesPage = lazyWithRetry(() => import("./pages/GovtSchemesPage"));
-const DevelopmentPage = lazyWithRetry(() => import("./pages/DevelopmentPage"));
-const MediaGalleryPage = lazyWithRetry(() => import("./pages/MediaGalleryPage"));
-const AnnouncementsPage = lazyWithRetry(() => import("./pages/AnnouncementsPage"));
-const NoticesPage = lazyWithRetry(() => import("./pages/NoticesPage"));
-const MarketPricesPage = lazyWithRetry(() => import("./pages/MarketPricesPage"));
-const TaxPaymentPage = lazyWithRetry(() => import("./pages/TaxPaymentPage"));
-const TaxPaymentReceipt = lazyWithRetry(() => import("./pages/TaxPaymentReceipt"));
-const ForumPage = lazyWithRetry(() => import("./pages/ForumPage"));
-const AdminDashboard = lazyWithRetry(() => import("./pages/AdminDashboard"));
-const BuySellPage = lazyWithRetry(() => import("./pages/BuySellPage"));
-const AdminMarketplaceDashboard = lazyWithRetry(() => import("./pages/AdminMarketplaceDashboard"));
-const SellerDashboard = lazyWithRetry(() => import("./pages/SellerDashboard"));
-const ExamDashboard = lazyWithRetry(() => import("./pages/ExamDashboard"));
-const ExamTake = lazyWithRetry(() => import("./pages/ExamTake"));
-const ExamResults = lazyWithRetry(() => import("./pages/ExamResults"));
-const ExamRules = lazyWithRetry(() => import("./pages/ExamRules"));
-const ExamAnalytics = lazyWithRetry(() => import("./pages/ExamAnalytics"));
-const AdminExamDashboard = lazyWithRetry(() => import("./pages/AdminExamDashboard"));
-const AdminExamQuestions = lazyWithRetry(() => import("./pages/AdminExamQuestions"));
-const AdminExamReports = lazyWithRetry(() => import("./pages/AdminExamReports"));
-const AddService = lazyWithRetry(() => import("./pages/AddService"));
-const ManageCategories = lazyWithRetry(() => import("./pages/ManageCategories"));
-const ServicesAdminDashboard = lazyWithRetry(() => import("./pages/ServicesAdminDashboard"));
-const NavigationConfigEditor = lazyWithRetry(() => import("./pages/NavigationConfigEditor"));
+
+const SchemePage = lazy(() => import("./pages/SchemePage"));
+const GovtSchemesPage = lazy(() => import("./pages/GovtSchemesPage"));
+const DevelopmentPage = lazy(() => import("./pages/DevelopmentPage"));
+const MediaGalleryPage = lazy(() => import("./pages/MediaGalleryPage"));
+//const GalleryPage = lazy(() => import("./pages/GalleryPage"));
+const AnnouncementsPage = lazy(() => import("./pages/AnnouncementsPage"));
+const NoticesPage = lazy(() => import("./pages/NoticesPage"));
+const MarketPricesPage = lazy(() => import("./pages/MarketPricesPage"));
+const TaxPaymentPage = lazy(() => import("./pages/TaxPaymentPage"));
+const TaxPaymentReceipt = lazy(() => import("./pages/TaxPaymentReceipt"));
+const ForumPage = lazy(() => import("./pages/ForumPage"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const BuySellPage = lazy(() => import("./pages/BuySellPage"));
+const AdminMarketplaceDashboard = lazy(() => import("./pages/AdminMarketplaceDashboard"));
+const SellerDashboard = lazy(() => import("./pages/SellerDashboard"));
+const ExamDashboard = lazy(() => import("./pages/ExamDashboard"));
+const ExamTake = lazy(() => import("./pages/ExamTake"));
+const ExamResults = lazy(() => import("./pages/ExamResults"));
+const ExamRules = lazy(() => import("./pages/ExamRules"));
+const ExamAnalytics = lazy(() => import("./pages/ExamAnalytics"));
+const AdminExamDashboard = lazy(() => import("./pages/AdminExamDashboard"));
+const AdminExamQuestions = lazy(() => import("./pages/AdminExamQuestions"));
+const AddService = lazy(() => import("./pages/AddService"));
+const ManageCategories = lazy(() => import("./pages/ManageCategories"));
+const ServicesAdminDashboard = lazy(() => import("./pages/ServicesAdminDashboard"));
+const NavigationConfigEditor = lazy(() => import("./pages/NavigationConfigEditor"));
 
 const queryClient = new QueryClient();
 
@@ -81,7 +65,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <UpdateNotification />
-        
+        <BrowserRouter>
         <Suspense fallback={<SectionSkeleton />}>
           <Routes>
             {/* Auth routes without layout */}
@@ -167,7 +151,6 @@ const App = () => (
                   <Route path="/exam/:examId/results/:attemptId" element={<ExamResults />} />
                   <Route path="/admin/exam-management" element={<AdminExamDashboard />} />
                   <Route path="/admin/exam/:examId/questions" element={<AdminExamQuestions />} />
-                  <Route path="/admin/exam-reports" element={<AdminExamReports />} />
                   <Route
                     path={CUSTOM_ROUTES.NOT_FOUND}
                     element={<NotFound />}
@@ -196,6 +179,7 @@ const App = () => (
           />
           </Routes>
          </Suspense>
+        </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
