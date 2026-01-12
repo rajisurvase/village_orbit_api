@@ -240,8 +240,8 @@ const ExamTake = () => {
         .single();
 
       if (existingAttempt) {
-        // Check if submitted and cannot reattempt
-        if (existingAttempt.status === "SUBMITTED" && !existingAttempt.can_reattempt) {
+        // STRICT: If submitted, never allow starting again
+        if (existingAttempt.status === "SUBMITTED") {
           toast({
             title: "परीक्षा आधीच दिली आहे",
             description: "तुम्ही ही परीक्षा आधीच पूर्ण केली आहे",

@@ -79,17 +79,17 @@ export const useExamAttempt = (): UseExamAttemptReturn => {
       if (fetchError) throw fetchError;
 
       if (existingAttempt) {
-        // If completed and can't reattempt, return null
-        if (existingAttempt.status === "SUBMITTED" && !existingAttempt.can_reattempt) {
+        // STRICT: If already submitted, do not allow starting again
+        if (existingAttempt.status === "SUBMITTED") {
           toast({
             title: "परीक्षा पूर्ण झाली",
-            description: "तुम्ही ही परीक्षा आधीच दिली आहे",
+            description: "तुम्ही ही परीक्षा आधीच दिली आहे" ,
             variant: "destructive"
           });
           return null;
         }
-        
-        // Return existing attempt
+
+        // Return existing attempt for resume
         return existingAttempt.id;
       }
 
