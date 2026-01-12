@@ -66,6 +66,7 @@ const App = () => (
         <Sonner />
         <UpdateNotification />
         <BrowserRouter>
+        
         <Suspense fallback={<SectionSkeleton />}>
           <Routes>
             {/* Auth routes without layout */}
@@ -90,7 +91,7 @@ const App = () => (
                     path={CUSTOM_ROUTES.CONTACT_US}
                     element={<ContactUsPage />}
                   />
-               
+
 
                   <Route path={CUSTOM_ROUTES.SCHEME} element={<SchemePage />} />
                   <Route path={CUSTOM_ROUTES.GOVT_SCHEMES} element={<GovtSchemesPage />} />
