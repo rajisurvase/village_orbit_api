@@ -448,17 +448,30 @@ const ExamDashboard = () => {
                   </CardContent>
                 </Card>
               ) : (
-                eligibleExams.map((exam) => (
-                  <StudentExamCard
-                    key={exam.id}
-                    exam={exam}
-                    status={getExamStatus(exam)}
-                    canTake={canTakeExam(exam)}
-                    onStart={() => handleStartExam(exam.id)}
-                    onResume={() => handleResumeExam(exam.id)}
-                    studentStandard={studentProfile?.standard || null}
-                  />
-                ))
+                eligibleExams.map((exam) => {
+                  // Find attempt info for this exam
+                  const submittedAttempt = pastAttempts.find(a => a.exam_id === exam.id && a.status === "SUBMITTED");
+                  const inProgressAttempt = inProgressAttempts.find(a => a.exam_id === exam.id);
+                  
+                  const attemptInfo = submittedAttempt 
+                    ? { id: submittedAttempt.id, status: "SUBMITTED", score: submittedAttempt.score ?? undefined }
+                    : inProgressAttempt 
+                    ? { id: inProgressAttempt.id, status: inProgressAttempt.status }
+                    : undefined;
+                  
+                  return (
+                    <StudentExamCard
+                      key={exam.id}
+                      exam={exam}
+                      attemptInfo={attemptInfo}
+                      status={getExamStatus(exam)}
+                      canTake={canTakeExam(exam)}
+                      onStart={() => handleStartExam(exam.id)}
+                      onResume={() => handleResumeExam(exam.id)}
+                      studentStandard={studentProfile?.standard || null}
+                    />
+                  );
+                })
               )}
               
             </div>
