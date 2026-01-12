@@ -57,9 +57,12 @@ const StudentExamCard = ({
     return colors[subject] || "bg-gray-500";
   };
 
+  // Check if attempt is completed (has score OR status is SUBMITTED)
+  const isAttemptCompleted = attemptInfo?.score !== undefined || attemptInfo?.status === "SUBMITTED";
+
   const getStatusBadge = () => {
-    // Show submitted badge if attempt has score or is submitted
-    if (attemptInfo?.status === "SUBMITTED" || attemptInfo?.score !== undefined || status === "completed") {
+    // PRIORITY 1: Check if attempt has score or is submitted - this means completed
+    if (isAttemptCompleted || status === "completed") {
       return (
         <Badge className="bg-green-700">
           <CheckCircle2 className="h-3 w-3 mr-1" />
@@ -68,7 +71,7 @@ const StudentExamCard = ({
       );
     }
     
-    // Show in-progress badge
+    // PRIORITY 2: Show in-progress badge only if NOT completed
     if (attemptInfo?.status === "IN_PROGRESS" || status === "resume") {
       return (
         <Badge className="bg-orange-500">
@@ -107,16 +110,19 @@ const StudentExamCard = ({
   };
 
   const canTakeExam = () => {
+    // FIRST: Check user attempt status - if completed, never allow
+    if (isAttemptCompleted) {
+      return false;
+    }
+
     const now = new Date();
     const scheduled = new Date(exam.scheduled_at);
     const ends = new Date(exam.ends_at);
 
     const isWithinTimeWindow = now >= scheduled && now <= ends;
     const isStatusValid = exam.status === "scheduled" || exam.status === "active";
-    // Check both status and score for completion
-    const hasNotCompleted = !attemptInfo || (attemptInfo.status !== "SUBMITTED" && attemptInfo.score === undefined);
 
-    return isWithinTimeWindow && isStatusValid && isEligible() && hasNotCompleted;
+    return isWithinTimeWindow && isStatusValid && isEligible();
   };
 
   const renderActionButton = () => {
@@ -131,6 +137,17 @@ const StudentExamCard = ({
       else if (onResumeExam && attemptInfo) onResumeExam(exam.id, attemptInfo.id);
     };
 
+    // PRIORITY 1: Check user attempt completion FIRST (score or SUBMITTED status)
+    if (isAttemptCompleted || status === "completed") {
+      return (
+        <Button className="w-full mt-4" variant="secondary" disabled>
+          <CheckCircle2 className="h-4 w-4 mr-2" />
+          पूर्ण झाली {attemptInfo?.score !== undefined ? `(${attemptInfo.score}%)` : ""}
+        </Button>
+      );
+    }
+
+    // PRIORITY 2: Check eligibility
     if (!isEligible()) {
       return (
         <Button className="w-full mt-4" variant="outline" disabled>
@@ -140,17 +157,8 @@ const StudentExamCard = ({
       );
     }
 
-    // Handle completed status (SUBMITTED or has score)
-    if (status === "completed" || attemptInfo?.status === "SUBMITTED" || attemptInfo?.score !== undefined) {
-      return (
-        <Button className="w-full mt-4" variant="secondary" disabled>
-          <CheckCircle2 className="h-4 w-4 mr-2" />
-          पूर्ण झाली {attemptInfo?.score !== undefined ? `(${attemptInfo.score}%)` : ""}
-        </Button>
-      );
-    }
-
-    if (status === "resume" || attemptInfo?.status === "IN_PROGRESS") {
+    // PRIORITY 3: Check for in-progress attempt
+    if (attemptInfo?.status === "IN_PROGRESS" || status === "resume") {
       const canResume = canTake !== undefined ? canTake : canTakeExam();
       if (canResume) {
         return (
