@@ -2,7 +2,7 @@ import { useState, useContext } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { MessageSquare, X } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import { useFooterVisibility } from '@/hooks/useFooterVisibility';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -94,105 +94,152 @@ const FeedbackForm = () => {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:scale-110 transition-all duration-500 z-40"
+          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:scale-110 transition-all duration-500 z-40 touch-target"
           style={{ backgroundColor: bgColor }}
           size="icon"
+          aria-label="Open feedback form"
         >
           <MessageSquare className="h-6 w-6 text-white" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle className="text-2xl">Share Your Feedback</DialogTitle>
-          <DialogDescription>
+      <DialogContent 
+        className="w-[calc(100%-2rem)] max-w-[500px] mx-auto p-4 sm:p-6 max-h-[90vh] overflow-y-auto rounded-lg"
+      >
+        <DialogHeader className="space-y-2 pb-2">
+          <DialogTitle className="text-xl sm:text-2xl font-semibold text-foreground">
+            Share Your Feedback
+          </DialogTitle>
+          <DialogDescription className="text-sm sm:text-base text-muted-foreground">
             We value your input! Share your feedback, suggestions, or complaints to help us improve.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <Label htmlFor="name">Name *</Label>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
+          {/* Name Field */}
+          <div className="space-y-1.5">
+            <Label htmlFor="name" className="text-sm sm:text-base font-medium">
+              Name <span className="text-destructive">*</span>
+            </Label>
             <Input
               id="name"
               placeholder="Your full name"
+              className="w-full h-10 sm:h-11 text-sm sm:text-base"
               {...register('name')}
               aria-invalid={errors.name ? 'true' : 'false'}
             />
             {errors.name && (
-              <p className="text-sm text-destructive mt-1">{errors.name.message}</p>
+              <p className="text-xs sm:text-sm text-destructive">{errors.name.message}</p>
             )}
           </div>
 
-          <div>
-            <Label htmlFor="mobile">Mobile Number *</Label>
+          {/* Mobile Field */}
+          <div className="space-y-1.5">
+            <Label htmlFor="mobile" className="text-sm sm:text-base font-medium">
+              Mobile Number <span className="text-destructive">*</span>
+            </Label>
             <Input
               id="mobile"
               placeholder="10-digit mobile number"
               maxLength={10}
+              inputMode="numeric"
+              className="w-full h-10 sm:h-11 text-sm sm:text-base"
               {...register('mobile')}
               aria-invalid={errors.mobile ? 'true' : 'false'}
             />
             {errors.mobile && (
-              <p className="text-sm text-destructive mt-1">{errors.mobile.message}</p>
+              <p className="text-xs sm:text-sm text-destructive">{errors.mobile.message}</p>
             )}
           </div>
 
-          <div>
-            <Label>Type *</Label>
+          {/* Type Selection */}
+          <div className="space-y-2">
+            <Label className="text-sm sm:text-base font-medium">
+              Type <span className="text-destructive">*</span>
+            </Label>
             <RadioGroup
               value={selectedType}
               onValueChange={(value) => setValue('type', value as any)}
-              className="flex gap-4 mt-2"
+              className="flex flex-wrap gap-3 sm:gap-4"
             >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="feedback" id="feedback" />
-                <Label htmlFor="feedback" className="cursor-pointer font-normal">
+              <div className="flex items-center space-x-2 min-w-fit">
+                <RadioGroupItem 
+                  value="feedback" 
+                  id="feedback" 
+                  className="h-4 w-4 sm:h-5 sm:w-5"
+                />
+                <Label 
+                  htmlFor="feedback" 
+                  className="cursor-pointer font-normal text-sm sm:text-base whitespace-nowrap"
+                >
                   Feedback
                 </Label>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="suggestion" id="suggestion" />
-                <Label htmlFor="suggestion" className="cursor-pointer font-normal">
+              <div className="flex items-center space-x-2 min-w-fit">
+                <RadioGroupItem 
+                  value="suggestion" 
+                  id="suggestion"
+                  className="h-4 w-4 sm:h-5 sm:w-5"
+                />
+                <Label 
+                  htmlFor="suggestion" 
+                  className="cursor-pointer font-normal text-sm sm:text-base whitespace-nowrap"
+                >
                   Suggestion
                 </Label>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="complaint" id="complaint" />
-                <Label htmlFor="complaint" className="cursor-pointer font-normal">
+              <div className="flex items-center space-x-2 min-w-fit">
+                <RadioGroupItem 
+                  value="complaint" 
+                  id="complaint"
+                  className="h-4 w-4 sm:h-5 sm:w-5"
+                />
+                <Label 
+                  htmlFor="complaint" 
+                  className="cursor-pointer font-normal text-sm sm:text-base whitespace-nowrap"
+                >
                   Complaint
                 </Label>
               </div>
             </RadioGroup>
             {errors.type && (
-              <p className="text-sm text-destructive mt-1">{errors.type.message}</p>
+              <p className="text-xs sm:text-sm text-destructive">{errors.type.message}</p>
             )}
           </div>
 
-          <div>
-            <Label htmlFor="message">Message *</Label>
+          {/* Message Field */}
+          <div className="space-y-1.5">
+            <Label htmlFor="message" className="text-sm sm:text-base font-medium">
+              Message <span className="text-destructive">*</span>
+            </Label>
             <Textarea
               id="message"
               placeholder="Share your thoughts in detail..."
-              rows={5}
+              rows={4}
               maxLength={1000}
+              className="w-full min-h-[100px] sm:min-h-[120px] text-sm sm:text-base resize-y"
               {...register('message')}
               aria-invalid={errors.message ? 'true' : 'false'}
             />
             {errors.message && (
-              <p className="text-sm text-destructive mt-1">{errors.message.message}</p>
+              <p className="text-xs sm:text-sm text-destructive">{errors.message.message}</p>
             )}
           </div>
 
-          <div className="flex gap-3 pt-4">
+          {/* Buttons */}
+          <div className="flex flex-col-reverse sm:flex-row gap-3 pt-3 sm:pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="flex-1"
+              className="w-full sm:flex-1 h-10 sm:h-11 text-sm sm:text-base"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting} className="flex-1">
+            <Button 
+              type="submit" 
+              disabled={isSubmitting} 
+              className="w-full sm:flex-1 h-10 sm:h-11 text-sm sm:text-base"
+            >
               {isSubmitting ? 'Submitting...' : 'Submit'}
             </Button>
           </div>
