@@ -23,6 +23,20 @@ const MediaGalleryPage = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
 
+
+
+// Add here
+const getYouTubeVideoId = (url: string) => {
+  let match = url.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/);
+  if (match) return match[1];
+  match = url.match(/[?&]v=([a-zA-Z0-9_-]+)/);
+  if (match) return match[1];
+  match = url.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
+  if (match) return match[1];
+  return url.split("/").pop()?.split("?")[0] || "";
+};
+
+
   usePageSEO({
     title: `${activeTab === "images"
       ? t("mediaGallery.seoImageTitle")
@@ -75,11 +89,11 @@ const MediaGalleryPage = () => {
   };
 
   // Get YouTube embed URL safely
-  const getYouTubeEmbedUrl = (url: string) => {
-    if (url.includes("embed")) return url;
-    const idMatch = url.match(/(?:v=|youtu\.be\/)([^&]+)/);
-    return idMatch ? `https://www.youtube.com/embed/${idMatch[1]}` : url;
-  };
+const getYouTubeEmbedUrl = (url: string) => {
+  const videoId = getYouTubeVideoId(url);
+  return `https://www.youtube.com/embed/${videoId}`;
+};
+
 
   if (loading || !config) return <SectionSkeleton />;
 
@@ -200,16 +214,19 @@ const MediaGalleryPage = () => {
                   >
                     <CardContent className="p-0">
                       <div className="relative aspect-video bg-muted">
-                        <img
-                          src={`https://img.youtube.com/vi/${video.youtubeUrl.split("/").pop()}/hqdefault.jpg`}
-                          alt={video.title}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                          <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center">
-                            <Play className="h-8 w-8 text-primary-foreground ml-1" />
-                          </div>
-                        </div>
+                    <img
+  src={`https://img.youtube.com/vi/${getYouTubeVideoId(video.youtubeUrl)}/hqdefault.jpg`}
+  alt={video.title}
+  className="w-full h-full object-cover"
+/>
+
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+  <img
+    src="public/youtube icon.png"
+    alt="Play Video"
+    className="w-16 h-16 text-white"
+  />
+</div>
                       </div>
                       <div className="p-4">
                         <h3 className="font-semibold text-foreground line-clamp-2 mb-1">
