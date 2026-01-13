@@ -156,23 +156,23 @@ const ExamDashboard = () => {
       if (examsError) throw examsError;
       
       // Filter exams based on student's standard eligibility
-      const eligible = (examsData || []).filter(exam => {
-        if (!exam.from_standard && !exam.to_standard) {
-          return true; // No restrictions
-        }
+      // const eligible = (examsData || []).filter(exam => {
+      //   if (!exam.from_standard && !exam.to_standard) {
+      //     return true; // No restrictions
+      //   }
         
-        if (!studentStandard) {
-          return false; // Student has no standard set
-        }
+      //   if (!studentStandard) {
+      //     return false; // Student has no standard set
+      //   }
         
-        const studentStd = parseInt(studentStandard.replace(/[^0-9]/g, '')) || 0;
-        const fromStd = exam.from_standard ? parseInt(exam.from_standard.replace(/[^0-9]/g, '')) || 0 : 0;
-        const toStd = exam.to_standard ? parseInt(exam.to_standard.replace(/[^0-9]/g, '')) || 12 : 12;
+      //   const studentStd = parseInt(studentStandard.replace(/[^0-9]/g, '')) || 0;
+      //   const fromStd = exam.from_standard ? parseInt(exam.from_standard.replace(/[^0-9]/g, '')) || 0 : 0;
+      //   const toStd = exam.to_standard ? parseInt(exam.to_standard.replace(/[^0-9]/g, '')) || 12 : 12;
         
-        return studentStd >= fromStd && studentStd <= toStd;
-      });
+      //   return studentStd >= fromStd && studentStd <= toStd;
+      // });
       
-      setEligibleExams(eligible);
+      setEligibleExams(examsData);
 
       // Fetch all attempts for this user
       const { data: attemptsData, error: attemptsError } = await supabase
