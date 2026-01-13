@@ -133,10 +133,13 @@ const Header: React.FC = () => {
         </a>
 
         {/* Email */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <a 
+          href={`mailto:${config.contact.office.email}`}
+          className="flex items-center justify-center gap-1.5 sm:gap-2 hover:opacity-80 transition-opacity"
+        >
           <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
           <span className="truncate max-w-[150px] sm:max-w-none">{config.contact.office.email}</span>
-        </div>
+        </a>
       </div>
 
       {/* Social Icons */}
