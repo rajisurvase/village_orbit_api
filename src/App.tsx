@@ -71,13 +71,14 @@ const App = () => (
         <Suspense fallback={<SectionSkeleton />}>
           <Routes>
             {/* Auth routes without layout */}
-            <Route path={CUSTOM_ROUTES.AUTH} element={<Auth />} />
+            
           {/* Public routes with full layout and village context */}
           <Route
             path="*"
             element={
               <Layout>
                 <Routes>
+                  <Route path={CUSTOM_ROUTES.AUTH} element={<Auth />} />
                   <Route path={CUSTOM_ROUTES.HOME} element={<Index />} />
                   <Route path={CUSTOM_ROUTES.ABOUT} element={<AboutPage />} />
                   <Route

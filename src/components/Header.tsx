@@ -74,6 +74,7 @@ const Header: React.FC = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setIsMenuOpen(false);
+    navigate("/");
   };
 
   const navigationData = useMemo(() => {

@@ -1,7 +1,21 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, BookOpen, Play, CheckCircle2, Lock, AlertTriangle } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  BookOpen,
+  Play,
+  CheckCircle2,
+  Lock,
+  AlertTriangle,
+} from "lucide-react";
 import { format, isPast, isFuture } from "date-fns";
 
 interface Exam {
@@ -34,6 +48,7 @@ interface StudentExamCardProps {
   onResumeExam?: (examId: string, attemptId: string) => void;
   onStart?: () => void;
   onResume?: () => void;
+  isRestricted?: boolean;
 }
 
 const StudentExamCard = ({
@@ -46,6 +61,7 @@ const StudentExamCard = ({
   onResumeExam,
   onStart,
   onResume,
+  isRestricted,
 }: StudentExamCardProps) => {
   const getSubjectColor = (subject: string) => {
     const colors: Record<string, string> = {
@@ -58,7 +74,8 @@ const StudentExamCard = ({
   };
 
   // Check if attempt is completed (has score OR status is SUBMITTED)
-  const isAttemptCompleted = attemptInfo?.score !== undefined || attemptInfo?.status === "SUBMITTED";
+  const isAttemptCompleted =
+    attemptInfo?.score !== undefined || attemptInfo?.status === "SUBMITTED";
 
   const getStatusBadge = () => {
     // PRIORITY 1: Check if attempt has score or is submitted - this means completed
@@ -70,7 +87,7 @@ const StudentExamCard = ({
         </Badge>
       );
     }
-    
+
     // PRIORITY 2: Show in-progress badge only if NOT completed
     if (attemptInfo?.status === "IN_PROGRESS" || status === "resume") {
       return (
@@ -80,7 +97,7 @@ const StudentExamCard = ({
         </Badge>
       );
     }
-    
+
     const scheduled = new Date(exam.scheduled_at);
     const ends = new Date(exam.ends_at);
 
@@ -120,7 +137,8 @@ const StudentExamCard = ({
     const ends = new Date(exam.ends_at);
 
     const isWithinTimeWindow = now >= scheduled && now <= ends;
-    const isStatusValid = exam.status === "scheduled" || exam.status === "active";
+    const isStatusValid =
+      exam.status === "scheduled" || exam.status === "active";
 
     return isWithinTimeWindow && isStatusValid && isEligible();
   };
@@ -131,18 +149,29 @@ const StudentExamCard = ({
       if (onStart) onStart();
       else if (onStartExam) onStartExam(exam.id);
     };
-    
+
     const handleResume = () => {
       if (onResume) onResume();
-      else if (onResumeExam && attemptInfo) onResumeExam(exam.id, attemptInfo.id);
+      else if (onResumeExam && attemptInfo)
+        onResumeExam(exam.id, attemptInfo.id);
     };
+
+    if (isRestricted) {
+      return (
+        <Button className="w-full mt-4" variant="outline" disabled>
+          <Lock className="h-4 w-4 mr-2" />
+          तुमच्या वर्गासाठी नाही
+        </Button>
+      );
+    }
 
     // PRIORITY 1: Check user attempt completion FIRST (score or SUBMITTED status)
     if (isAttemptCompleted || status === "completed") {
       return (
         <Button className="w-full mt-4" variant="secondary" disabled>
           <CheckCircle2 className="h-4 w-4 mr-2" />
-          पूर्ण झाली {attemptInfo?.score !== undefined ? `(${attemptInfo.score}%)` : ""}
+          पूर्ण झाली{" "}
+          {attemptInfo?.score !== undefined ? `(${attemptInfo.score}%)` : ""}
         </Button>
       );
     }
@@ -221,7 +250,9 @@ const StudentExamCard = ({
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader>
         <div className="flex justify-between items-start mb-2">
-          <Badge className={getSubjectColor(exam.subject)}>{exam.subject}</Badge>
+          <Badge className={getSubjectColor(exam.subject)}>
+            {exam.subject}
+          </Badge>
           {getStatusBadge()}
         </div>
         <CardTitle className="text-xl">{exam.title}</CardTitle>
