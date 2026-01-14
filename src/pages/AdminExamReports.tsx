@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Search, FileSpreadsheet, RefreshCw, RotateCcw, Trophy, Medal, Award } from "lucide-react";
+import { ArrowLeft, Search, FileSpreadsheet, RefreshCw, RotateCcw, Trophy, Medal, Award, FileDown, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import CustomLoader from "@/components/CustomLoader";
 import { format } from "date-fns";
@@ -87,8 +87,47 @@ const AdminExamReports = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardExam, setLeaderboardExam] = useState<string>("");
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const handleDownloadPdf = async (attemptId: string) => {
+    try {
+      setDownloadingPdf(attemptId);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await supabase.functions.invoke('generate-exam-result-pdf', {
+        body: { attemptId },
+        headers: { Authorization: `Bearer ${session?.access_token}` }
+      });
+
+      if (response.error) throw response.error;
+
+      const { html, studentName, examTitle } = response.data;
+      
+      // Open HTML in new window for printing/saving as PDF
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => printWindow.print(), 500);
+      }
+
+      toast({
+        title: "PDF तयार",
+        description: "कृपया Print dialog मधून PDF म्हणून Save करा"
+      });
+    } catch (error: any) {
+      toast({
+        title: "त्रुटी",
+        description: error.message || "PDF तयार करता आला नाही",
+        variant: "destructive"
+      });
+    } finally {
+      setDownloadingPdf(null);
+    }
+  };
 
   useEffect(() => {
     checkAuth();
@@ -527,15 +566,30 @@ const AdminExamReports = () => {
                                 : "-"}
                             </TableCell>
                             <TableCell>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleReattempt(attempt.id)}
-                                disabled={attempt.status !== "SUBMITTED" || attempt.can_reattempt}
-                              >
-                                <RotateCcw className="h-4 w-4 mr-1" />
-                                परत परीक्षा
-                              </Button>
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDownloadPdf(attempt.id)}
+                                  disabled={attempt.status !== "SUBMITTED" || downloadingPdf === attempt.id}
+                                  title="PDF डाउनलोड करा"
+                                >
+                                  {downloadingPdf === attempt.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <FileDown className="h-4 w-4" />
+                                  )}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleReattempt(attempt.id)}
+                                  disabled={attempt.status !== "SUBMITTED" || attempt.can_reattempt}
+                                >
+                                  <RotateCcw className="h-4 w-4 mr-1" />
+                                  परत परीक्षा
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))
