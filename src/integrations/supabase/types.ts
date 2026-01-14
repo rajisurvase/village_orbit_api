@@ -474,6 +474,7 @@ export type Database = {
       }
       exams: {
         Row: {
+          allow_reattempt_till_end_date: boolean
           created_at: string
           created_by: string | null
           description: string | null
@@ -495,6 +496,7 @@ export type Database = {
           village_id: string | null
         }
         Insert: {
+          allow_reattempt_till_end_date?: boolean
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -516,6 +518,7 @@ export type Database = {
           village_id?: string | null
         }
         Update: {
+          allow_reattempt_till_end_date?: boolean
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -1587,6 +1590,10 @@ export type Database = {
         Returns: undefined
       }
       can_attempt_exam: {
+        Args: { p_exam_id: string; p_user_id: string }
+        Returns: boolean
+      }
+      can_student_reattempt_exam: {
         Args: { p_exam_id: string; p_user_id: string }
         Returns: boolean
       }

@@ -43,6 +43,7 @@ interface Exam {
   scheduled_at: string;
   ends_at: string;
   status: string;
+  allow_reattempt_till_end_date: boolean;
 }
 
 interface ExamAttempt {
@@ -240,15 +241,30 @@ const ExamTake = () => {
         .single();
 
       if (existingAttempt) {
-        // STRICT: If submitted, never allow starting again
+        // Check if submitted
         if (existingAttempt.status === "SUBMITTED") {
-          toast({
-            title: "परीक्षा आधीच दिली आहे",
-            description: "तुम्ही ही परीक्षा आधीच पूर्ण केली आहे",
-            variant: "destructive"
-          });
-          navigate("/exam");
-          return;
+          // Check if reattempt is allowed via exam setting
+          const allowReattempt = examData.allow_reattempt_till_end_date === true;
+          const canReattemptViaAdmin = existingAttempt.can_reattempt === true;
+          
+          if (!allowReattempt && !canReattemptViaAdmin) {
+            toast({
+              title: "परीक्षा आधीच दिली आहे",
+              description: "तुम्ही ही परीक्षा आधीच पूर्ण केली आहे",
+              variant: "destructive"
+            });
+            navigate("/exam");
+            return;
+          }
+          
+          // Allow reattempt - start fresh attempt
+          if (allowReattempt || canReattemptViaAdmin) {
+            // Create new attempt for reattempt
+            await loadQuestions(examData.shuffle_questions, examData.total_questions);
+            setTimeRemaining(examData.duration_minutes * 60);
+            setLoading(false);
+            return;
+          }
         }
 
         // Resume existing attempt

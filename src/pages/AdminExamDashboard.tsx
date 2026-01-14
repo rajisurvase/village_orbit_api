@@ -33,7 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Users, FileText, Calendar, BarChart, Shuffle, ClipboardList } from "lucide-react";
+import { Plus, Edit, Trash2, Users, FileText, Calendar, BarChart, Shuffle, ClipboardList, RefreshCw } from "lucide-react";
 import CustomLoader from "@/components/CustomLoader";
 import { format } from "date-fns";
 
@@ -52,6 +52,7 @@ interface Exam {
   to_standard: string | null;
   shuffle_questions: boolean;
   pass_marks: number | null;
+  allow_reattempt_till_end_date: boolean;
 }
 
 const STANDARDS = [
@@ -95,6 +96,7 @@ const AdminExamDashboard = () => {
     from_standard: string;
     to_standard: string;
     shuffle_questions: boolean;
+    allow_reattempt_till_end_date: boolean;
   }>({
     title: "",
     subject: "GK",
@@ -107,7 +109,8 @@ const AdminExamDashboard = () => {
     pass_marks: 40,
     from_standard: "",
     to_standard: "",
-    shuffle_questions: true
+    shuffle_questions: true,
+    allow_reattempt_till_end_date: false
   });
 
   useEffect(() => {
@@ -179,7 +182,8 @@ const AdminExamDashboard = () => {
         pass_marks: formData.pass_marks,
         from_standard: formData.from_standard || null,
         to_standard: formData.to_standard || null,
-        shuffle_questions: formData.shuffle_questions
+        shuffle_questions: formData.shuffle_questions,
+        allow_reattempt_till_end_date: formData.allow_reattempt_till_end_date
       };
       
       if (editingExam) {
@@ -233,7 +237,8 @@ const AdminExamDashboard = () => {
       pass_marks: exam.pass_marks || 40,
       from_standard: exam.from_standard || "",
       to_standard: exam.to_standard || "",
-      shuffle_questions: exam.shuffle_questions ?? true
+      shuffle_questions: exam.shuffle_questions ?? true,
+      allow_reattempt_till_end_date: exam.allow_reattempt_till_end_date ?? false
     });
     setShowDialog(true);
   };
@@ -280,7 +285,8 @@ const AdminExamDashboard = () => {
       pass_marks: 40,
       from_standard: "",
       to_standard: "",
-      shuffle_questions: true
+      shuffle_questions: true,
+      allow_reattempt_till_end_date: false
     });
   };
 
@@ -502,6 +508,26 @@ const AdminExamDashboard = () => {
                       </div>
                     </div>
 
+                    {/* Reattempt Setting */}
+                    <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <RefreshCw className="h-4 w-4 text-muted-foreground" />
+                          <Label htmlFor="allow_reattempt" className="font-medium">
+                            Allow Reattempt Till End Date
+                          </Label>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          If enabled, students can reattempt the exam multiple times until end date. Latest attempt is final.
+                        </p>
+                      </div>
+                      <Switch
+                        id="allow_reattempt"
+                        checked={formData.allow_reattempt_till_end_date}
+                        onCheckedChange={(checked) => setFormData({ ...formData, allow_reattempt_till_end_date: checked })}
+                      />
+                    </div>
+
                     <div>
                       <Label htmlFor="status">Status *</Label>
                       <Select
@@ -611,6 +637,7 @@ const AdminExamDashboard = () => {
                     <TableHead>Questions</TableHead>
                     <TableHead>Duration</TableHead>
                     <TableHead>Shuffle</TableHead>
+                    <TableHead>Reattempt</TableHead>
                     <TableHead>Scheduled</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
@@ -639,6 +666,16 @@ const AdminExamDashboard = () => {
                           <Badge variant="default" className="bg-green-500">Yes</Badge>
                         ) : (
                           <Badge variant="secondary">No</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {exam.allow_reattempt_till_end_date ? (
+                          <Badge variant="default" className="bg-blue-500">
+                            <RefreshCw className="h-3 w-3 mr-1" />
+                            Yes
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">Once</Badge>
                         )}
                       </TableCell>
                       <TableCell className="text-sm">
