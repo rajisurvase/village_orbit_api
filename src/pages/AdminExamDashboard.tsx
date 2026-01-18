@@ -170,6 +170,9 @@ const AdminExamDashboard = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Avoid duplicate submits (extra safety; button is already disabled)
+    if (submitting) return;
+
     // Validate required fields
     if (!formData.title.trim()) {
       toast({
@@ -214,11 +217,37 @@ const AdminExamDashboard = () => {
 
       console.log("[EXAM] Submitting exam data:", examData);
 
+      // IMPORTANT: ensure we always send a fresh access token.
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      let accessToken = session?.access_token ?? null;
+
+      if (!accessToken) {
+        const { data: refreshed } = await supabase.auth.refreshSession();
+        accessToken = refreshed.session?.access_token ?? null;
+      }
+
+      if (!accessToken) {
+        toast({
+          title: "Session expired",
+          description: "Please login again.",
+          variant: "destructive",
+        });
+        navigate("/auth");
+        return;
+      }
+
       console.log("[EXAM] Calling admin-save-exam function...");
 
-      // Let the SDK attach the current user's JWT automatically.
       const { data, error } = await supabase.functions.invoke("admin-save-exam", {
         body: { examId: editingExam?.id ?? null, exam: examData },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          // Avoid any intermediaries/service-worker caching surprises
+          "Cache-Control": "no-store",
+        },
       });
 
       if (error) throw error;
