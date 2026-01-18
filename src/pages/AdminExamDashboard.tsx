@@ -5,7 +5,6 @@ import { usePageSEO } from "@/hooks/usePageSEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -14,61 +13,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Users, FileText, Calendar, BarChart, Shuffle, ClipboardList, RefreshCw, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, Users, FileText, Calendar, BarChart, Shuffle, ClipboardList, RefreshCw } from "lucide-react";
 import CustomLoader from "@/components/CustomLoader";
 import { format } from "date-fns";
-
-interface Exam {
-  id: string;
-  title: string;
-  subject: string;
-  description: string | null;
-  total_questions: number;
-  duration_minutes: number;
-  scheduled_at: string;
-  ends_at: string;
-  status: string;
-  created_at: string;
-  from_standard: string | null;
-  to_standard: string | null;
-  shuffle_questions: boolean;
-  pass_marks: number | null;
-  allow_reattempt_till_end_date: boolean;
-}
-
-const STANDARDS = [
-  { value: "1st", label: "1st" },
-  { value: "2nd", label: "2nd" },
-  { value: "3rd", label: "3rd" },
-  { value: "4th", label: "4th" },
-  { value: "5th", label: "5th" },
-  { value: "6th", label: "6th" },
-  { value: "7th", label: "7th" },
-  { value: "8th", label: "8th" },
-  { value: "9th", label: "9th" },
-  { value: "10th", label: "10th" },
-  { value: "11th", label: "11th" },
-  { value: "12th", label: "12th" },
-];
+import ExamFormDialog, { Exam } from "@/components/exam/ExamFormDialog";
 
 const AdminExamDashboard = () => {
   usePageSEO({
@@ -78,41 +27,10 @@ const AdminExamDashboard = () => {
 
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [editingExam, setEditingExam] = useState<Exam | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  const [formData, setFormData] = useState<{
-    title: string;
-    subject: string;
-    description: string;
-    total_questions: number;
-    duration_minutes: number;
-    scheduled_at: string;
-    ends_at: string;
-    status: "draft" | "scheduled" | "active" | "completed" | "cancelled";
-    pass_marks: number;
-    from_standard: string;
-    to_standard: string;
-    shuffle_questions: boolean;
-    allow_reattempt_till_end_date: boolean;
-  }>({
-    title: "",
-    subject: "GK",
-    description: "",
-    total_questions: 100,
-    duration_minutes: 60,
-    scheduled_at: "",
-    ends_at: "",
-    status: "draft",
-    pass_marks: 40,
-    from_standard: "",
-    to_standard: "",
-    shuffle_questions: true,
-    allow_reattempt_till_end_date: false
-  });
 
   useEffect(() => {
     checkAuth();
@@ -167,131 +85,25 @@ const AdminExamDashboard = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleEdit = (exam: Exam) => {
+    setEditingExam(exam);
+    setShowDialog(true);
+  };
 
-    // Avoid duplicate submits (extra safety; button is already disabled)
-    if (submitting) return;
+  const handleCreateNew = () => {
+    setEditingExam(null);
+    setShowDialog(true);
+  };
 
-    // Validate required fields
-    if (!formData.title.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Exam title is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!formData.scheduled_at || !formData.ends_at) {
-      toast({
-        title: "Validation Error",
-        description: "Start date and end date are required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setSubmitting(true);
-
-    try {
-      // Convert datetime-local format to ISO string
-      const scheduledAt = new Date(formData.scheduled_at).toISOString();
-      const endsAt = new Date(formData.ends_at).toISOString();
-
-      const examData = {
-        title: formData.title.trim(),
-        subject: formData.subject as any,
-        description: formData.description.trim() || null,
-        total_questions: formData.total_questions,
-        duration_minutes: formData.duration_minutes,
-        scheduled_at: scheduledAt,
-        ends_at: endsAt,
-        status: formData.status as any,
-        pass_marks: formData.pass_marks,
-        from_standard: formData.from_standard || null,
-        to_standard: formData.to_standard || null,
-        shuffle_questions: formData.shuffle_questions,
-        allow_reattempt_till_end_date: formData.allow_reattempt_till_end_date,
-      };
-
-      console.log("[EXAM] Submitting exam data:", examData);
-
-      // IMPORTANT: ensure we always send a fresh access token.
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      let accessToken = session?.access_token ?? null;
-
-      if (!accessToken) {
-        const { data: refreshed } = await supabase.auth.refreshSession();
-        accessToken = refreshed.session?.access_token ?? null;
-      }
-
-      if (!accessToken) {
-        toast({
-          title: "Session expired",
-          description: "Please login again.",
-          variant: "destructive",
-        });
-        navigate("/auth");
-        return;
-      }
-
-      console.log("[EXAM] Calling admin-save-exam function...");
-
-      const { data, error } = await supabase.functions.invoke("admin-save-exam", {
-        body: { examId: editingExam?.id ?? null, exam: examData },
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          // Avoid any intermediaries/service-worker caching surprises
-          "Cache-Control": "no-store",
-        },
-      });
-
-      if (error) throw error;
-
-      console.log("[EXAM] Save request completed. Exam id:", data?.id);
-
-      toast({
-        title: "Success",
-        description: editingExam ? "Exam updated successfully" : "Exam created successfully",
-      });
-
-      setShowDialog(false);
-      resetForm();
-      fetchExams();
-    } catch (error: any) {
-      console.error("[EXAM] Submit error:", error);
-      toast({
-        title: "Error",
-        description: error?.message || "Failed to save exam",
-        variant: "destructive",
-      });
-    } finally {
-      setSubmitting(false);
+  const handleDialogClose = (open: boolean) => {
+    setShowDialog(open);
+    if (!open) {
+      setEditingExam(null);
     }
   };
 
-  const handleEdit = (exam: Exam) => {
-    setEditingExam(exam);
-    setFormData({
-      title: exam.title,
-      subject: exam.subject,
-      description: exam.description || "",
-      total_questions: exam.total_questions,
-      duration_minutes: exam.duration_minutes,
-      scheduled_at: exam.scheduled_at ? format(new Date(exam.scheduled_at), "yyyy-MM-dd'T'HH:mm") : "",
-      ends_at: exam.ends_at ? format(new Date(exam.ends_at), "yyyy-MM-dd'T'HH:mm") : "",
-      status: exam.status as any,
-      pass_marks: exam.pass_marks || 40,
-      from_standard: exam.from_standard || "",
-      to_standard: exam.to_standard || "",
-      shuffle_questions: exam.shuffle_questions ?? true,
-      allow_reattempt_till_end_date: exam.allow_reattempt_till_end_date ?? false
-    });
-    setShowDialog(true);
+  const handleFormSuccess = () => {
+    fetchExams();
   };
 
   const handleDelete = async (examId: string) => {
@@ -320,25 +132,6 @@ const AdminExamDashboard = () => {
         variant: "destructive"
       });
     }
-  };
-
-  const resetForm = () => {
-    setEditingExam(null);
-    setFormData({
-      title: "",
-      subject: "GK",
-      description: "",
-      total_questions: 100,
-      duration_minutes: 60,
-      scheduled_at: "",
-      ends_at: "",
-      status: "draft",
-      pass_marks: 40,
-      from_standard: "",
-      to_standard: "",
-      shuffle_questions: true,
-      allow_reattempt_till_end_date: false
-    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -379,267 +172,22 @@ const AdminExamDashboard = () => {
                 <BarChart className="h-4 w-4 mr-2" />
                 View Analytics
               </Button>
-              <Dialog open={showDialog} onOpenChange={setShowDialog}>
-                <DialogTrigger asChild>
-                  <Button onClick={resetForm}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Exam
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>
-                      {editingExam ? "Edit Exam" : "Create New Exam"}
-                    </DialogTitle>
-                    <DialogDescription>
-                      Fill in the exam details below
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                      <Label htmlFor="title">Exam Title *</Label>
-                      <Input
-                        id="title"
-                        value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="subject">Subject *</Label>
-                      <Select
-                        value={formData.subject}
-                        onValueChange={(value) => setFormData({ ...formData, subject: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="GK">General Knowledge</SelectItem>
-                          <SelectItem value="Science">Science</SelectItem>
-                          <SelectItem value="Math">Mathematics</SelectItem>
-                          <SelectItem value="English">English</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea
-                        id="description"
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        rows={3}
-                      />
-                    </div>
-
-                    {/* Standard Range Selection */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="from_standard">From Standard</Label>
-                        <Select
-                          value={formData.from_standard || "none"}
-                          onValueChange={(value) => setFormData({ ...formData, from_standard: value === "none" ? "" : value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select minimum standard" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">No restriction</SelectItem>
-                            {STANDARDS.map((std) => (
-                              <SelectItem key={std.value} value={std.value}>
-                                {std.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Minimum class eligible for this exam
-                        </p>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="to_standard">To Standard</Label>
-                        <Select
-                          value={formData.to_standard || "none"}
-                          onValueChange={(value) => setFormData({ ...formData, to_standard: value === "none" ? "" : value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select maximum standard" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">No restriction</SelectItem>
-                            {STANDARDS.map((std) => (
-                              <SelectItem key={std.value} value={std.value}>
-                                {std.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Maximum class eligible for this exam
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="total_questions">Total Questions *</Label>
-                        <Input
-                          id="total_questions"
-                          type="number"
-                          min="1"
-                          value={formData.total_questions}
-                          onChange={(e) => {
-                            const next = parseInt(e.target.value, 10);
-                            setFormData({
-                              ...formData,
-                              total_questions: Number.isFinite(next) ? next : 1,
-                            });
-                          }}
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="duration">Duration (minutes) *</Label>
-                        <Input
-                          id="duration"
-                          type="number"
-                          min="1"
-                          value={formData.duration_minutes}
-                          onChange={(e) => {
-                            const next = parseInt(e.target.value, 10);
-                            setFormData({
-                              ...formData,
-                              duration_minutes: Number.isFinite(next) ? next : 1,
-                            });
-                          }}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="pass_marks">Pass Marks (%)</Label>
-                        <Input
-                          id="pass_marks"
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={formData.pass_marks}
-                          onChange={(e) => {
-                            const next = parseInt(e.target.value, 10);
-                            setFormData({
-                              ...formData,
-                              pass_marks: Number.isFinite(next) ? next : 0,
-                            });
-                          }}
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between pt-6">
-                        <div className="flex items-center gap-2">
-                          <Shuffle className="h-4 w-4 text-muted-foreground" />
-                          <Label htmlFor="shuffle">Shuffle Questions</Label>
-                        </div>
-                        <Switch
-                          id="shuffle"
-                          checked={formData.shuffle_questions}
-                          onCheckedChange={(checked) => setFormData({ ...formData, shuffle_questions: checked })}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="scheduled_at">Start Date & Time *</Label>
-                        <Input
-                          id="scheduled_at"
-                          type="datetime-local"
-                          value={formData.scheduled_at}
-                          onChange={(e) => setFormData({ ...formData, scheduled_at: e.target.value })}
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <Label htmlFor="ends_at">End Date & Time *</Label>
-                        <Input
-                          id="ends_at"
-                          type="datetime-local"
-                          value={formData.ends_at}
-                          onChange={(e) => setFormData({ ...formData, ends_at: e.target.value })}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    {/* Reattempt Setting */}
-                    <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <RefreshCw className="h-4 w-4 text-muted-foreground" />
-                          <Label htmlFor="allow_reattempt" className="font-medium">
-                            Allow Reattempt Till End Date
-                          </Label>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          If enabled, students can reattempt the exam multiple times until end date. Latest attempt is final.
-                        </p>
-                      </div>
-                      <Switch
-                        id="allow_reattempt"
-                        checked={formData.allow_reattempt_till_end_date}
-                        onCheckedChange={(checked) => setFormData({ ...formData, allow_reattempt_till_end_date: checked })}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="status">Status *</Label>
-                      <Select
-                        value={formData.status}
-                        onValueChange={(value: any) => setFormData({ ...formData, status: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="draft">Draft</SelectItem>
-                          <SelectItem value="scheduled">Scheduled</SelectItem>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="flex justify-end gap-3 pt-4 border-t">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={() => {
-                          setShowDialog(false);
-                          resetForm();
-                        }}
-                        disabled={submitting}
-                      >
-                        Cancel
-                      </Button>
-                      <Button type="submit" disabled={submitting}>
-                        {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                        {editingExam ? "Update" : "Create"} Exam
-                      </Button>
-                    </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
+              <Button onClick={handleCreateNew}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Exam
+              </Button>
             </div>
           </div>
         </div>
       </section>
+
+      {/* Exam Form Dialog */}
+      <ExamFormDialog
+        open={showDialog}
+        onOpenChange={handleDialogClose}
+        editingExam={editingExam}
+        onSuccess={handleFormSuccess}
+      />
 
       {/* Statistics Cards */}
       <div className="container mx-auto px-4 py-8">
