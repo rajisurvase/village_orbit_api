@@ -149,18 +149,18 @@ const AdminExamDashboard = () => {
   const fetchExams = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("exams")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .throwOnError();
 
-      if (error) throw error;
       setExams(data || []);
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -169,33 +169,37 @@ const AdminExamDashboard = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate required fields
     if (!formData.title.trim()) {
       toast({
         title: "Validation Error",
         description: "Exam title is required",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    
+
     if (!formData.scheduled_at || !formData.ends_at) {
       toast({
         title: "Validation Error",
         description: "Start date and end date are required",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
 
     setSubmitting(true);
-    
+
+    // Safety: never let the button stay disabled forever
+    const timeoutMs = 20000;
+    let timeoutId: number | undefined;
+
     try {
       // Convert datetime-local format to ISO string
       const scheduledAt = new Date(formData.scheduled_at).toISOString();
       const endsAt = new Date(formData.ends_at).toISOString();
-      
+
       const examData = {
         title: formData.title.trim(),
         subject: formData.subject as any,
@@ -209,56 +213,60 @@ const AdminExamDashboard = () => {
         from_standard: formData.from_standard || null,
         to_standard: formData.to_standard || null,
         shuffle_questions: formData.shuffle_questions,
-        allow_reattempt_till_end_date: formData.allow_reattempt_till_end_date
+        allow_reattempt_till_end_date: formData.allow_reattempt_till_end_date,
       };
 
-      console.log("Submitting exam data:", examData);
-      
+      console.log("[EXAM] Submitting exam data:", examData);
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = window.setTimeout(() => {
+          reject(new Error("Request timed out while saving the exam. Please try again."));
+        }, timeoutMs);
+      });
+
       if (editingExam) {
-        const { error } = await supabase
+        console.log("[EXAM] Starting update request...");
+        const requestPromise = supabase
           .from("exams")
           .update(examData)
-          .eq("id", editingExam.id);
+          .eq("id", editingExam.id)
+          .throwOnError();
 
-        if (error) {
-          console.error("Update error:", error);
-          throw error;
-        }
-        
+        await Promise.race([requestPromise, timeoutPromise]);
+
         toast({
           title: "Success",
-          description: "Exam updated successfully"
+          description: "Exam updated successfully",
         });
       } else {
-        const { data, error } = await supabase
-          .from("exams")
-          .insert(examData)
-          .select();
+        console.log("[EXAM] Starting insert request...");
+        // Note: we intentionally avoid `.select()` here to keep the request small and reliable.
+        const requestPromise = supabase.from("exams").insert(examData).throwOnError();
 
-        if (error) {
-          console.error("Insert error:", error);
-          throw error;
-        }
-        
-        console.log("Exam created:", data);
-        
+        await Promise.race([requestPromise, timeoutPromise]);
+
         toast({
           title: "Success",
-          description: "Exam created successfully"
+          description: "Exam created successfully",
         });
       }
+
+      console.log("[EXAM] Save request completed.");
 
       setShowDialog(false);
       resetForm();
       fetchExams();
     } catch (error: any) {
-      console.error("Submit error:", error);
+      console.error("[EXAM] Submit error:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to save exam",
-        variant: "destructive"
+        description: error?.message || "Failed to save exam",
+        variant: "destructive",
       });
     } finally {
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
       setSubmitting(false);
     }
   };
@@ -480,7 +488,13 @@ const AdminExamDashboard = () => {
                           type="number"
                           min="1"
                           value={formData.total_questions}
-                          onChange={(e) => setFormData({ ...formData, total_questions: parseInt(e.target.value) })}
+                          onChange={(e) => {
+                            const next = parseInt(e.target.value, 10);
+                            setFormData({
+                              ...formData,
+                              total_questions: Number.isFinite(next) ? next : 1,
+                            });
+                          }}
                           required
                         />
                       </div>
@@ -492,7 +506,13 @@ const AdminExamDashboard = () => {
                           type="number"
                           min="1"
                           value={formData.duration_minutes}
-                          onChange={(e) => setFormData({ ...formData, duration_minutes: parseInt(e.target.value) })}
+                          onChange={(e) => {
+                            const next = parseInt(e.target.value, 10);
+                            setFormData({
+                              ...formData,
+                              duration_minutes: Number.isFinite(next) ? next : 1,
+                            });
+                          }}
                           required
                         />
                       </div>
@@ -507,7 +527,13 @@ const AdminExamDashboard = () => {
                           min="0"
                           max="100"
                           value={formData.pass_marks}
-                          onChange={(e) => setFormData({ ...formData, pass_marks: parseInt(e.target.value) })}
+                          onChange={(e) => {
+                            const next = parseInt(e.target.value, 10);
+                            setFormData({
+                              ...formData,
+                              pass_marks: Number.isFinite(next) ? next : 0,
+                            });
+                          }}
                         />
                       </div>
 
