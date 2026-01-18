@@ -33,7 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Users, FileText, Calendar, BarChart, Shuffle, ClipboardList, RefreshCw } from "lucide-react";
+import { Plus, Edit, Trash2, Users, FileText, Calendar, BarChart, Shuffle, ClipboardList, RefreshCw, Loader2 } from "lucide-react";
 import CustomLoader from "@/components/CustomLoader";
 import { format } from "date-fns";
 
@@ -78,6 +78,7 @@ const AdminExamDashboard = () => {
 
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [editingExam, setEditingExam] = useState<Exam | null>(null);
   const navigate = useNavigate();
@@ -169,15 +170,40 @@ const AdminExamDashboard = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate required fields
+    if (!formData.title.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Exam title is required",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!formData.scheduled_at || !formData.ends_at) {
+      toast({
+        title: "Validation Error",
+        description: "Start date and end date are required",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    
     try {
+      // Convert datetime-local format to ISO string
+      const scheduledAt = new Date(formData.scheduled_at).toISOString();
+      const endsAt = new Date(formData.ends_at).toISOString();
+      
       const examData = {
-        title: formData.title,
+        title: formData.title.trim(),
         subject: formData.subject as any,
-        description: formData.description,
+        description: formData.description.trim() || null,
         total_questions: formData.total_questions,
         duration_minutes: formData.duration_minutes,
-        scheduled_at: formData.scheduled_at,
-        ends_at: formData.ends_at,
+        scheduled_at: scheduledAt,
+        ends_at: endsAt,
         status: formData.status as any,
         pass_marks: formData.pass_marks,
         from_standard: formData.from_standard || null,
@@ -185,6 +211,8 @@ const AdminExamDashboard = () => {
         shuffle_questions: formData.shuffle_questions,
         allow_reattempt_till_end_date: formData.allow_reattempt_till_end_date
       };
+
+      console.log("Submitting exam data:", examData);
       
       if (editingExam) {
         const { error } = await supabase
@@ -192,18 +220,27 @@ const AdminExamDashboard = () => {
           .update(examData)
           .eq("id", editingExam.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Update error:", error);
+          throw error;
+        }
         
         toast({
           title: "Success",
           description: "Exam updated successfully"
         });
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("exams")
-          .insert(examData);
+          .insert(examData)
+          .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error("Insert error:", error);
+          throw error;
+        }
+        
+        console.log("Exam created:", data);
         
         toast({
           title: "Success",
@@ -215,11 +252,14 @@ const AdminExamDashboard = () => {
       resetForm();
       fetchExams();
     } catch (error: any) {
+      console.error("Submit error:", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to save exam",
         variant: "destructive"
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -547,7 +587,7 @@ const AdminExamDashboard = () => {
                       </Select>
                     </div>
 
-                    <div className="flex justify-end gap-3">
+                    <div className="flex justify-end gap-3 pt-4 border-t">
                       <Button 
                         type="button" 
                         variant="outline" 
@@ -555,10 +595,12 @@ const AdminExamDashboard = () => {
                           setShowDialog(false);
                           resetForm();
                         }}
+                        disabled={submitting}
                       >
                         Cancel
                       </Button>
-                      <Button type="submit">
+                      <Button type="submit" disabled={submitting}>
+                        {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                         {editingExam ? "Update" : "Create"} Exam
                       </Button>
                     </div>
