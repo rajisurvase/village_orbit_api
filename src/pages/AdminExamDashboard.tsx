@@ -226,11 +226,18 @@ const AdminExamDashboard = () => {
 
       if (editingExam) {
         console.log("[EXAM] Starting update request...");
-        const requestPromise = supabase
-          .from("exams")
-          .update(examData)
-          .eq("id", editingExam.id)
-          .throwOnError();
+
+        // IMPORTANT: Postgrest builders are thenables; wrapping in Promise.resolve ensures
+        // they execute reliably when used with Promise.race.
+        const requestPromise = Promise.resolve(
+          supabase
+            .from("exams")
+            .update(examData)
+            .eq("id", editingExam.id)
+            .select("id")
+            .single()
+            .throwOnError()
+        );
 
         await Promise.race([requestPromise, timeoutPromise]);
 
@@ -240,8 +247,15 @@ const AdminExamDashboard = () => {
         });
       } else {
         console.log("[EXAM] Starting insert request...");
-        // Note: we intentionally avoid `.select()` here to keep the request small and reliable.
-        const requestPromise = supabase.from("exams").insert(examData).throwOnError();
+
+        const requestPromise = Promise.resolve(
+          supabase
+            .from("exams")
+            .insert(examData)
+            .select("id")
+            .single()
+            .throwOnError()
+        );
 
         await Promise.race([requestPromise, timeoutPromise]);
 
