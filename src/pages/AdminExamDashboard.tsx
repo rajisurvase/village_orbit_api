@@ -191,10 +191,6 @@ const AdminExamDashboard = () => {
 
     setSubmitting(true);
 
-    // Safety: never let the button stay disabled forever
-    const timeoutMs = 20000;
-    let timeoutId: number | undefined;
-
     try {
       // Convert datetime-local format to ISO string
       const scheduledAt = new Date(formData.scheduled_at).toISOString();
@@ -218,54 +214,29 @@ const AdminExamDashboard = () => {
 
       console.log("[EXAM] Submitting exam data:", examData);
 
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        timeoutId = window.setTimeout(() => {
-          reject(new Error("Request timed out while saving the exam. Please try again."));
-        }, timeoutMs);
-      });
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      if (editingExam) {
-        console.log("[EXAM] Starting update request...");
-
-        // IMPORTANT: Postgrest builders are thenables; wrapping in Promise.resolve ensures
-        // they execute reliably when used with Promise.race.
-        const requestPromise = Promise.resolve(
-          supabase
-            .from("exams")
-            .update(examData)
-            .eq("id", editingExam.id)
-            .select("id")
-            .single()
-            .throwOnError()
-        );
-
-        await Promise.race([requestPromise, timeoutPromise]);
-
-        toast({
-          title: "Success",
-          description: "Exam updated successfully",
-        });
-      } else {
-        console.log("[EXAM] Starting insert request...");
-
-        const requestPromise = Promise.resolve(
-          supabase
-            .from("exams")
-            .insert(examData)
-            .select("id")
-            .single()
-            .throwOnError()
-        );
-
-        await Promise.race([requestPromise, timeoutPromise]);
-
-        toast({
-          title: "Success",
-          description: "Exam created successfully",
-        });
+      if (!session?.access_token) {
+        throw new Error("You are not logged in. Please login again.");
       }
 
-      console.log("[EXAM] Save request completed.");
+      console.log("[EXAM] Calling admin-save-exam function...");
+
+      const { data, error } = await supabase.functions.invoke("admin-save-exam", {
+        body: { examId: editingExam?.id ?? null, exam: examData },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      if (error) throw error;
+
+      console.log("[EXAM] Save request completed. Exam id:", data?.id);
+
+      toast({
+        title: "Success",
+        description: editingExam ? "Exam updated successfully" : "Exam created successfully",
+      });
 
       setShowDialog(false);
       resetForm();
@@ -278,9 +249,6 @@ const AdminExamDashboard = () => {
         variant: "destructive",
       });
     } finally {
-      if (timeoutId) {
-        window.clearTimeout(timeoutId);
-      }
       setSubmitting(false);
     }
   };
