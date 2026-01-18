@@ -1,5 +1,8 @@
 project_id = "eapbulrifjyhlxpsydin"
 
+[functions.admin-save-exam]
+verify_jwt = false
+
 [functions.create-tax-payment]
 verify_jwt = false
 
