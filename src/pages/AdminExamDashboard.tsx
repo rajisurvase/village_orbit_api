@@ -214,19 +214,11 @@ const AdminExamDashboard = () => {
 
       console.log("[EXAM] Submitting exam data:", examData);
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session?.access_token) {
-        throw new Error("You are not logged in. Please login again.");
-      }
-
       console.log("[EXAM] Calling admin-save-exam function...");
 
+      // Let the SDK attach the current user's JWT automatically.
       const { data, error } = await supabase.functions.invoke("admin-save-exam", {
         body: { examId: editingExam?.id ?? null, exam: examData },
-        headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
       if (error) throw error;

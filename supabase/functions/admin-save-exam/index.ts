@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,28 +37,35 @@ serve(async (req) => {
     }
 
     const authHeader = req.headers.get("Authorization") ?? "";
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
+    if (!authHeader || !authHeader.toLowerCase().startsWith("bearer ")) {
+      return new Response(JSON.stringify({ error: "Missing or invalid Authorization header" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Verify user from JWT
+    const token = authHeader.replace(/bearer\s+/i, "").trim();
+
+    // Verify user from JWT (pass token explicitly)
     const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: authHeader } },
       auth: { persistSession: false },
     });
 
-    const { data: userData, error: userErr } = await userClient.auth.getUser();
-    if (userErr || !userData?.user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+    const {
+      data: { user },
+      error: userErr,
+    } = await userClient.auth.getUser(token);
+
+    if (userErr || !user) {
+      const reason = userErr?.message ?? "Invalid token";
+      console.error("[admin-save-exam] Invalid token:", reason);
+      return new Response(JSON.stringify({ error: "Unauthorized", reason }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const userId = userData.user.id;
+    const userId = user.id;
 
     // Use service role for privileged DB writes + role checks
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
