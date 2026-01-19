@@ -163,14 +163,26 @@ const ExamFormDialog = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    console.log("[ExamForm] Form submit triggered, formData:", formData);
+
     // Prevent duplicate submissions
-    if (submitting) return;
+    if (submitting) {
+      console.log("[ExamForm] Already submitting, skipping");
+      return;
+    }
 
     // Validate form data
-    if (!validateForm()) {
+    const isValid = validateForm();
+    console.log("[ExamForm] Validation result:", isValid, "Errors:", errors);
+    
+    if (!isValid) {
+      // Get first error message to show user
+      const result = examFormSchema.safeParse(formData);
+      const firstError = !result.success ? result.error.errors[0]?.message : "Please fix the errors in the form";
+      
       toast({
         title: "Validation Error",
-        description: "Please fix the errors in the form",
+        description: firstError,
         variant: "destructive",
       });
       return;
