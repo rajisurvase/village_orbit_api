@@ -46,15 +46,16 @@ serve(async (req) => {
 
     const token = authHeader.replace(/bearer\s+/i, "").trim();
 
-    // Verify JWT and read user id from claims
+    // Verify JWT and read user id using getUser
     const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
       auth: { persistSession: false },
     });
 
-    const { data: claimsData, error: claimsErr } = await authClient.auth.getClaims(token);
+    const { data: userData, error: userErr } = await authClient.auth.getUser();
 
-    if (claimsErr || !claimsData?.claims?.sub) {
-      const reason = claimsErr?.message ?? "Invalid token";
+    if (userErr || !userData?.user?.id) {
+      const reason = userErr?.message ?? "Invalid token";
       console.error("[admin-save-exam] Invalid token:", reason);
       return new Response(JSON.stringify({ error: "Unauthorized", reason }), {
         status: 401,
@@ -62,7 +63,7 @@ serve(async (req) => {
       });
     }
 
-    const userId = claimsData.claims.sub;
+    const userId = userData.user.id;
 
     // Use service role for privileged DB writes + role checks
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
