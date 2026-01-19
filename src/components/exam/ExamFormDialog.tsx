@@ -163,7 +163,8 @@ const ExamFormDialog = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log("[ExamForm] Form submit triggered, formData:", formData);
+    console.log("[ExamForm] Form submit triggered");
+    console.log("[ExamForm] Form data:", JSON.stringify(formData, null, 2));
 
     // Prevent duplicate submissions
     if (submitting) {
@@ -171,14 +172,23 @@ const ExamFormDialog = ({
       return;
     }
 
-    // Validate form data
-    const isValid = validateForm();
-    console.log("[ExamForm] Validation result:", isValid, "Errors:", errors);
+    // Validate form data using Zod directly
+    const validationResult = examFormSchema.safeParse(formData);
+    console.log("[ExamForm] Validation success:", validationResult.success);
     
-    if (!isValid) {
-      // Get first error message to show user
-      const result = examFormSchema.safeParse(formData);
-      const firstError = !result.success ? result.error.errors[0]?.message : "Please fix the errors in the form";
+    if (!validationResult.success) {
+      // Set errors for display
+      const fieldErrors: Record<string, string> = {};
+      validationResult.error.errors.forEach((err) => {
+        const path = err.path.join(".");
+        if (!fieldErrors[path]) {
+          fieldErrors[path] = err.message;
+        }
+      });
+      setErrors(fieldErrors);
+      
+      const firstError = validationResult.error.errors[0]?.message || "Please fix the errors in the form";
+      console.log("[ExamForm] Validation failed:", firstError);
       
       toast({
         title: "Validation Error",
@@ -187,12 +197,17 @@ const ExamFormDialog = ({
       });
       return;
     }
-
+    
+    // Clear any previous errors
+    setErrors({});
     setSubmitting(true);
+    console.log("[ExamForm] Starting submission...");
 
     try {
       // Get fresh access token
+      console.log("[ExamForm] Getting access token...");
       const accessToken = await getAccessToken();
+      console.log("[ExamForm] Got access token:", accessToken ? "yes" : "no");
 
       if (!accessToken) {
         toast({
@@ -221,7 +236,7 @@ const ExamFormDialog = ({
         allow_reattempt_till_end_date: formData.allow_reattempt_till_end_date,
       };
 
-      console.log("[ExamForm] Submitting exam data:", examData);
+      console.log("[ExamForm] Calling edge function with payload:", JSON.stringify({ examId: editingExam?.id ?? null, exam: examData }, null, 2));
 
       // Call the edge function
       const { data, error } = await supabase.functions.invoke("admin-save-exam", {
@@ -231,6 +246,8 @@ const ExamFormDialog = ({
           "Cache-Control": "no-store",
         },
       });
+
+      console.log("[ExamForm] Edge function response - data:", data, "error:", error);
 
       if (error) {
         console.error("[ExamForm] Edge function error:", error);
@@ -259,6 +276,7 @@ const ExamFormDialog = ({
         variant: "destructive",
       });
     } finally {
+      console.log("[ExamForm] Submission complete, resetting state");
       setSubmitting(false);
     }
   };
