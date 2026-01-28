@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft, Edit2, Save, X } from "lucide-react";
 import { usePageSEO } from "@/hooks/usePageSEO";
+import useApiAuth from "@/hooks/useApiAuth";
 
 interface UserProfile {
   id: string;
@@ -23,7 +23,7 @@ interface UserProfile {
 
 export default function UserDashboard() {
   usePageSEO({ title: "My Dashboard", description: "View and manage your profile" });
-  const { user, loading: authLoading, isApproved } = useAuth();
+  const { user, loading: authLoading, isApproved } = useApiAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -52,7 +52,7 @@ export default function UserDashboard() {
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", user?.id)
+        .eq("id", user?.userId)
         .single();
 
       if (error) throw error;
@@ -81,7 +81,7 @@ export default function UserDashboard() {
           full_name: formData.full_name,
           mobile: formData.mobile,
         })
-        .eq("id", user?.id);
+        .eq("id", user?.userId);
 
       if (error) throw error;
 

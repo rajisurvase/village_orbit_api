@@ -11,74 +11,71 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { UpdateNotification } from "@/components/UpdateNotification";
 
 // Lazy load pages for code splitting
-const Auth = lazy(() => import("@/pages/Auth"));
-const Index = lazy(() => import("@/pages/Index"));
-const Admin = lazy(() => import("@/pages/Admin"));
-const VillageManagement = lazy(() => import("@/pages/VillageManagement"));
-const JsonConfigManager = lazy(() => import("@/pages/JsonConfigManager"));
-const ContactMessagesAdmin = lazy(() => import("@/pages/ContactMessagesAdmin"));
-const UserManagementDashboard = lazy(() => import("@/pages/UserManagementDashboard"));
-const UserDashboard = lazy(() => import("@/pages/UserDashboard"));
-const NotFound = lazy(() => import("@/pages/NotFound"));
-const AboutPage = lazy(() => import("@/pages/AboutPage"));
-const ServicePage = lazy(() => import("@/pages/ServicePage"));
-const PanchayatPage = lazy(() => import("@/pages/PanchayatPage"));
-const ContactUsPage = lazy(() => import("@/pages/ContactUsPage"));
-//const ProudPeoplePage = lazy(() => import("@/pages/ProudPeoplePage"));
-const DocumentsModel = lazy(() => import("@/pages/DocumentsModel"));
+const Index = lazy(() => import("./pages/Index"));
+const Auth = lazy(() => import("./pages/Auth"));
+const Admin = lazy(() => import("./pages/Admin"));
+const VillageManagement = lazy(() => import("./pages/VillageManagement"));
+const JsonConfigManager = lazy(() => import("./pages/JsonConfigManager"));
+const ContactMessagesAdmin = lazy(() => import("./pages/ContactMessagesAdmin"));
+// Use API-based user management dashboard
+const UserManagementDashboard = lazy(() => import("./pages/UserManagementDashboardApi"));
+// Use API-based user dashboard
+const UserDashboard = lazy(() => import("./pages/UserDashboardApi"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+const ServicePage = lazy(() => import("./pages/ServicePage"));
+const PanchayatPage = lazy(() => import("./pages/PanchayatPage"));
+const ContactUsPage = lazy(() => import("./pages/ContactUsPage"));
+const DocumentsModel = lazy(() => import("./pages/DocumentsModel"));
 
-
-
-const SchemePage = lazy(() => import("@/pages/SchemePage"));
-const GovtSchemesPage = lazy(() => import("@/pages/GovtSchemesPage"));
-const DevelopmentPage = lazy(() => import("@/pages/DevelopmentPage"));
-const MediaGalleryPage = lazy(() => import("@/pages/MediaGalleryPage"));
-//const GalleryPage = lazy(() => import("@/pages/GalleryPage"));
-const AnnouncementsPage = lazy(() => import("@/pages/AnnouncementsPage"));
-const NoticesPage = lazy(() => import("@/pages/NoticesPage"));
-const MarketPricesPage = lazy(() => import("@/pages/MarketPricesPage"));
-const TaxPaymentPage = lazy(() => import("@/pages/TaxPaymentPage"));
-const TaxPaymentReceipt = lazy(() => import("@/pages/TaxPaymentReceipt"));
-const ForumPage = lazy(() => import("@/pages/ForumPage"));
-const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
-const BuySellPage = lazy(() => import("@/pages/BuySellPage"));
-const AdminMarketplaceDashboard = lazy(() => import("@/pages/AdminMarketplaceDashboard"));
-const SellerDashboard = lazy(() => import("@/pages/SellerDashboard"));
-const ExamDashboard = lazy(() => import("@/pages/ExamDashboard"));
-const ExamTake = lazy(() => import("@/pages/ExamTake"));
-const ExamResults = lazy(() => import("@/pages/ExamResults"));
-const ExamRules = lazy(() => import("@/pages/ExamRules"));
-const AdminExamReports = lazy(() => import("@/pages/AdminExamReports"));
-const ExamAnalytics = lazy(() => import("@/pages/ExamAnalytics"));
-const AdminExamDashboard = lazy(() => import("@/pages/AdminExamDashboard"));
-const AdminExamQuestions = lazy(() => import("@/pages/AdminExamQuestions"));
-const AddService = lazy(() => import("@/pages/AddService"));
-const ManageCategories = lazy(() => import("@/pages/ManageCategories"));
-const ServicesAdminDashboard = lazy(() => import("@/pages/ServicesAdminDashboard"));
-const NavigationConfigEditor = lazy(() => import("@/pages/NavigationConfigEditor"));
+const SchemePage = lazy(() => import("./pages/SchemePage"));
+const GovtSchemesPage = lazy(() => import("./pages/GovtSchemesPage"));
+const DevelopmentPage = lazy(() => import("./pages/DevelopmentPage"));
+const MediaGalleryPage = lazy(() => import("./pages/MediaGalleryPage"));
+const AnnouncementsPage = lazy(() => import("./pages/AnnouncementsPage"));
+const NoticesPage = lazy(() => import("./pages/NoticesPage"));
+const MarketPricesPage = lazy(() => import("./pages/MarketPricesPage"));
+const TaxPaymentPage = lazy(() => import("./pages/TaxPaymentPage"));
+const TaxPaymentReceipt = lazy(() => import("./pages/TaxPaymentReceipt"));
+const ForumPage = lazy(() => import("./pages/ForumPage"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const BuySellPage = lazy(() => import("./pages/BuySellPage"));
+const AdminMarketplaceDashboard = lazy(() => import("./pages/AdminMarketplaceDashboard"));
+const SellerDashboard = lazy(() => import("./pages/SellerDashboard"));
+const ExamDashboard = lazy(() => import("./pages/ExamDashboard"));
+const ExamTake = lazy(() => import("./pages/ExamTake"));
+const ExamResults = lazy(() => import("./pages/ExamResults"));
+const ExamRules = lazy(() => import("./pages/ExamRules"));
+const ExamAnalytics = lazy(() => import("./pages/ExamAnalytics"));
+const AdminExamDashboard = lazy(() => import("./pages/AdminExamDashboard"));
+const AdminExamQuestions = lazy(() => import("./pages/AdminExamQuestions"));
+const AddService = lazy(() => import("./pages/AddService"));
+const ManageCategories = lazy(() => import("./pages/ManageCategories"));
+const ServicesAdminDashboard = lazy(() => import("./pages/ServicesAdminDashboard"));
+const NavigationConfigEditor = lazy(() => import("./pages/NavigationConfigEditor"));
+// RBAC Management page for super admins
+const RbacManagement = lazy(() => import("./pages/RbacManagement"));
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <UpdateNotification />
-        
+        <BrowserRouter>
         <Suspense fallback={<SectionSkeleton />}>
           <Routes>
             {/* Auth routes without layout */}
-            
+            <Route path={CUSTOM_ROUTES.AUTH} element={<Auth />} />
           {/* Public routes with full layout and village context */}
           <Route
             path="*"
             element={
               <Layout>
                 <Routes>
-                  <Route path={CUSTOM_ROUTES.AUTH} element={<Auth />} />
                   <Route path={CUSTOM_ROUTES.HOME} element={<Index />} />
                   <Route path={CUSTOM_ROUTES.ABOUT} element={<AboutPage />} />
                   <Route
@@ -93,7 +90,7 @@ const App = () => (
                     path={CUSTOM_ROUTES.CONTACT_US}
                     element={<ContactUsPage />}
                   />
-
+               
 
                   <Route path={CUSTOM_ROUTES.SCHEME} element={<SchemePage />} />
                   <Route path={CUSTOM_ROUTES.GOVT_SCHEMES} element={<GovtSchemesPage />} />
@@ -101,7 +98,10 @@ const App = () => (
                     path={CUSTOM_ROUTES.DEVELOPMENT}
                     element={<DevelopmentPage />}
                   />
-                  
+                  {/*<Route
+                    path={CUSTOM_ROUTES.GALLERY}
+                    element={<GalleryPage />}
+                  />*/}
                   <Route
                     path={CUSTOM_ROUTES.MEDIA_GALLERY}
                     element={<MediaGalleryPage />}
@@ -147,7 +147,6 @@ const App = () => (
                   <Route path="/exam" element={<ExamDashboard />} />
                   <Route path="/exam/rules" element={<ExamRules />} />
                   <Route path="/exam/analytics" element={<ExamAnalytics />} />
-                  <Route path="/admin/exam-reports" element={<AdminExamReports />} />
                   <Route path="/exam/:examId/take" element={<ExamTake />} />
                   <Route path="/exam/:examId/results/:attemptId" element={<ExamResults />} />
                   <Route path="/admin/exam-management" element={<AdminExamDashboard />} />
@@ -156,6 +155,7 @@ const App = () => (
                     path={CUSTOM_ROUTES.NOT_FOUND}
                     element={<NotFound />}
                   />
+                   {/* Admin routes with basic layout (no village context) */}
                   <Route path={CUSTOM_ROUTES.ADMIN} element={<Admin />} />
                   <Route
                     path={CUSTOM_ROUTES.VILLAGE_MANAGEMENT}
@@ -169,19 +169,20 @@ const App = () => (
                   <Route path={CUSTOM_ROUTES.USER_MANAGEMENT} element={<UserManagementDashboard />} />
                   <Route path={CUSTOM_ROUTES.USER_DASHBOARD} element={<UserDashboard />} />
                   <Route path={CUSTOM_ROUTES.ADMIN_MARKETPLACE} element={<AdminMarketplaceDashboard />} />
-            <Route path={CUSTOM_ROUTES.ADD_SERVICE} element={<AddService />} />
-            <Route path={CUSTOM_ROUTES.MANAGE_CATEGORIES} element={<ManageCategories />} />
-            <Route path={CUSTOM_ROUTES.SERVICES_ADMIN} element={<ServicesAdminDashboard />} />
-            <Route path={CUSTOM_ROUTES.NAVIGATION_CONFIG} element={<NavigationConfigEditor />} />
+                  <Route path={CUSTOM_ROUTES.ADD_SERVICE} element={<AddService />} />
+                  <Route path={CUSTOM_ROUTES.MANAGE_CATEGORIES} element={<ManageCategories />} />
+                  <Route path={CUSTOM_ROUTES.SERVICES_ADMIN} element={<ServicesAdminDashboard />} />
+                  <Route path={CUSTOM_ROUTES.NAVIGATION_CONFIG} element={<NavigationConfigEditor />} />
+                  <Route path={CUSTOM_ROUTES.RBAC_MANAGEMENT} element={<RbacManagement />} />
                 </Routes>
               </Layout>
             }
           />
           </Routes>
          </Suspense>
+        </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
-        </BrowserRouter>
   </QueryClientProvider>
 );
 

@@ -1,12 +1,27 @@
-// 📍 src/main.tsx
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App";   
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import App from "./App.tsx";
 import "./index.css";
-import "./i18n";
+import "./i18n.ts";
+import { VillageProvider } from "./context/VillageContextConfig.tsx";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    <QueryClientProvider client={queryClient}>
+      <VillageProvider villageName="Shivankhed">
+        <App />
+      </VillageProvider>
+    </QueryClientProvider>
   </StrictMode>
 );

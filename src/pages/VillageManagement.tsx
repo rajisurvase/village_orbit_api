@@ -2,117 +2,113 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, Edit, Trash2, ArrowLeft } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-
-interface Village {
-  id: string;
-  name: string;
-  state: string;
-  district: string;
-  pincode: string;
-  established: string | null;
-  area: string | null;
-  description: string | null;
-  vision: string | null;
-  is_active: boolean;
-}
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  CreateUpdateVillage,
+  DeleteVillage,
+  GetVillagesList,
+  Village,
+} from "@/services/village-service";
 
 const VillageManagement = () => {
-  const [loading, setLoading] = useState(true);
-  const [villages, setVillages] = useState<Village[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVillage, setEditingVillage] = useState<Village | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<
+    Omit<Village, "createdAt" | "updatedAt" | "isActive">
+  >({
     name: "",
     state: "",
     district: "",
     pincode: "",
     established: "",
     area: "",
+    latitude: "",
+    longitude: "",
+    altitude: "",
     description: "",
     vision: "",
   });
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchVillages();
-  }, []);
+  const {
+    data: villagesData,
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ["villages"],
+    queryFn: GetVillagesList,
+    select(data) {
+      return data.data;
+    },
+  });
 
-  const fetchVillages = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("villages")
-        .select("*")
-        .order("name");
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: CreateUpdateVillage,
+  });
 
-      if (error) throw error;
-      setVillages(data || []);
-    } catch (error) {
-      console.error("Error fetching villages:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load villages.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { mutateAsync: deleteVillage, isPending: isDeletePending } =
+    useMutation({
+      mutationFn: DeleteVillage,
+    });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    try {
-      if (editingVillage) {
-        const { error } = await supabase
-          .from("villages")
-          .update(formData)
-          .eq("id", editingVillage.id);
-
-        if (error) throw error;
-
+    mutateAsync(formData, {
+      onSuccess(data) {
+        refetch();
         toast({
           title: "Success",
-          description: "Village updated successfully.",
+          description: formData?.id
+            ? "Village updated successfully."
+            : "Village created successfully.",
         });
-      } else {
-        const { error } = await supabase
-          .from("villages")
-          .insert([formData]);
-
-        if (error) throw error;
-
+        setIsDialogOpen(false);
+        setEditingVillage(null);
+        resetForm();
+      },
+      onError(error: any) {
         toast({
-          title: "Success",
-          description: "Village created successfully.",
+          title: "Error",
+          description: error.message || "Failed to create village.",
+          variant: "destructive",
         });
-      }
-
-      setIsDialogOpen(false);
-      setEditingVillage(null);
-      resetForm();
-      fetchVillages();
-    } catch (error: any) {
-      console.error("Error saving village:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to save village.",
-        variant: "destructive",
-      });
-    }
+      },
+    });
   };
 
   const handleEdit = (village: Village) => {
     setEditingVillage(village);
     setFormData({
+      id: village.id,
       name: village.name,
       state: village.state,
       district: village.district,
@@ -121,6 +117,9 @@ const VillageManagement = () => {
       area: village.area || "",
       description: village.description || "",
       vision: village.vision || "",
+      altitude: village.altitude || "",
+      latitude: village.latitude || "",
+      longitude: village.longitude || "",
     });
     setIsDialogOpen(true);
   };
@@ -128,28 +127,22 @@ const VillageManagement = () => {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this village?")) return;
 
-    try {
-      const { error } = await supabase
-        .from("villages")
-        .delete()
-        .eq("id", id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Village deleted successfully.",
-      });
-
-      fetchVillages();
-    } catch (error) {
-      console.error("Error deleting village:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete village.",
-        variant: "destructive",
-      });
-    }
+    deleteVillage(id, {
+      onSuccess() {
+        refetch();
+        toast({
+          title: "Success",
+          description: "Village deleted successfully.",
+        });
+      },
+      onError(error) {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to delete village.",
+          variant: "destructive",
+        });
+      },
+    });
   };
 
   const resetForm = () => {
@@ -162,10 +155,13 @@ const VillageManagement = () => {
       area: "",
       description: "",
       vision: "",
+      latitude: "",
+      longitude: "",
+      altitude: "",
     });
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -184,11 +180,13 @@ const VillageManagement = () => {
             </Button>
             <h1 className="text-3xl font-bold">Village Management</h1>
           </div>
-          <Button onClick={() => {
-            resetForm();
-            setEditingVillage(null);
-            setIsDialogOpen(true);
-          }}>
+          <Button
+            onClick={() => {
+              resetForm();
+              setEditingVillage(null);
+              setIsDialogOpen(true);
+            }}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Village
           </Button>
@@ -197,7 +195,9 @@ const VillageManagement = () => {
         <Card>
           <CardHeader>
             <CardTitle>All Villages</CardTitle>
-            <CardDescription>Manage village information and settings</CardDescription>
+            <CardDescription>
+              Manage village information and settings
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -211,9 +211,11 @@ const VillageManagement = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {villages.map((village) => (
+                {villagesData.map((village) => (
                   <TableRow key={village.id}>
-                    <TableCell className="font-medium">{village.name}</TableCell>
+                    <TableCell className="font-medium">
+                      {village.name}
+                    </TableCell>
                     <TableCell>{village.district}</TableCell>
                     <TableCell>{village.state}</TableCell>
                     <TableCell>{village.pincode}</TableCell>
@@ -229,6 +231,7 @@ const VillageManagement = () => {
                         <Button
                           variant="outline"
                           size="sm"
+                          disabled={isDeletePending}
                           onClick={() => handleDelete(village.id)}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -249,7 +252,9 @@ const VillageManagement = () => {
                 {editingVillage ? "Edit Village" : "Add New Village"}
               </DialogTitle>
               <DialogDescription>
-                {editingVillage ? "Update village information" : "Create a new village entry"}
+                {editingVillage
+                  ? "Update village information"
+                  : "Create a new village entry"}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -259,7 +264,9 @@ const VillageManagement = () => {
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                     required
                   />
                 </div>
@@ -268,7 +275,9 @@ const VillageManagement = () => {
                   <Input
                     id="state"
                     value={formData.state}
-                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, state: e.target.value })
+                    }
                     required
                   />
                 </div>
@@ -277,7 +286,9 @@ const VillageManagement = () => {
                   <Input
                     id="district"
                     value={formData.district}
-                    onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, district: e.target.value })
+                    }
                     required
                   />
                 </div>
@@ -286,7 +297,9 @@ const VillageManagement = () => {
                   <Input
                     id="pincode"
                     value={formData.pincode}
-                    onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, pincode: e.target.value })
+                    }
                     required
                   />
                 </div>
@@ -295,7 +308,9 @@ const VillageManagement = () => {
                   <Input
                     id="established"
                     value={formData.established}
-                    onChange={(e) => setFormData({ ...formData, established: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, established: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -303,8 +318,45 @@ const VillageManagement = () => {
                   <Input
                     id="area"
                     value={formData.area}
-                    onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, area: e.target.value })
+                    }
                     placeholder="e.g., 15.2 sq km"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="latitude">Latitude *</Label>
+                  <Input
+                    id="latitude"
+                    value={formData.latitude}
+                    onChange={(e) =>
+                      setFormData({ ...formData, latitude: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="longitude">Longitude *</Label>
+                  <Input
+                    id="longitude"
+                    value={formData.longitude}
+                    onChange={(e) =>
+                      setFormData({ ...formData, longitude: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="altitude">Altitude *</Label>
+                  <Input
+                    id="altitude"
+                    value={formData.altitude}
+                    onChange={(e) =>
+                      setFormData({ ...formData, altitude: e.target.value })
+                    }
+                    placeholder="e.g., 500m"
+                    required
                   />
                 </div>
               </div>
@@ -313,7 +365,9 @@ const VillageManagement = () => {
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   rows={3}
                 />
               </div>
@@ -322,15 +376,21 @@ const VillageManagement = () => {
                 <Textarea
                   id="vision"
                   value={formData.vision}
-                  onChange={(e) => setFormData({ ...formData, vision: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, vision: e.target.value })
+                  }
                   rows={2}
                 />
               </div>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                >
                   Cancel
                 </Button>
-                <Button type="submit">
+                <Button type="submit" disabled={isPending}>
                   {editingVillage ? "Update" : "Create"} Village
                 </Button>
               </DialogFooter>

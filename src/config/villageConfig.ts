@@ -9,7 +9,7 @@ export interface VillageConfig {
 // Available villages configuration
 export const VILLAGES: Record<string, VillageConfig> = {
   shivankhed: {
-    id: 'shivankhed',
+    id: '4dd1a3a2-5e25-46ff-a830-e476c92865e6',
     name: 'Shivankhed',
     domain: 'shivankhed'
   }

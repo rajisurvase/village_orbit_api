@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { useApiAuth } from "@/hooks/useApiAuth";
 
 const emailSchema = z.string().trim().email("Invalid email address");
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
@@ -18,96 +18,46 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [mobile, setMobile] = useState("");
   const [aadharNumber, setAadharNumber] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading: authLoading, isAuthenticated, isSuperAdmin, isAdmin, isSubAdmin, login, signup } = useApiAuth();
 
   useEffect(() => {
     // Check if user is already logged in
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session) {
-        const destination = await checkUserRoleAndRedirect(session.user.id);
-        navigate(destination);
+    if (!authLoading && isAuthenticated && user) {
+      // Redirect based on role
+      if (isSuperAdmin || isAdmin || isSubAdmin) {
+        navigate("/admin");
+      } else if (user.approvalStatus === 'APPROVED') {
+        navigate("/my-dashboard");
+      } else {
+        navigate("/");
       }
-    });
-
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session && event === 'SIGNED_IN') {
-        const destination = await checkUserRoleAndRedirect(session.user.id);
-        navigate(destination);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
-
-  const checkUserRoleAndRedirect = async (userId: string) => {
-    try {
-      // Check user roles
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId);
-
-      if (roleData && roleData.length > 0) {
-        const roles = roleData.map(r => r.role);
-        // If user is admin or sub_admin, redirect to admin dashboard
-        if (roles.includes("admin") || roles.includes("sub_admin")) {
-          return "/admin/dashboard";
-        }
-      }
-
-      // Check approval status for regular users
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("approval_status")
-        .eq("id", userId)
-        .single();
-
-      if (profileData?.approval_status === "approved") {
-        return "/my-dashboard";
-      }
-
-      // If not approved, go to home
-      return "/";
-    } catch (error) {
-      console.error("Error checking user role:", error);
-      return "/";
     }
-  };
+  }, [authLoading, isAuthenticated, user, isSuperAdmin, isAdmin, isSubAdmin, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
 
     try {
       emailSchema.parse(email);
       passwordSchema.parse(password);
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const result = await login(email, password);
 
-      if (error) {
-        if (error.message.includes("Invalid login credentials")) {
-          toast({
-            title: "Login Failed",
-            description: "Invalid email or password. Please try again.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Error",
-            description: error.message,
-            variant: "destructive",
-          });
-        }
-      } else {
+      if (result.success) {
         toast({
           title: "Welcome back!",
           description: "You have successfully logged in.",
+        });
+        // Navigation will be handled by the useEffect
+      } else {
+        toast({
+          title: "Login Failed",
+          description: result.error || "Invalid email or password. Please try again.",
+          variant: "destructive",
         });
       }
     } catch (err) {
@@ -119,13 +69,13 @@ const Auth = () => {
         });
       }
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
 
     try {
       emailSchema.parse(email);
@@ -137,7 +87,7 @@ const Auth = () => {
           description: "Full name is required",
           variant: "destructive",
         });
-        setLoading(false);
+        setSubmitting(false);
         return;
       }
 
@@ -147,7 +97,7 @@ const Auth = () => {
           description: "Please enter a valid 10-digit mobile number",
           variant: "destructive",
         });
-        setLoading(false);
+        setSubmitting(false);
         return;
       }
 
@@ -157,49 +107,34 @@ const Auth = () => {
           description: "Please enter a valid 12-digit Aadhar number",
           variant: "destructive",
         });
-        setLoading(false);
+        setSubmitting(false);
         return;
       }
 
-      const redirectUrl = `${window.location.origin}/`;
-
-      const { error } = await supabase.auth.signUp({
+      const result = await signup({
         email,
         password,
-        options: {
-          data: {
-            full_name: fullName,
-            mobile: mobile,
-            aadhar_number: aadharNumber,
-          },
-          emailRedirectTo: redirectUrl,
-        },
+        fullName,
+        mobile,
+        aadharNumber,
       });
 
-      if (error) {
-        if (error.message.includes("already registered")) {
-          toast({
-            title: "Account Exists",
-            description: "This email is already registered. Please login instead.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Signup Failed",
-            description: error.message,
-            variant: "destructive",
-          });
-        }
-      } else {
+      if (result.success) {
         toast({
           title: "Registration Submitted!",
-          description: "Your registration has been submitted for approval. You will receive an email once approved.",
+          description: result.message || "Your registration has been submitted for approval. You will receive notification once approved.",
         });
         setEmail("");
         setPassword("");
         setFullName("");
         setMobile("");
         setAadharNumber("");
+      } else {
+        toast({
+          title: "Signup Failed",
+          description: result.error || "Registration failed. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -210,9 +145,17 @@ const Auth = () => {
         });
       }
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
@@ -254,8 +197,8 @@ const Auth = () => {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Loading..." : "Login"}
+                <Button type="submit" className="w-full" disabled={submitting}>
+                  {submitting ? "Loading..." : "Login"}
                 </Button>
               </form>
             </TabsContent>
@@ -319,8 +262,8 @@ const Auth = () => {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Submitting..." : "Sign Up"}
+                <Button type="submit" className="w-full" disabled={submitting}>
+                  {submitting ? "Submitting..." : "Sign Up"}
                 </Button>
               </form>
             </TabsContent>

@@ -47,25 +47,7 @@ const resources = {
       "announcements.noticeBoard": "Notice Board",
       "announcements.visitOffice": "Visit Panchayat office",
       "announcements.contactUpdates": "Contact for Updates",
-
-         // Media Gallery
-  "mediaGallery.title": "Media Gallery",
-  "mediaGallery.subtitle": "Browse photos and videos of festivals, development work and community events.",
-  "mediaGallery.photosTab": "Photo Gallery",
-  "mediaGallery.videosTab": "Video Gallery",
-  "mediaGallery.filterAll": "All",
-  "mediaGallery.noPhotosTitle": "No Photos Available",
-  "mediaGallery.noPhotosText": "Gallery photos will be updated soon.",
-  "mediaGallery.noVideosTitle": "No Videos Available",
-  "mediaGallery.noVideosText": "Video gallery will be updated soon.",
-  "mediaGallery.seoImageTitle": "Photo Gallery",
-  "mediaGallery.seoVideoTitle": "Video Gallery",
-  "mediaGallery.seoDescription": "View the official village media gallery — photos and videos",
-
-    
-
-
-
+        
       // Gov Staff Section
       "govstaff.title": "Government Staff",
       "govstaff.description": "Government officials working for the welfare and development of our village",
@@ -114,18 +96,6 @@ const resources = {
       "schemes.downloadForms": "Download Forms",
       "schemes.contactOffice": "Contact Office",
       
-      //buy and sell page 
-      // Marketplace
-"marketplace.title": "Buy & Sell – Market",
-"marketplace.subtitle": "Buy and sell items in your village community",
-"marketplace.settings": "Settings",
-"marketplace.browse": "Browse",
-"marketplace.sellItem": "Sell Item",
-"marketplace.myListings": "My Listings",
-"marketplace.loginRequired": "Login Required",
-"marketplace.loginMessage": "Please login to post items for sale in the marketplace.",
-"marketplace.loginToSell": "Login to Sell",
-
       // Development
       "development.title": "Development Works",
       "development.description": "Track the progress of various development projects undertaken in our village.",
@@ -148,19 +118,20 @@ const resources = {
       
 
       // Proud People
-"proud-peopleWorkers.title": "Proud of Our People",
-"proud-peopleWorkers.description":
+"proudPeople.title": "Proud of Our People",
+"proudPeople.description":
   "Celebrating individuals who have made our village proud through their achievements and contributions",
 
 
-//asha worker 
-  "ashaWorkers.title": "ASHA Workers",
-  "ashaWorkers.description": "Accredited Social Health Activists who provide essential primary healthcare services, promote maternal and child health, and support community well-being at the village level.",
-//anganwadi worker 
-  "anganwadiWorkers.title": "Anganwadi Workers",
-  "anganwadiWorkers.description": "Frontline workers responsible for child nutrition, early childhood education, health awareness, and the welfare of women and children in the village.",
+  // Asha Workers
+"ashaWorkers.title": "Asha Workers",
+"ashaWorkers.description":
+  "Dedicated health workers serving our community with care and compassion",
 
-
+// Anganwadi Workers
+"anganwadiWorkers.title": "Anganwadi Karyakarti",
+"anganwadiWorkers.description":
+  "Committed workers ensuring child development and women welfare in our village",
 
   // Development Works
 "developmentWorks.title": "Development Works",
@@ -179,33 +150,7 @@ const resources = {
       "gallery.uploadDescription": "Have photos or videos from village events? Share them with us to be featured in our community gallery. Help us document our village's journey and celebrate our achievements together.",
       "gallery.acceptedTypes": "Photos & Videos Welcome",
       "gallery.moderation": "Community Moderated",
-      //notices board 
-     
-  "notices.title": "Notice Board",
-  "notices.subtitle": "Latest official notices and announcements",
-  "notices.metaDescription": "View the latest official notices and announcements from the Gram Panchayat.",
-
-  "notices.search": "Search notices...",
-  "notices.none": "No notices available",
-  "notices.checkBack": "Please check back later",
-
-  "notices.category": "Category",
-  "notices.date": "Date",
-  "notices.readMore": "Read More",
-  "notices.attachment": "View Attachment",
-  "notices.viewAttachment": "Open Attachment",
-
-  "notices.active": "Active",
-  "notices.inactive": "Expired Notice",
-
-  "notices.all": "All",
-  "notices.general": "General",
-  "notices.meeting": "Meeting",
-  "notices.urgent": "Urgent",
-  "notices.tender": "Tender",
-  "notices.scheme": "Scheme",
-  "notices.election": "Election",
-
+      
       // Contact
       "contact.title": "Contact Us",
       "contact.description": "Get in touch with your Gram Panchayat for any queries, complaints, or assistance with government services and village development matters.",
@@ -234,7 +179,7 @@ const resources = {
       "contact.fire": "Fire",
       "contact.ambulance": "Ambulance",
       "contact.localEmergency": "Local Emergency",
-   
+      
       // Footer
       "footer.aboutDescription": "A progressive village committed to sustainable development, transparent governance, and inclusive growth for all residents.",
       "footer.quickLinks": "Quick Links",
@@ -308,33 +253,6 @@ const resources = {
     "header.adminDashboard": "एडमिन डैशबोर्ड",
     "header.logout": "लॉगआउट",
 
-
-    //buy and sell page 
-    // Marketplace
-"marketplace.title": "खरीदें और बेचें – बाजार",
-"marketplace.subtitle": "अपने गाँव के समुदाय में वस्तुएँ खरीदें और बेचें",
-"marketplace.settings": "सेटिंग्स",
-"marketplace.browse": "देखें",
-"marketplace.sellItem": "वस्तु बेचें",
-"marketplace.myListings": "मेरी सूचियाँ",
-"marketplace.loginRequired": "लॉगिन आवश्यक",
-"marketplace.loginMessage": "मार्केटप्लेस में वस्तु बेचने के लिए कृपया लॉगिन करें।",
-"marketplace.loginToSell": "बेचने के लिए लॉगिन करें",
-
-      // Media Gallery (Hindi)
-  "mediaGallery.title": "मीडिया गैलरी",
-  "mediaGallery.subtitle": "गाँव के त्योहारों, विकास कार्यों और सामुदायिक कार्यक्रमों की तस्वीरें और वीडियो देखें।",
-  "mediaGallery.photosTab": "फोटो गैलरी",
-  "mediaGallery.videosTab": "वीडियो गैलरी",
-  "mediaGallery.filterAll": "सभी",
-  "mediaGallery.noPhotosTitle": "कोई फोटो उपलब्ध नहीं",
-  "mediaGallery.noPhotosText": "गैलरी फोटो जल्द ही अपडेट किए जाएंगे।",
-  "mediaGallery.noVideosTitle": "कोई वीडियो उपलब्ध नहीं",
-  "mediaGallery.noVideosText": "वीडियो गैलरी जल्द ही अपडेट की जाएगी।",
-  "mediaGallery.seoImageTitle": "फोटो गैलरी",
-  "mediaGallery.seoVideoTitle": "वीडियो गैलरी",
-  "mediaGallery.seoDescription": "हमारे गाँव की मीडिया गैलरी — फोटो और वीडियो देखें",
-
       
       // Hero
       "hero.title": "शिवनखेड (खु) गांव में आपका स्वागत है",
@@ -379,21 +297,23 @@ const resources = {
       "panchayat.message": "हमारे प्रिय गांव समुदाय की समृद्धि और विकास के लिए मिलकर काम कर रहे हैं।",
       "panchayat.officeHours": "कार्यालय समय",
       "panchayat.responsibilities": "पंचायत की जिम्मेदारियां",
-
+      
 
       // Proud People
-"proud-peopleWorkers.title": " गौरवशाली लोग",
-"proud-peopleWorkers.description":
+"proudPeople.title": "गौरवशाली लोग",
+"proudPeople.description":
   "उन व्यक्तियों का सम्मान जो अपनी उपलब्धियों और योगदान से हमारे गांव का नाम रोशन कर रहे हैं",
 
 
   // आशा कार्यकर्ता
+"ashaWorkers.title": "आशा कार्यकर्ता",
+"ashaWorkers.description":
+  "समुदाय के स्वास्थ्य और जागरूकता के लिए समर्पित आशा कार्यकर्ता",
 
-  "ashaWorkers.title": "आशा कार्यकर्ता",
-  "ashaWorkers.description": "आशा (मान्यता प्राप्त सामाजिक स्वास्थ्य कार्यकर्ता) गांव स्तर पर प्राथमिक स्वास्थ्य सेवाएं प्रदान करती हैं, मातृ एवं शिशु स्वास्थ्य को बढ़ावा देती हैं और समुदाय के कल्याण में सहयोग करती हैं।",
-
-  "anganwadiWorkers.title": "आंगनवाड़ी कार्यकर्ता",
-  "anganwadiWorkers.description": "आंगनवाड़ी कार्यकर्ता बाल पोषण, प्रारंभिक शिक्षा, स्वास्थ्य जागरूकता तथा महिलाओं और बच्चों के कल्याण के लिए महत्वपूर्ण सेवाएं प्रदान करती हैं।",
+// आंगनवाड़ी कार्यकर्ता
+"anganwadiWorkers.title": "आंगनवाड़ी कार्यकर्ता",
+"anganwadiWorkers.description":
+  "बाल विकास और महिला कल्याण के लिए कार्यरत समर्पित आंगनवाड़ी कार्यकर्ता",
 
   // विकास कार्य
 "developmentWorks.title": "विकास कार्य",
@@ -514,31 +434,6 @@ const resources = {
       "contact.ambulance": "एम्बुलेंस",
       "contact.localEmergency": "स्थानीय आपातकाल",
       
-      // notice board 
-  "notices.title": "सूचना पटल",
-  "notices.subtitle": "नवीनतम आधिकारिक सूचनाएँ और घोषणाएँ",
-  "notices.metaDescription": "ग्राम पंचायत की नवीनतम आधिकारिक सूचनाएँ देखें।",
-
-  "notices.search": "सूचनाएँ खोजें...",
-  "notices.none": "कोई सूचना उपलब्ध नहीं है",
-  "notices.checkBack": "कृपया बाद में दुबारा देखें",
-
-  "notices.category": "श्रेणी",
-  "notices.date": "तारीख",
-  "notices.readMore": "और पढ़ें",
-  "notices.attachment": "संलग्नक देखें",
-  "notices.viewAttachment": "संलग्नक खोलें",
-
-  "notices.active": "सक्रिय",
-  "notices.inactive": "समाप्त सूचना",
-
-  "notices.all": "सभी",
-  "notices.general": "सामान्य",
-  "notices.meeting": "बैठक",
-  "notices.urgent": "जरूरी",
-  "notices.tender": "निविदा",
-  "notices.scheme": "योजना",
-  "notices.election": "चुनाव",
       // Common
       "common.district": "जिला",
       "common.state": "राज्य",
@@ -582,46 +477,22 @@ const resources = {
 "header.login": "लॉगिन",
 "header.adminDashboard": "प्रशासन डॅशबोर्ड",
 "header.logout": "लॉगआउट",
-//buy and sell 
-// Marketplace
-"marketplace.title": "खरेदी व विक्री – बाजार",
-"marketplace.subtitle": "आपल्या गावाच्या समुदायात वस्तू खरेदी व विक्री करा",
-"marketplace.settings": "सेटिंग्स",
-"marketplace.browse": "ब्राउज करा",
-"marketplace.sellItem": "वस्तू विक्री करा",
-"marketplace.myListings": "माझ्या सूची",
-"marketplace.loginRequired": "लॉगिन आवश्यक",
-"marketplace.loginMessage": "मार्केटप्लेसमध्ये वस्तू विकण्यासाठी कृपया लॉगिन करा.",
-"marketplace.loginToSell": "विक्रीसाठी लॉगिन करा",
 
 
-
-  // Media Gallery
-  "mediaGallery.title": "मीडिया गॅलरी",
-  "mediaGallery.subtitle": "गावातील सण, विकास कामे आणि सामुदायिक कार्यक्रमांचे फोटो आणि व्हिडिओ पहा.",
-  "mediaGallery.photosTab": "फोटो गॅलरी",
-  "mediaGallery.videosTab": "व्हिडिओ गॅलरी",
-  "mediaGallery.filterAll": "सर्व",
-  "mediaGallery.noPhotosTitle": "फोटो उपलब्ध नाहीत",
-  "mediaGallery.noPhotosText": "गॅलरी फोटो लवकरच अपडेट केले जातील.",
-  "mediaGallery.noVideosTitle": "व्हिडिओ उपलब्ध नाहीत",
-  "mediaGallery.noVideosText": "व्हिडिओ गॅलरी लवकरच अपडेट केली जाईल.",
-  "mediaGallery.seoImageTitle": "फोटो गॅलरी",
-  "mediaGallery.seoVideoTitle": "व्हिडिओ गॅलरी",
-  "mediaGallery.seoDescription": "आपल्या गावाची मीडिया गॅलरी — फोटो आणि व्हिडिओ पहा",
       // Proud People
-"proud-peopleWorkers.title": "गौरवशाली व्यक्ती",
-"proud-peopleWorkers.description":
+"proudPeople.title": "गौरवशाली व्यक्ती",
+"proudPeople.description":
   "आपल्या कर्तृत्व व योगदानातून गावाचा मान वाढवणाऱ्या व्यक्तींचा गौरव",
 
 // आशा सेविका
+"ashaWorkers.title": "आशा सेविका",
+"ashaWorkers.description":
+  "गावातील आरोग्य सेवा व जनजागृतीसाठी समर्पितपणे कार्य करणाऱ्या आशा सेविका",
 
-  "ashaWorkers.title": "आशा कार्यकर्त्या",
-  "ashaWorkers.description": "आशा (Accredited Social Health Activist) कार्यकर्त्या गाव पातळीवर प्राथमिक आरोग्य सेवा पुरवणे, माता व बाल आरोग्याची काळजी घेणे आणि समुदायाच्या आरोग्य जनजागृतीसाठी कार्य करतात.",
-
-  "anganwadiWorkers.title": "अंगणवाडी सेविका",
-  "anganwadiWorkers.description": "अंगणवाडी सेविका बाल पोषण, पूर्व प्राथमिक शिक्षण, आरोग्य विषयक जनजागृती तसेच महिला व बालकांच्या कल्याणासाठी महत्त्वाची भूमिका बजावतात.",
-
+// अंगणवाडी कार्यकर्त्या
+"anganwadiWorkers.title": "अंगणवाडी कार्यकर्त्या",
+"anganwadiWorkers.description":
+  "बालविकास व महिलांच्या कल्याणासाठी कार्य करणाऱ्या समर्पित अंगणवाडी कार्यकर्त्या",
 // विकास कामे
 "developmentWorks.title": "विकास कामे",
 "developmentWorks.description":
@@ -735,32 +606,7 @@ const resources = {
       "schemes.freeVerification": "मोफत पडताळणी",
       "schemes.downloadForms": "फॉर्म डाउनलोड करा",
       "schemes.contactOffice": "कार्यालयाशी संपर्क साधा",
-      //notice board 
       
-  "notices.title": "सूचना फलक",
-  "notices.subtitle": "नवीन अधिकृत सूचना आणि घोषणा",
-  "notices.metaDescription": "ग्रामपंचायतीच्या ताज्या अधिकृत सूचना पहा.",
-
-  "notices.search": "सूचना शोधा...",
-  "notices.none": "कोणतीही सूचना उपलब्ध नाही",
-  "notices.checkBack": "कृपया नंतर पुन्हा पहा",
-
-  "notices.category": "विभाग",
-  "notices.date": "तारीख",
-  "notices.readMore": "अधिक वाचा",
-  "notices.attachment": "संलग्नक पहा",
-  "notices.viewAttachment": "संलग्नक उघडा",
-
-  "notices.active": "सक्रिय",
-  "notices.inactive": "कालबाह्य सूचना",
-
-  "notices.all": "सर्व",
-  "notices.general": "सामान्य",
-  "notices.meeting": "बैठक",
-  "notices.urgent": "त्वरित",
-  "notices.tender": "टेंडर",
-  "notices.scheme": "योजना",
-  "notices.election": "निवडणूक",
       // Development
       "development.title": "विकास कामे",
       "development.description": "आमच्या गावात केलेल्या विविध विकास प्रकल्पांची प्रगती ट्रॅक करा।",

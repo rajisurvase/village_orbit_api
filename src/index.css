@@ -109,7 +109,7 @@ All colors MUST be HSL format for theming support.
 
 .animate-scroll-left {
   display: inline-flex;
-  animation: scroll-left 45s linear infinite;
+  animation: scroll-left 22s linear infinite;
 }
 
 @layer base {

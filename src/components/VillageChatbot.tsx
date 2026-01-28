@@ -24,8 +24,6 @@ const VillageChatbot = () => {
   const recognitionRef = useRef<any>(null);
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isAutoScrollEnabled = useRef(true);
-  const chatRef = useRef<HTMLDivElement>(null);
-
   const { i18n } = useTranslation();
   const isFooterVisible = useFooterVisibility();
   const { config } = useContext(VillageContext);
@@ -37,23 +35,16 @@ const VillageChatbot = () => {
   };
 
   // Load messages from localStorage on mount
- useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-    if (chatRef.current && !chatRef.current.contains(event.target as Node)) {
-      setIsOpen(false);
-      setIsMinimized(false);
+  useEffect(() => {
+    const savedMessages = localStorage.getItem("villageChatMessages");
+    if (savedMessages) {
+      try {
+        setMessages(JSON.parse(savedMessages));
+      } catch (error) {
+        console.error("Failed to load messages:", error);
+      }
     }
-  };
-
-  if (isOpen && !isMinimized) {
-    document.addEventListener("mousedown", handleClickOutside);
-  }
-
-  return () => {
-    document.removeEventListener("mousedown", handleClickOutside);
-  };
-}, [isOpen, isMinimized]);
-
+  }, []);
 
   // Save messages to localStorage whenever they change
   useEffect(() => {
@@ -374,7 +365,7 @@ const VillageChatbot = () => {
 
       {/* Chat Popup */}
       {isOpen && !isMinimized && (
-        <div ref={chatRef} className="fixed bottom-44 right-6 z-[60] w-96 max-w-[calc(100vw-3rem)] h-[500px] max-h-[70vh] bg-card rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
+        <div className="fixed bottom-44 right-6 z-[60] w-96 max-w-[calc(100vw-3rem)] h-[500px] max-h-[70vh] bg-card rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
           {/* Header */}
           <div
             className="p-4 text-white flex items-center justify-between"

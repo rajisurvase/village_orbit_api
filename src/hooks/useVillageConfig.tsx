@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { GetVillageById } from "@/services/village-service";
 // import { getCurrentVillage } from "@/config/villageConfig";
 
 export interface Geography {
@@ -106,7 +108,7 @@ export interface VillageConfig {
     wardMembers: PersonProfile[];
     staff: PersonProfile[];
   };
-  
+
   proudPeople?: PersonProfile[];
   ashaWorkers?: PersonProfile[];
   anganwadiWorkers?: PersonProfile[];
@@ -145,7 +147,7 @@ export interface VillageConfig {
     text: string;
     priority?: "high" | "medium" | "low";
   }>;
- 
+
   scrollerCards?: Array<{
     id: string;
     title: string;
@@ -155,106 +157,115 @@ export interface VillageConfig {
   }>;
 }
 
-export const useVillageConfig = (village?: string, language: string = 'en') => {
-  const [config, setConfig] = useState<VillageConfig | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+// export const useVillageConfig = (village?: string, language: string = "en") => {
+//   const [error, setError] = useState<string | null>(null);
 
-  
-  // Normalize language code to base language (e.g., 'en-US' -> 'en')
-  const normalizedLanguage = language.split('-')[0]
-  
-  useEffect(() => {
-    const fetchConfig = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+//   let id = "4dd1a3a2-5e25-46ff-a830-e476c92865e6";
 
-        // If no village name specified, use static data as fallback
-        if (!village) {
-          setLoading(false);
-          return;
-        }
+//   const { data: config, isLoading } = useQuery({
+//     queryKey: ["villageConfig", id, language],
+//     queryFn: () => GetVillageById({ id, language }),
+//     select(data) {
+//       return data.data;
+//     },
+//   });
 
-        // Fetch village ID
-        const { data: villageData, error: villageError } = await supabase
-          .from("villages")
-          .select("id")
-          .eq("name", village)
-          .single();
+//   console.log("Village Config Hook Data:", config);
 
-        if (villageError) {
-          console.error("Error fetching village:", villageError);
-          // Fallback to static data
-          setLoading(false);
-          return;
-        }
+//   // Normalize language code to base language (e.g., 'en-US' -> 'en')
+//   // const normalizedLanguage = language.split('-')[0]
 
-        // Fetch config from database with language filter
-        const { data: configData, error: configError } = await supabase
-          .from("village_config")
-          .select("config_data")
-          .eq("village_id", villageData.id)
-          .eq("language", normalizedLanguage)
-          .maybeSingle();
+//   // useEffect(() => {
+//   //   const fetchConfig = async () => {
+//   //     try {
+//   //       setLoading(true);
+//   //       setError(null);
 
-        if (configError) {
-          console.error("Error fetching config:", configError);
-          setError(configError.message);
-          // Fallback to static data
-        } else if (configData) {
-          // Handle nested config_data structure (if user saved entire payload)
-          let parsedConfig = configData.config_data as any;
-          if (parsedConfig?.config_data) {
-            // Data is double-nested, unwrap it
-            parsedConfig = parsedConfig.config_data;
-          }
-          setConfig(parsedConfig);
-        } else {
-          // No config in database, use static data
-        }
-      } catch (err) {
-        console.error("Error in fetchConfig:", err);
-        setError(err instanceof Error ? err.message : "Unknown error");
-        // Fallback to static data
-      } finally {
-        setLoading(false);
-      }
-    };
+//   //       // If no village name specified, use static data as fallback
+//   //       if (!village) {
+//   //         setLoading(false);
+//   //         return;
+//   //       }
 
-    fetchConfig();
+//   //       // Fetch village ID
+//   //       const { data: villageData, error: villageError } = await supabase
+//   //         .from("villages")
+//   //         .select("id")
+//   //         .eq("name", village)
+//   //         .single();
 
-    // Set up real-time subscription for village config updates
-    const channel = supabase
-      .channel("village-config-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "village_config",
-        },
-        (payload) => {
-          if (
-            payload.eventType === "UPDATE" ||
-            payload.eventType === "INSERT"
-          ) {
-            const newData = payload.new as any;
-            let parsedConfig = newData.config_data as any;
-            // Handle nested config_data structure
-            if (parsedConfig?.config_data) {
-              parsedConfig = parsedConfig.config_data;
-            }
-            setConfig(parsedConfig);
-          }
-        }
-      )
-      .subscribe();
+//   //       if (villageError) {
+//   //         console.error("Error fetching village:", villageError);
+//   //         // Fallback to static data
+//   //         setLoading(false);
+//   //         return;
+//   //       }
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [village, normalizedLanguage]);
+//   //       // Fetch config from database with language filter
+//   //       const { data: configData, error: configError } = await supabase
+//   //         .from("village_config")
+//   //         .select("config_data")
+//   //         .eq("village_id", villageData.id)
+//   //         .eq("language", normalizedLanguage)
+//   //         .maybeSingle();
 
-  return { config, loading, error };
-};
+//   //       if (configError) {
+//   //         console.error("Error fetching config:", configError);
+//   //         setError(configError.message);
+//   //         // Fallback to static data
+//   //       } else if (configData) {
+//   //         // Handle nested config_data structure (if user saved entire payload)
+//   //         let parsedConfig = configData.config_data as any;
+//   //         if (parsedConfig?.config_data) {
+//   //           // Data is double-nested, unwrap it
+//   //           parsedConfig = parsedConfig.config_data;
+//   //         }
+//   //         setConfig(parsedConfig);
+//   //       } else {
+//   //         // No config in database, use static data
+//   //       }
+//   //     } catch (err) {
+//   //       console.error("Error in fetchConfig:", err);
+//   //       setError(err instanceof Error ? err.message : "Unknown error");
+//   //       // Fallback to static data
+//   //     } finally {
+//   //       setLoading(false);
+//   //     }
+//   //   };
+
+//   //   fetchConfig();
+
+//   //   // Set up real-time subscription for village config updates
+//   //   const channel = supabase
+//   //     .channel("village-config-changes")
+//   //     .on(
+//   //       "postgres_changes",
+//   //       {
+//   //         event: "*",
+//   //         schema: "public",
+//   //         table: "village_config",
+//   //       },
+//   //       (payload) => {
+//   //         if (
+//   //           payload.eventType === "UPDATE" ||
+//   //           payload.eventType === "INSERT"
+//   //         ) {
+//   //           const newData = payload.new as any;
+//   //           let parsedConfig = newData.config_data as any;
+//   //           // Handle nested config_data structure
+//   //           if (parsedConfig?.config_data) {
+//   //             parsedConfig = parsedConfig.config_data;
+//   //           }
+//   //           setConfig(parsedConfig);
+//   //         }
+//   //       }
+//   //     )
+//   //     .subscribe();
+
+//   //   return () => {
+//   //     supabase.removeChannel(channel);
+//   //   };
+//   // }, [village, normalizedLanguage]);
+
+//   return { config, loading: isLoading, error };
+// };

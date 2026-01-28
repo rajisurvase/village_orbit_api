@@ -21,10 +21,10 @@ import {
 } from "@/components/ui/select";
 import { Calendar, Download, Filter, Mail, Phone, User, MessageSquare, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import CustomLoader from "@/components/CustomLoader";
 import * as XLSX from 'xlsx';
+import useApiAuth from "@/hooks/useApiAuth";
 
 interface ContactMessage {
   id: string;
@@ -39,7 +39,7 @@ interface ContactMessage {
 
 const ContactMessagesAdmin = () => {
   const navigate = useNavigate();
-  const { isAdmin, loading: authLoading } = useAuth();
+  const { isAdmin, loading: authLoading, isSuperAdmin } = useApiAuth();
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [filteredMessages, setFilteredMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -172,8 +172,9 @@ const ContactMessagesAdmin = () => {
     }
   };
 
+
   if (authLoading || loading) return <CustomLoader />;
-  if (!isAdmin) return null;
+  // if (isSuperAdmin) return null;
 
   return (
     <div className="min-h-screen bg-background py-8">

@@ -200,10 +200,10 @@ const Contact = ({contact, documents=[], quickServices=[]}) => {
             {(quickServices.length > 0 || documents.length > 0) && (
               <Card ref={quickServicesRef} id="quick-services" className="card-elegant mt-8">
                 <CardHeader>
-             <CardTitle className="flex items-center gap-3 text-xl">
-  <FileText className="h-5 w-5 text-primary" />
-  {t("contact.quickServices")}
-</CardTitle>
+                  <CardTitle className="flex items-center gap-3 text-xl">
+                    <FileText className="h-5 w-5 text-primary" />
+                    Quick Services
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-3">

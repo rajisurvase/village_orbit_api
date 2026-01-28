@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react"; // AdminDashboard
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useApiAuth } from "@/hooks/useApiAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -44,7 +44,7 @@ export default function AdminDashboard() {
     description: "View and manage users, posts, and ratings",
   });
   
-  const { user, isAdmin, isSubAdmin, loading: authLoading } = useAuth();
+  const { user, isSuperAdmin, isAdmin, isSubAdmin, loading: authLoading } = useApiAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -58,6 +58,9 @@ export default function AdminDashboard() {
     averageRating: 0,
   });
 
+  // Check if user can access admin panel
+  const canAccessAdmin = isSuperAdmin || isAdmin || isSubAdmin;
+
   useEffect(() => {
     if (!authLoading && !user) {
       toast({
@@ -66,17 +69,17 @@ export default function AdminDashboard() {
         variant: "destructive",
       });
       navigate(CUSTOM_ROUTES.AUTH);
-    } else if (!authLoading && user && !isAdmin && !isSubAdmin) {
+    } else if (!authLoading && user && !canAccessAdmin) {
       toast({
         title: "Access Denied",
         description: "Only administrators can access this page",
         variant: "destructive",
       });
       navigate("/");
-    } else if (!authLoading && user && (isAdmin || isSubAdmin)) {
+    } else if (!authLoading && user && canAccessAdmin) {
       fetchData();
     }
-  }, [user, isAdmin, authLoading, navigate, toast]);
+  }, [user, canAccessAdmin, authLoading, navigate, toast]);
 
   const fetchData = async () => {
     try {
@@ -174,7 +177,7 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!user || (!isAdmin && !isSubAdmin)) {
+  if (!user || !canAccessAdmin) {
     return null;
   }
 

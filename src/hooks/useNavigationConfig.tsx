@@ -55,7 +55,6 @@ export const getDefaultNavigationConfig = (): NavigationConfig => ({
         { id: "videos_gallery", key: "videos_gallery", label: { en: "Videos", hi: "वीडियो", mr: "व्हिडिओ" }, href: "/media-gallery?type=videos", pageKey: "gallery", isVisible: true, order: 3 },
       ]
     },
-    
     {
       id: "government",
       title: { en: "Government & Administration", hi: "सरकार और प्रशासन", mr: "शासन आणि प्रशासन" },

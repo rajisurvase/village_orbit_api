@@ -2,16 +2,16 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { usePageSEO } from "@/hooks/usePageSEO";
+import { useApiAuth } from "@/hooks/useApiAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock, Trophy, BookOpen, Play, CheckCircle2, XCircle, Bell, BellOff, RefreshCw, AlertTriangle } from "lucide-react";
+import { Calendar, Clock, Trophy, BookOpen, Play, CheckCircle2, XCircle, Bell, BellOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import CustomLoader from "@/components/CustomLoader";
 import { format, isPast, isFuture } from "date-fns";
 import { useNotifications } from "@/hooks/useNotifications";
-import StudentExamCard from "@/components/exam/StudentExamCard";
 
 interface Exam {
   id: string;
@@ -23,22 +23,17 @@ interface Exam {
   scheduled_at: string;
   ends_at: string;
   status: string;
-  from_standard: string | null;
-  to_standard: string | null;
-  shuffle_questions: boolean;
 }
 
 interface ExamAttempt {
   id: string;
   exam_id: string;
-  score: number | null;
-  correct_answers: number | null;
-  wrong_answers: number | null;
+  score: number;
+  correct_answers: number;
+  wrong_answers: number;
   total_questions: number;
   start_time: string;
-  end_time: string | null;
-  status: string;
-  can_reattempt: boolean;
+  end_time: string;
   exams: Exam;
 }
 
@@ -49,104 +44,53 @@ interface LeaderboardEntry {
   subject: string;
 }
 
-interface StudentProfile {
-  standard: string | null;
-  full_name: string | null;
-}
-
-interface UserRoles {
-  isStudent: boolean;
-  isAdmin: boolean;
-}
-
 const ExamDashboard = () => {
   usePageSEO({
-    title: "ऑनलाइन परीक्षा प्रणाली - Shivankhed Khurd",
-    description: "GK, विज्ञान, गणित आणि इंग्रजीमध्ये ऑनलाइन परीक्षा द्या. तुमचे गुण पहा आणि लीडरबोर्डवर स्पर्धा करा.",
+    title: "Online Exam System - Shivankhed Khurd",
+    description: "Take online exams in GK, Science, Math, and English. View your scores and compete on the leaderboard.",
     keywords: ["online exam", "test", "quiz", "education", "student", "Shivankhed Khurd"],
   });
 
-  const [eligibleExams, setEligibleExams] = useState<Exam[]>([]);
+  const [upcomingExams, setUpcomingExams] = useState<Exam[]>([]);
   const [pastAttempts, setPastAttempts] = useState<ExamAttempt[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
-  const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
-  const [userRoles, setUserRoles] = useState<UserRoles>({ isStudent: false, isAdmin: false });
-  const [inProgressAttempts, setInProgressAttempts] = useState<ExamAttempt[]>([]);
+  const { user, loading: authLoading, isAuthenticated } = useApiAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { permission, requestPermission, checkUpcomingExams, subscribeToExamReminders } = useNotifications();
 
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+    if (authLoading) return;
+    
+    if (!isAuthenticated || !user?.userId) {
       toast({
-        title: "प्रमाणीकरण आवश्यक",
-        description: "कृपया परीक्षा प्रणाली वापरण्यासाठी लॉगिन करा",
+        title: "Authentication Required",
+        description: "Please login to access the exam system",
         variant: "destructive"
       });
       navigate("/auth");
       return;
     }
-    setUser(session.user);
     
-    // Check user roles
-    const { data: rolesData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", session.user.id);
+    fetchData(user.userId);
     
-    const roles = rolesData?.map(r => r.role) || [];
-    const isStudent = roles.includes("student");
-    const isAdmin = roles.includes("admin") || roles.includes("sub_admin");
-    setUserRoles({ isStudent, isAdmin });
-    
-    // If not a student and not an admin, show error
-    // if (!isStudent && !isAdmin) {
-    //   toast({
-    //     title: "प्रवेश नाकारला",
-    //     description: "परीक्षा देण्यासाठी तुम्हाला 'विद्यार्थी' भूमिका आवश्यक आहे. कृपया प्रशासकाशी संपर्क साधा.",
-    //     variant: "destructive"
-    //   });
-    //   navigate("/");
-    //   return;
-    // }
-    
-    // Fetch student profile
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("standard, full_name")
-      .eq("id", session.user.id)
-      .single();
-    
-    setStudentProfile(profileData);
-    
-    // Only fetch exam data for students
-    // if (isStudent) {
-      fetchData(session.user.id, profileData?.standard);
-      
-      // Check for upcoming exams and set up notifications
-      checkUpcomingExams(session.user.id);
-      const channel = await subscribeToExamReminders(session.user.id);
-      
+    // Check for upcoming exams and set up notifications
+    checkUpcomingExams(user.userId);
+    const setupReminders = async () => {
+      const channel = await subscribeToExamReminders(user.userId);
       return () => {
         supabase.removeChannel(channel);
       };
-    // } else {
-    //   setLoading(false);
-    // }
-  };
+    };
+    setupReminders();
+  }, [authLoading, isAuthenticated, user]);
 
-  const fetchData = async (userId: string, studentStandard: string | null) => {
+  const fetchData = async (userId: string) => {
     try {
       setLoading(true);
       
-      // Fetch all scheduled/active exams
+      // Fetch upcoming exams
       const { data: examsData, error: examsError } = await supabase
         .from("exams")
         .select("*")
@@ -154,27 +98,9 @@ const ExamDashboard = () => {
         .order("scheduled_at", { ascending: true });
 
       if (examsError) throw examsError;
-      
-      // Filter exams based on student's standard eligibility
-      // const eligible = (examsData || []).filter(exam => {
-      //   if (!exam.from_standard && !exam.to_standard) {
-      //     return true; // No restrictions
-      //   }
-        
-      //   if (!studentStandard) {
-      //     return false; // Student has no standard set
-      //   }
-        
-      //   const studentStd = parseInt(studentStandard.replace(/[^0-9]/g, '')) || 0;
-      //   const fromStd = exam.from_standard ? parseInt(exam.from_standard.replace(/[^0-9]/g, '')) || 0 : 0;
-      //   const toStd = exam.to_standard ? parseInt(exam.to_standard.replace(/[^0-9]/g, '')) || 12 : 12;
-        
-      //   return studentStd >= fromStd && studentStd <= toStd;
-      // });
-      
-      setEligibleExams(examsData);
+      setUpcomingExams(examsData || []);
 
-      // Fetch all attempts for this user
+      // Fetch past attempts
       const { data: attemptsData, error: attemptsError } = await supabase
         .from("exam_attempts")
         .select(`
@@ -188,27 +114,14 @@ const ExamDashboard = () => {
             duration_minutes,
             scheduled_at,
             ends_at,
-            status,
-            from_standard,
-            to_standard,
-            shuffle_questions
+            status
           )
         `)
         .eq("user_id", userId)
         .order("start_time", { ascending: false });
 
       if (attemptsError) throw attemptsError;
-      
-      // Separate completed attempts (SUBMITTED or has score) and in-progress
-      const inProgress = (attemptsData || []).filter(a => 
-        (a.status === "IN_PROGRESS" || a.status === "NOT_STARTED") && a.score === null
-      );
-      const completed = (attemptsData || []).filter(a => 
-        a.status === "SUBMITTED" || a.score !== null
-      );
-      
-      setInProgressAttempts(inProgress);
-      setPastAttempts(completed);
+      setPastAttempts(attemptsData || []);
 
       // Fetch leaderboard (top 10 scores)
       const { data: leaderboardData, error: leaderboardError } = await supabase
@@ -221,7 +134,6 @@ const ExamDashboard = () => {
             subject
           )
         `)
-        .eq("status", "SUBMITTED")
         .not("score", "is", null)
         .order("score", { ascending: false })
         .limit(10);
@@ -239,7 +151,7 @@ const ExamDashboard = () => {
 
     } catch (error: any) {
       toast({
-        title: "त्रुटी",
+        title: "Error",
         description: error.message,
         variant: "destructive"
       });
@@ -258,91 +170,43 @@ const ExamDashboard = () => {
     return colors[subject] || "bg-gray-500";
   };
 
+  const getStatusBadge = (exam: Exam) => {
+    const now = new Date();
+    const scheduled = new Date(exam.scheduled_at);
+    const ends = new Date(exam.ends_at);
+
+    if (isFuture(scheduled)) {
+      return <Badge variant="secondary">Upcoming</Badge>;
+    } else if (isPast(ends)) {
+      return <Badge variant="destructive">Ended</Badge>;
+    } else {
+      return <Badge className="bg-green-600">Active</Badge>;
+    }
+  };
+
   const canTakeExam = (exam: Exam) => {
     const now = new Date();
     const scheduled = new Date(exam.scheduled_at);
     const ends = new Date(exam.ends_at);
-
-    // Check if exam is within the valid time window
+    
+    const hasAttempt = pastAttempts.some(attempt => attempt.exam_id === exam.id);
+    
+    // Check if exam is within the valid time window (started but not ended)
     const isWithinTimeWindow = now >= scheduled && now <= ends;
-
-    // Check if exam status allows taking
+    
+    // Check if exam status allows taking (scheduled or active)
     const isStatusValid = exam.status === "scheduled" || exam.status === "active";
-
-    // STRICT: if the student has ANY completed attempt (SUBMITTED or has score), never allow starting again
-    const hasCompletedAttempt = pastAttempts.some(attempt =>
-      attempt.exam_id === exam.id && (attempt.status === "SUBMITTED" || attempt.score !== null)
-    );
-
-    return !hasCompletedAttempt && isWithinTimeWindow && isStatusValid;
-  };
-
-  const getExamStatus = (exam: Exam) => {
-    const now = new Date();
-    const scheduled = new Date(exam.scheduled_at);
-    const ends = new Date(exam.ends_at);
     
-    // Check for submitted attempt (status SUBMITTED or has score)
-    const submittedAttempt = pastAttempts.find(a => 
-      a.exam_id === exam.id && (a.status === "SUBMITTED" || a.score !== null)
-    );
-    if (submittedAttempt) {
-      return "completed";
-    }
-    
-    // Check for in-progress attempt
-    const inProgressAttempt = inProgressAttempts.find(a => a.exam_id === exam.id);
-    if (inProgressAttempt) {
-      return "resume";
-    }
-    
-    if (isFuture(scheduled)) {
-      return "upcoming";
-    } else if (isPast(ends)) {
-      return "ended";
-    }
-    
-    return "active";
+    return !hasAttempt && isWithinTimeWindow && isStatusValid;
   };
 
   const handleStartExam = (examId: string) => {
     navigate(`/exam/${examId}/take`);
   };
 
-  const handleResumeExam = (examId: string) => {
-    navigate(`/exam/${examId}/take`);
-  };
-
-  if (loading) {
+  if (authLoading || loading) {
     return <CustomLoader />;
   }
-
-  // // Show message for non-student users
-  // if (!userRoles.isStudent && !userRoles.isAdmin) {
-  //   return (
-  //     <div className="min-h-screen bg-background flex items-center justify-center">
-  //       <Card className="max-w-md mx-4">
-  //         <CardHeader>
-  //           <CardTitle className="flex items-center gap-2 text-destructive">
-  //             <AlertTriangle className="h-6 w-6" />
-  //             प्रवेश नाकारला
-  //           </CardTitle>
-  //         </CardHeader>
-  //         <CardContent className="space-y-4">
-  //           <p className="text-muted-foreground">
-  //             परीक्षा प्रणाली वापरण्यासाठी तुम्हाला 'विद्यार्थी' भूमिका आवश्यक आहे.
-  //           </p>
-  //           <p className="text-sm text-muted-foreground">
-  //             कृपया प्रशासकाशी संपर्क साधून तुम्हाला विद्यार्थी म्हणून नोंदणी करा.
-  //           </p>
-  //           <Button onClick={() => navigate("/")} className="w-full">
-  //             मुख्यपृष्ठावर परत जा
-  //           </Button>
-  //         </CardContent>
-  //       </Card>
-  //     </div>
-  //   );
-  // }
 
   return (
     <div className="min-h-screen bg-background">
@@ -351,33 +215,22 @@ const ExamDashboard = () => {
         <div className="container mx-auto px-4">
           <div className="text-center">
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-              ऑनलाइन परीक्षा प्रणाली
+              Online Exam System
             </h1>
-            <p className="text-muted-foreground mb-2">
-              GK, विज्ञान, गणित आणि इंग्रजीमध्ये तुमचे ज्ञान तपासा
+            <p className="text-muted-foreground mb-4">
+              Test your knowledge in GK, Science, Math, and English
             </p>
-            {userRoles.isStudent && studentProfile?.standard && (
-              <Badge variant="outline" className="mb-4">
-                इयत्ता: {studentProfile.standard}
-              </Badge>
-            )}
-            {userRoles.isStudent && !studentProfile?.standard && (
-              <div className="flex items-center justify-center gap-2 text-yellow-600 mb-4">
-                <AlertTriangle className="h-4 w-4" />
-                <span className="text-sm">तुमची इयत्ता सेट केलेली नाही. कृपया प्रशासकाशी संपर्क साधा.</span>
-              </div>
-            )}
             <div className="flex gap-2 justify-center flex-wrap">
               <Button 
                 variant="outline" 
                 onClick={() => navigate("/exam/rules")}
               >
-                📖 परीक्षा नियम वाचा
+                📖 Read Exam Rules & Guidelines
               </Button>
               {permission === "granted" ? (
                 <Button variant="outline" disabled>
                   <Bell className="h-4 w-4 mr-2" />
-                  सूचना चालू
+                  Notifications On
                 </Button>
               ) : (
                 <Button 
@@ -385,7 +238,7 @@ const ExamDashboard = () => {
                   onClick={requestPermission}
                 >
                   <BellOff className="h-4 w-4 mr-2" />
-                  सूचना सुरू करा
+                  Enable Notifications
                 </Button>
               )}
             </div>
@@ -393,90 +246,76 @@ const ExamDashboard = () => {
         </div>
       </section>
 
-      {/* In-Progress Exams Alert */}
-      {inProgressAttempts.length > 0 && (
-        <div className="container mx-auto px-4 py-4">
-          <Card className="border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
-                <RefreshCw className="h-5 w-5" />
-                अपूर्ण परीक्षा
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {inProgressAttempts.map((attempt) => (
-                  <div key={attempt.id} className="flex items-center justify-between p-3 bg-background rounded-lg">
-                    <div>
-                      <p className="font-semibold">{attempt.exams.title}</p>
-                      <p className="text-sm text-muted-foreground">
-                        सुरू केले: {format(new Date(attempt.start_time), "PPP, p")}
-                      </p>
-                    </div>
-                    <Button onClick={() => handleResumeExam(attempt.exam_id)}>
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      पुन्हा सुरू करा
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
       <div className="container mx-auto px-4 py-8">
         <Tabs defaultValue="upcoming" className="w-full">
           <TabsList className="grid w-full max-w-xl mx-auto grid-cols-3">
-            <TabsTrigger value="upcoming">उपलब्ध परीक्षा</TabsTrigger>
-            <TabsTrigger value="scores">माझे गुण</TabsTrigger>
-            <TabsTrigger value="leaderboard">लीडरबोर्ड</TabsTrigger>
+            <TabsTrigger value="upcoming">Upcoming Exams</TabsTrigger>
+            <TabsTrigger value="scores">My Scores</TabsTrigger>
+            <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
           </TabsList>
+
+          {/* Upcoming Exams Tab */}
           <TabsContent value="upcoming" className="mt-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {eligibleExams.length === 0 ? (
+              {upcomingExams.length === 0 ? (
                 <Card className="col-span-full">
                   <CardContent className="pt-6 text-center">
                     <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">
-                      {studentProfile?.standard 
-                        ? "सध्या तुमच्या इयत्तेसाठी कोणतीही परीक्षा उपलब्ध नाही"
-                        : "तुमची इयत्ता सेट केलेली नसल्यामुळे परीक्षा दिसत नाहीत"
-                      }
-                    </p>
+                    <p className="text-muted-foreground">No upcoming exams</p>
                   </CardContent>
                 </Card>
               ) : (
-                eligibleExams.map((exam) => {
-                  // Find attempt info for this exam - check for completed (SUBMITTED or has score)
-                  const submittedAttempt = pastAttempts.find(a => 
-                    a.exam_id === exam.id && (a.status === "SUBMITTED" || a.score !== null)
-                  );
-                  const inProgressAttempt = inProgressAttempts.find(a => a.exam_id === exam.id);
-                  
-                  const attemptInfo = submittedAttempt 
-                    ? { id: submittedAttempt.id, status: "SUBMITTED" as const, score: submittedAttempt.score ?? undefined }
-                    : inProgressAttempt 
-                    ? { id: inProgressAttempt.id, status: inProgressAttempt.status }
-                    : undefined;
-                  return (
-                    <StudentExamCard
-                      key={exam.id}
-                      exam={exam}
-                      attemptInfo={attemptInfo}
-                      status={getExamStatus(exam)}
-                      canTake={canTakeExam(exam)}
-                      onStart={() => handleStartExam(exam.id)}
-                      onResume={() => handleResumeExam(exam.id)}
-                      studentStandard={studentProfile?.standard || null}
-                      isRestricted={!(userRoles.isAdmin || userRoles.isStudent)}
-                    />
-                  );
-                })
+                upcomingExams.map((exam) => (
+                  <Card key={exam.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <div className="flex justify-between items-start mb-2">
+                        <Badge className={getSubjectColor(exam.subject)}>
+                          {exam.subject}
+                        </Badge>
+                        {getStatusBadge(exam)}
+                      </div>
+                      <CardTitle className="text-xl">{exam.title}</CardTitle>
+                      <CardDescription>{exam.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Calendar className="h-4 w-4 mr-2" />
+                          {format(new Date(exam.scheduled_at), "PPP")}
+                        </div>
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Clock className="h-4 w-4 mr-2" />
+                          {exam.duration_minutes} minutes
+                        </div>
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <BookOpen className="h-4 w-4 mr-2" />
+                          {exam.total_questions} questions
+                        </div>
+                        
+                        {canTakeExam(exam) ? (
+                          <Button 
+                            className="w-full mt-4" 
+                            onClick={() => handleStartExam(exam.id)}
+                          >
+                            <Play className="h-4 w-4 mr-2" />
+                            Start Exam
+                          </Button>
+                        ) : pastAttempts.some(a => a.exam_id === exam.id) ? (
+                          <Button className="w-full mt-4" variant="secondary" disabled>
+                            <CheckCircle2 className="h-4 w-4 mr-2" />
+                            Already Attempted
+                          </Button>
+                        ) : (
+                          <Button className="w-full mt-4" variant="outline" disabled>
+                            Not Available
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
               )}
-              
             </div>
-
           </TabsContent>
 
           {/* Past Scores Tab */}
@@ -486,7 +325,7 @@ const ExamDashboard = () => {
                 <Card>
                   <CardContent className="pt-6 text-center">
                     <XCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">अद्याप कोणतीही परीक्षा दिलेली नाही</p>
+                    <p className="text-muted-foreground">No exam attempts yet</p>
                   </CardContent>
                 </Card>
               ) : (
@@ -508,25 +347,25 @@ const ExamDashboard = () => {
                     <CardContent>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div>
-                          <p className="text-sm text-muted-foreground">गुण</p>
+                          <p className="text-sm text-muted-foreground">Score</p>
                           <p className="text-2xl font-bold text-primary">
-                            {attempt.score ?? 0}%
+                            {attempt.score}%
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground">बरोबर</p>
+                          <p className="text-sm text-muted-foreground">Correct</p>
                           <p className="text-xl font-semibold text-green-600">
-                            {attempt.correct_answers ?? 0}
+                            {attempt.correct_answers}
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground">चुकीचे</p>
+                          <p className="text-sm text-muted-foreground">Wrong</p>
                           <p className="text-xl font-semibold text-red-600">
-                            {attempt.wrong_answers ?? 0}
+                            {attempt.wrong_answers}
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm text-muted-foreground">एकूण</p>
+                          <p className="text-sm text-muted-foreground">Total</p>
                           <p className="text-xl font-semibold">
                             {attempt.total_questions}
                           </p>
@@ -537,7 +376,7 @@ const ExamDashboard = () => {
                         variant="outline"
                         onClick={() => navigate(`/exam/${attempt.exam_id}/results/${attempt.id}`)}
                       >
-                        तपशील पहा
+                        View Details
                       </Button>
                     </CardContent>
                   </Card>
@@ -552,16 +391,16 @@ const ExamDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Trophy className="h-6 w-6 mr-2 text-yellow-500" />
-                  उत्कृष्ट कामगिरी
+                  Top Performers
                 </CardTitle>
                 <CardDescription>
-                  सर्व परीक्षांमधील सर्वोच्च गुण
+                  Highest scores across all exams
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {leaderboard.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">
-                    अद्याप कोणतेही गुण नाहीत
+                    No scores yet
                   </p>
                 ) : (
                   <div className="space-y-4">

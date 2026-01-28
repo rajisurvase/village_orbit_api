@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import CustomLoader from "@/components/CustomLoader";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
-import NotificationSettings from "@/components/NotificationSettings";
+import useApiAuth from "@/hooks/useApiAuth";
 
 interface Item {
   id: string;
@@ -35,7 +34,7 @@ interface Item {
 }
 
 export default function AdminMarketplaceDashboard() {
-  const { isAdmin, loading: authLoading, user } = useAuth();
+  const { isAdmin, loading: authLoading, user } = useApiAuth();
   const navigate = useNavigate();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,7 +80,7 @@ export default function AdminMarketplaceDashboard() {
         .update({
           status: "approved",
           reviewed_at: new Date().toISOString(),
-          reviewed_by: user?.id,
+          reviewed_by: user?.userId,
         })
         .eq("id", itemId);
 
@@ -122,7 +121,7 @@ export default function AdminMarketplaceDashboard() {
         .update({
           status: "rejected",
           reviewed_at: new Date().toISOString(),
-          reviewed_by: user?.id,
+          reviewed_by: user?.userId,
           rejection_reason: rejectionReason,
         })
         .eq("id", selectedItem.id);

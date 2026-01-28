@@ -1,20 +1,17 @@
 import { usePageSEO } from "@/hooks/usePageSEO";
-import { ShoppingBag, Plus, Package, LogIn, Settings } from "lucide-react";
+import { ShoppingBag, Plus, Package, LogIn } from "lucide-react";
 import ItemList from "@/components/marketplace/ItemList";
 import PostItemForm from "@/components/marketplace/PostItemForm";
 import MyListings from "@/components/marketplace/MyListings";
-import NotificationSettings from "@/components/NotificationSettings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { useTranslation } from 'react-i18next';
+import useApiAuth from "@/hooks/useApiAuth";
 
 const BuySellPage = () => {
-  const { user } = useAuth();
+  const { user } = useApiAuth();
   const navigate = useNavigate();
 
   usePageSEO({
@@ -23,7 +20,6 @@ const BuySellPage = () => {
     keywords: ["buy", "sell", "marketplace", "village market", "OLX", "local sellers", "Shivankhed Khurd"],
     canonical: window.location.origin + "/buy-sell"
   });
-const { t } = useTranslation();
 
   const handleLoginRedirect = () => {
     toast.info("Please login to sell items");
@@ -39,28 +35,12 @@ const { t } = useTranslation();
             <div className="text-center flex-1">
               <h1 className="text-xl md:text-3xl font-bold text-foreground mb-1 md:mb-2 flex items-center justify-center gap-2">
                 <ShoppingBag className="h-5 w-5 md:h-6 md:w-6" />
-              <span>{t("marketplace.title")}</span>
-
+                Buy & Sell – Market
               </h1>
               <p className="text-xs md:text-sm text-muted-foreground">
-               {t("marketplace.subtitle")}
+                Buy and sell items in your village community
               </p>
             </div>
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="shrink-0">
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-              <SheetTitle>{t("marketplace.settings")}</SheetTitle>
-                </SheetHeader>
-                <div className="mt-6">
-                  <NotificationSettings />
-                </div>
-              </SheetContent>
-            </Sheet>
           </div>
         </div>
       </section>
@@ -71,20 +51,17 @@ const { t } = useTranslation();
           <TabsList className={`grid w-full max-w-2xl mx-auto mb-4 md:mb-8 h-auto ${user ? 'grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'}`}>
             <TabsTrigger value="browse" className="text-xs md:text-sm py-2 md:py-3 gap-1 md:gap-2">
               <ShoppingBag className="h-4 w-4" />
-           <span>{t("marketplace.browse")}</span>
-
+              <span>Browse</span>
             </TabsTrigger>
             {user ? (
               <>
                 <TabsTrigger value="sell" className="text-xs md:text-sm py-2 md:py-3 gap-1 md:gap-2">
                   <Plus className="h-4 w-4" />
-              <span>{t("marketplace.sellItem")}</span>
-
+                  <span>Sell Item</span>
                 </TabsTrigger>
                 <TabsTrigger value="mylistings" className="text-xs md:text-sm py-2 md:py-3 gap-1 md:gap-2">
                   <Package className="h-4 w-4" />
-                <span>{t("marketplace.myListings")}</span>
-
+                  <span>My Listings</span>
                 </TabsTrigger>
               </>
             ) : (
@@ -97,7 +74,7 @@ const { t } = useTranslation();
                 }}
               >
                 <Plus className="h-4 w-4" />
-             <span>{t("marketplace.sellItem")}</span>
+                <span>Sell Item</span>
               </TabsTrigger>
             )}
           </TabsList>
@@ -127,14 +104,13 @@ const { t } = useTranslation();
               <Card className="max-w-md mx-auto">
                 <CardContent className="flex flex-col items-center justify-center py-12 px-4 text-center">
                   <LogIn className="h-16 w-16 text-muted-foreground mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">{t("marketplace.loginRequired")}</h3>
+                  <h3 className="text-xl font-semibold mb-2">Login Required</h3>
                   <p className="text-muted-foreground mb-6">
-             {t("marketplace.loginMessage")}
-
+                    Please login to post items for sale in the marketplace.
                   </p>
                   <Button onClick={handleLoginRedirect} size="lg">
                     <LogIn className="h-5 w-5 mr-2" />
-                   {t("marketplace.loginToSell")}
+                    Login to Sell
                   </Button>
                 </CardContent>
               </Card>

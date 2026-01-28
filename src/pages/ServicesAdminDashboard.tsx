@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import { ArrowLeft, Pencil, Trash2, Upload } from "lucide-react";
 import CustomLoader from "@/components/CustomLoader";
+import { useServices } from "@/hooks/village/useService";
 
 interface Service {
   id: string;
@@ -34,41 +35,6 @@ const ServicesAdminDashboard = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
 
-  useEffect(() => {
-    fetchServices();
-    fetchCategories();
-  }, []);
-
-  const fetchServices = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("village_services")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      toast.error("Failed to load services");
-      console.error(error);
-    } else {
-      setServices(data || []);
-    }
-    setLoading(false);
-  };
-
-  const fetchCategories = async () => {
-    const { data, error } = await supabase
-      .from("service_categories")
-      .select("*")
-      .eq("is_active", true)
-      .order("display_order");
-
-    if (error) {
-      console.error(error);
-    } else {
-      setCategories(data || []);
-    }
-  };
-
   const handleEdit = (service: Service) => {
     setSelectedService(service);
     setImagePreview(service.image_url || "");
@@ -86,7 +52,7 @@ const ServicesAdminDashboard = () => {
       console.error(error);
     } else {
       toast.success("Service deleted successfully");
-      fetchServices();
+      // fetchServices();
     }
   };
 
@@ -154,7 +120,7 @@ const ServicesAdminDashboard = () => {
 
       toast.success("Service updated successfully");
       setEditDialogOpen(false);
-      fetchServices();
+      // fetchServices();
     } catch (error: any) {
       toast.error(error.message || "Failed to update service");
       console.error(error);

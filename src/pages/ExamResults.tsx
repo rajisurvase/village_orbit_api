@@ -247,7 +247,7 @@ const ExamResults = () => {
         </Card>
 
         {/* Detailed Answers */}
-        {/* <Card>
+        <Card>
           <CardHeader>
             <CardTitle>Detailed Solutions</CardTitle>
             <CardDescription>
@@ -325,7 +325,7 @@ const ExamResults = () => {
               );
             })}
           </CardContent>
-        </Card> */}
+        </Card>
 
         <div className="flex justify-center mt-8">
           <Button onClick={() => navigate("/exam")} size="lg">

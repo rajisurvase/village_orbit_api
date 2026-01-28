@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { toast } from "sonner";
 import { Trash2, Eye, EyeOff, Loader2, Package, Edit, CheckCircle2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import EditItemDialog from "./EditItemDialog";
+import useApiAuth from "@/hooks/useApiAuth";
 
 interface Item {
   id: string;
@@ -28,7 +28,7 @@ interface Item {
 }
 
 const MyListings = () => {
-  const { user } = useAuth();
+  const { user } = useApiAuth();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -42,7 +42,7 @@ const MyListings = () => {
       const { data, error } = await supabase
         .from("items")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", user.userId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;

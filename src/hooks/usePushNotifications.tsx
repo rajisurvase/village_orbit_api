@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
+import useApiAuth from "./useApiAuth";
 
 // VAPID public key - must match the one used to generate push subscriptions
 const VAPID_PUBLIC_KEY = "BKeeemIYegVXOgB5euV_68Kl1ln39kwgqNnJOiX_51_DFriIS3dz6SSVYKBNlNYC2TugaS8hBJp-pyPCbMBY2KE";
@@ -19,7 +19,7 @@ interface PushNotificationState {
 }
 
 export const usePushNotifications = () => {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin } = useApiAuth();
   const { toast } = useToast();
   const [state, setState] = useState<PushNotificationState>({
     permission: "default",
@@ -215,7 +215,7 @@ export const usePushNotifications = () => {
           endpoint,
           p256dh,
           auth,
-          user_id: user?.id || null,
+          user_id: user?.userId || null,
           is_admin: isAdmin || false,
           updated_at: new Date().toISOString(),
         },

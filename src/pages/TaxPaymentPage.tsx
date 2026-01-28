@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@/hooks/useAuth";
 import { CUSTOM_ROUTES } from "@/custom-routes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +18,7 @@ import { toast } from "sonner";
 import { usePageSEO } from "@/hooks/usePageSEO";
 import { VILLAGES } from "@/config/villageConfig";
 import { Loader2 } from "lucide-react";
+import useApiAuth from "@/hooks/useApiAuth";
 
 interface TaxType {
   code: string;
@@ -29,7 +29,7 @@ interface TaxType {
 const TaxPaymentPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useApiAuth();
   const [loading, setLoading] = useState(false);
   const [selectedTax, setSelectedTax] = useState<string>("");
   const [formData, setFormData] = useState({

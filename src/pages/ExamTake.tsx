@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -15,10 +15,8 @@ import {
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Clock, Camera, Send, AlertTriangle } from "lucide-react";
+import { Clock, Camera, Send } from "lucide-react";
 import CustomLoader from "@/components/CustomLoader";
-import ExamInstructionsMarathi from "@/components/exam/ExamInstructionsMarathi";
-import AutoSaveIndicator from "@/components/exam/AutoSaveIndicator";
 
 interface Question {
   id: string;
@@ -37,22 +35,6 @@ interface Exam {
   subject: string;
   duration_minutes: number;
   total_questions: number;
-  shuffle_questions: boolean;
-  from_standard: string | null;
-  to_standard: string | null;
-  scheduled_at: string;
-  ends_at: string;
-  status: string;
-  allow_reattempt_till_end_date: boolean;
-}
-
-interface ExamAttempt {
-  id: string;
-  status: string;
-  remaining_time_seconds: number;
-  shuffled_question_order: string[];
-  can_reattempt: boolean;
-  integrity_pledge_accepted: boolean;
 }
 
 const ExamTake = () => {
@@ -61,8 +43,6 @@ const ExamTake = () => {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const questionStartTimeRef = useRef<number>(Date.now());
-  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const [exam, setExam] = useState<Exam | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -72,22 +52,13 @@ const ExamTake = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [attemptId, setAttemptId] = useState<string | null>(null);
-  const [attemptStatus, setAttemptStatus] = useState<string>("NOT_STARTED");
-  
-  // Auto-save states
-  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-  const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
   
   // Integrity check states
-  const [showInstructions, setShowInstructions] = useState(true);
-  const [showPledge, setShowPledge] = useState(false);
+  const [showPledge, setShowPledge] = useState(true);
   const [pledgeAccepted, setPledgeAccepted] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [startSnapshot, setStartSnapshot] = useState<string | null>(null);
-  
-  // Confirmation dialog
-  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
 
   useEffect(() => {
     initializeExam();
@@ -95,43 +66,23 @@ const ExamTake = () => {
       if (cameraStream) {
         cameraStream.getTracks().forEach(track => track.stop());
       }
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
-      }
     };
   }, [examId]);
 
-  // Start timer when exam is in progress
   useEffect(() => {
-    if (timeRemaining > 0 && attemptStatus === "IN_PROGRESS" && !showPledge && !showCamera && !showInstructions) {
-      timerIntervalRef.current = setInterval(() => {
+    if (timeRemaining > 0 && !showPledge && !showCamera) {
+      const timer = setInterval(() => {
         setTimeRemaining((prev) => {
           if (prev <= 1) {
-            handleAutoSubmit();
+            handleSubmitExam();
             return 0;
-          }
-          // Save remaining time every 30 seconds
-          if (prev % 30 === 0 && attemptId) {
-            saveRemainingTime(prev - 1);
           }
           return prev - 1;
         });
       }, 1000);
-      return () => {
-        if (timerIntervalRef.current) {
-          clearInterval(timerIntervalRef.current);
-        }
-      };
+      return () => clearInterval(timer);
     }
-  }, [timeRemaining, attemptStatus, showPledge, showCamera, showInstructions, attemptId]);
-
-  const saveRemainingTime = async (time: number) => {
-    if (!attemptId) return;
-    await supabase
-      .from("exam_attempts")
-      .update({ remaining_time_seconds: time, last_activity_at: new Date().toISOString() })
-      .eq("id", attemptId);
-  };
+  }, [timeRemaining, showPledge, showCamera]);
 
   const initializeExam = async () => {
     try {
@@ -142,25 +93,6 @@ const ExamTake = () => {
       }
       setUser(session.user);
 
-      // Check if user has student role (backend enforcement)
-      const { data: rolesData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", session.user.id);
-      
-      const roles = rolesData?.map(r => r.role) || [];
-      const isStudent = roles.includes("student");
-      
-      if (!isStudent) {
-        toast({
-          title: "प्रवेश नाकारला",
-          description: "परीक्षा देण्यासाठी तुम्हाला 'विद्यार्थी' भूमिका आवश्यक आहे. कृपया प्रशासकाशी संपर्क साधा.",
-          variant: "destructive"
-        });
-        navigate("/exam");
-        return;
-      }
-
       // Fetch exam details
       const { data: examData, error: examError } = await supabase
         .from("exams")
@@ -170,170 +102,42 @@ const ExamTake = () => {
 
       if (examError) throw examError;
       setExam(examData);
+      setTimeRemaining(examData.duration_minutes * 60);
 
-      // Check if exam is within schedule
-      const now = new Date();
-      const scheduledAt = new Date(examData.scheduled_at);
-      const endsAt = new Date(examData.ends_at);
-
-      if (now < scheduledAt) {
-        toast({
-          title: "परीक्षा अद्याप सुरू झालेली नाही",
-          description: "कृपया निर्धारित वेळेनंतर पुन्हा प्रयत्न करा",
-          variant: "destructive"
-        });
-        navigate("/exam");
-        return;
-      }
-
-      if (now > endsAt) {
-        toast({
-          title: "परीक्षेची वेळ संपली",
-          description: "ही परीक्षा आता उपलब्ध नाही",
-          variant: "destructive"
-        });
-        navigate("/exam");
-        return;
-      }
-
-      // Check student eligibility based on standard
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("standard, full_name")
-        .eq("id", session.user.id)
-        .single();
-
-      // Validate standard eligibility
-      if (examData.from_standard || examData.to_standard) {
-        if (!profileData?.standard) {
-          toast({
-            title: "तुमची इयत्ता सेट केलेली नाही",
-            description: "कृपया प्रशासकाशी संपर्क साधून तुमची इयत्ता सेट करा",
-            variant: "destructive"
-          });
-          navigate("/exam");
-          return;
-        }
-        
-        const studentStandard = parseInt(profileData.standard.replace(/[^0-9]/g, '')) || 0;
-        const fromStandard = examData.from_standard ? parseInt(examData.from_standard.replace(/[^0-9]/g, '')) || 0 : 0;
-        const toStandard = examData.to_standard ? parseInt(examData.to_standard.replace(/[^0-9]/g, '')) || 12 : 12;
-
-        if (studentStandard < fromStandard || studentStandard > toStandard) {
-          toast({
-            title: "तुम्ही या परीक्षेसाठी पात्र नाही",
-            description: `ही परीक्षा ${examData.from_standard || "1st"} ते ${examData.to_standard || "12th"} इयत्तेच्या विद्यार्थ्यांसाठी आहे. तुमची इयत्ता: ${profileData.standard}`,
-            variant: "destructive"
-          });
-          navigate("/exam");
-          return;
-        }
-      }
-
-      // Check for existing attempt (resume logic)
+      // Check if already attempted
       const { data: existingAttempt } = await supabase
         .from("exam_attempts")
-        .select("*")
+        .select("id")
         .eq("exam_id", examId)
         .eq("user_id", session.user.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
         .single();
 
       if (existingAttempt) {
-        // Check if submitted
-        if (existingAttempt.status === "SUBMITTED") {
-          // Check if reattempt is allowed via exam setting
-          const allowReattempt = examData.allow_reattempt_till_end_date === true;
-          const canReattemptViaAdmin = existingAttempt.can_reattempt === true;
-          
-          if (!allowReattempt && !canReattemptViaAdmin) {
-            toast({
-              title: "परीक्षा आधीच दिली आहे",
-              description: "तुम्ही ही परीक्षा आधीच पूर्ण केली आहे",
-              variant: "destructive"
-            });
-            navigate("/exam");
-            return;
-          }
-          
-          // Allow reattempt - start fresh attempt
-          if (allowReattempt || canReattemptViaAdmin) {
-            // Create new attempt for reattempt
-            await loadQuestions(examData.shuffle_questions, examData.total_questions);
-            setTimeRemaining(examData.duration_minutes * 60);
-            setLoading(false);
-            return;
-          }
-        }
-
-        // Resume existing attempt
-        if (existingAttempt.status === "IN_PROGRESS" || existingAttempt.status === "NOT_STARTED") {
-          setAttemptId(existingAttempt.id);
-          setAttemptStatus(existingAttempt.status);
-          setTimeRemaining(existingAttempt.remaining_time_seconds || examData.duration_minutes * 60);
-          
-          // Load previous answers
-          const { data: previousAnswers } = await supabase
-            .from("exam_answers")
-            .select("question_id, selected_option")
-            .eq("attempt_id", existingAttempt.id);
-
-          if (previousAnswers) {
-            const answersMap: Record<string, string> = {};
-            previousAnswers.forEach(ans => {
-              if (ans.selected_option) {
-                answersMap[ans.question_id] = ans.selected_option;
-              }
-            });
-            setAnswers(answersMap);
-          }
-
-          // Load shuffled question order if exists
-          if (existingAttempt.shuffled_question_order && existingAttempt.shuffled_question_order.length > 0) {
-            const { data: allQuestions } = await supabase
-              .from("exam_questions")
-              .select("*")
-              .eq("exam_id", examId);
-
-            if (allQuestions) {
-              const orderedQuestions = existingAttempt.shuffled_question_order
-                .map((qId: string) => allQuestions.find(q => q.id === qId))
-                .filter(Boolean) as Question[];
-              setQuestions(orderedQuestions);
-            }
-          } else {
-            await loadQuestions(examData.shuffle_questions, examData.total_questions);
-          }
-
-          // If pledge was accepted, skip to exam
-          if (existingAttempt.integrity_pledge_accepted) {
-            setShowInstructions(false);
-            setShowPledge(false);
-            setShowCamera(false);
-            
-            // Update status to IN_PROGRESS if NOT_STARTED
-            if (existingAttempt.status === "NOT_STARTED") {
-              await supabase
-                .from("exam_attempts")
-                .update({ status: "IN_PROGRESS", last_activity_at: new Date().toISOString() })
-                .eq("id", existingAttempt.id);
-              setAttemptStatus("IN_PROGRESS");
-            }
-          }
-
-          setLoading(false);
-          return;
-        }
+        toast({
+          title: "Already Attempted",
+          description: "You have already taken this exam",
+          variant: "destructive"
+        });
+        navigate("/exam");
+        return;
       }
 
-      // New attempt - load questions
-      await loadQuestions(examData.shuffle_questions, examData.total_questions);
-      setTimeRemaining(examData.duration_minutes * 60);
+      // Fetch all questions and randomize
+      const { data: questionsData, error: questionsError } = await supabase
+        .from("exam_questions")
+        .select("*")
+        .eq("exam_id", examId);
+
+      if (questionsError) throw questionsError;
+
+      // Randomly select required number of questions
+      const shuffled = [...questionsData].sort(() => 0.5 - Math.random());
+      const selectedQuestions = shuffled.slice(0, examData.total_questions);
+      setQuestions(selectedQuestions);
 
     } catch (error: any) {
       toast({
-        title: "त्रुटी",
+        title: "Error",
         description: error.message,
         variant: "destructive"
       });
@@ -341,26 +145,6 @@ const ExamTake = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const loadQuestions = async (shuffle: boolean, totalQuestions: number) => {
-    const { data: questionsData, error: questionsError } = await supabase
-      .from("exam_questions")
-      .select("*")
-      .eq("exam_id", examId);
-
-    if (questionsError) throw questionsError;
-
-    let selectedQuestions = [...questionsData];
-    
-    if (shuffle) {
-      selectedQuestions = selectedQuestions.sort(() => 0.5 - Math.random());
-    }
-    
-    selectedQuestions = selectedQuestions.slice(0, totalQuestions);
-    setQuestions(selectedQuestions);
-    
-    return selectedQuestions;
   };
 
   const startCamera = async () => {
@@ -375,8 +159,8 @@ const ExamTake = () => {
       }
     } catch (error) {
       toast({
-        title: "कॅमेरा त्रुटी",
-        description: "कॅमेरा वापरण्याची परवानगी द्या",
+        title: "Camera Error",
+        description: "Unable to access camera. Please allow camera permissions.",
         variant: "destructive"
       });
     }
@@ -397,16 +181,11 @@ const ExamTake = () => {
     return null;
   };
 
-  const handleInstructionsAccept = () => {
-    setShowInstructions(false);
-    setShowPledge(true);
-  };
-
   const handlePledgeAccept = () => {
     if (!pledgeAccepted) {
       toast({
-        title: "प्रतिज्ञा आवश्यक",
-        description: "कृपया सत्यनिष्ठा प्रतिज्ञा स्वीकारा",
+        title: "Pledge Required",
+        description: "Please accept the integrity pledge to continue",
         variant: "destructive"
       });
       return;
@@ -420,8 +199,8 @@ const ExamTake = () => {
     const snapshot = captureSnapshot();
     if (!snapshot) {
       toast({
-        title: "त्रुटी",
-        description: "फोटो घेता आला नाही. कृपया पुन्हा प्रयत्न करा.",
+        title: "Error",
+        description: "Unable to capture photo. Please try again.",
         variant: "destructive"
       });
       return;
@@ -433,179 +212,111 @@ const ExamTake = () => {
       cameraStream.getTracks().forEach(track => track.stop());
     }
 
-    // Get profile data
+    // Create exam attempt
     const { data: profileData } = await supabase
       .from("profiles")
       .select("full_name")
       .eq("id", user.id)
       .single();
 
-    // Create or update exam attempt with shuffled order
-    const shuffledOrder = questions.map(q => q.id);
-    
-    if (attemptId) {
-      // Update existing attempt
-      await supabase
-        .from("exam_attempts")
-        .update({
-          status: "IN_PROGRESS",
-          integrity_pledge_accepted: true,
-          start_snapshot_url: snapshot,
-          shuffled_question_order: shuffledOrder,
-          last_activity_at: new Date().toISOString()
-        })
-        .eq("id", attemptId);
-      
-      setAttemptStatus("IN_PROGRESS");
-    } else {
-      // Create new attempt
-      const { data: attemptData, error } = await supabase
-        .from("exam_attempts")
-        .insert({
-          exam_id: examId,
-          user_id: user.id,
-          student_name: profileData?.full_name || user.email || "Student",
-          total_questions: exam!.total_questions,
-          integrity_pledge_accepted: true,
-          start_snapshot_url: snapshot,
-          status: "IN_PROGRESS",
-          remaining_time_seconds: exam!.duration_minutes * 60,
-          shuffled_question_order: shuffledOrder
-        })
-        .select()
-        .single();
+    const { data: attemptData, error } = await supabase
+      .from("exam_attempts")
+      .insert({
+        exam_id: examId,
+        user_id: user.id,
+        student_name: profileData?.full_name || user.email || "Student",
+        total_questions: exam!.total_questions,
+        integrity_pledge_accepted: true,
+        start_snapshot_url: snapshot
+      })
+      .select()
+      .single();
 
-      if (error) {
-        toast({
-          title: "त्रुटी",
-          description: error.message,
-          variant: "destructive"
-        });
-        return;
-      }
-
-      setAttemptId(attemptData.id);
-      setAttemptStatus("IN_PROGRESS");
+    if (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+      return;
     }
 
+    setAttemptId(attemptData.id);
     setShowCamera(false);
   };
 
-  // Auto-save answer on selection
-  const handleAnswerSelect = useCallback(async (questionId: string, option: string) => {
-    const previousAnswer = answers[questionId];
-    setAnswers(prev => ({ ...prev, [questionId]: option }));
-    
-    if (!attemptId) return;
-    
-    // Calculate time taken for this question
-    const timeTaken = Math.round((Date.now() - questionStartTimeRef.current) / 1000);
-    
-    setAutoSaveStatus('saving');
-    
-    try {
-      // Use the save_exam_answer function for atomic save
-      const { error } = await supabase.rpc('save_exam_answer', {
-        p_attempt_id: attemptId,
-        p_question_id: questionId,
-        p_selected_option: option,
-        p_time_taken_seconds: timeTaken
-      });
-
-      if (error) throw error;
-      
-      setAutoSaveStatus('saved');
-      setLastSaveTime(new Date());
-      
-      // Reset question start time for next question
-      questionStartTimeRef.current = Date.now();
-    } catch (error: any) {
-      console.error("Auto-save error:", error);
-      setAutoSaveStatus('error');
-      // Revert to previous answer on error
-      if (previousAnswer) {
-        setAnswers(prev => ({ ...prev, [questionId]: previousAnswer }));
-      }
-      toast({
-        title: "सेव्ह करताना त्रुटी",
-        description: "उत्तर सेव्ह होऊ शकले नाही. कृपया पुन्हा प्रयत्न करा.",
-        variant: "destructive"
-      });
-    }
-  }, [attemptId, answers, toast]);
+  const handleAnswerSelect = (questionId: string, option: string) => {
+    setAnswers({ ...answers, [questionId]: option });
+  };
 
   const handleNext = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
-      questionStartTimeRef.current = Date.now();
     }
   };
 
   const handlePrevious = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
-      questionStartTimeRef.current = Date.now();
     }
   };
 
-  const handleAutoSubmit = async () => {
-    toast({
-      title: "वेळ संपला!",
-      description: "परीक्षा आपोआप सबमिट होत आहे...",
-    });
-    await finalSubmitExam();
-  };
-
-  const handleSubmitClick = () => {
-    setShowSubmitConfirm(true);
-  };
-
-  const finalSubmitExam = async () => {
+  const handleSubmitExam = async () => {
     if (!attemptId) return;
 
     try {
-      // Calculate final score
+      // Calculate score
       let correctCount = 0;
       let wrongCount = 0;
       
+      // Save answers
       for (const question of questions) {
         const selectedOption = answers[question.id];
+        const isCorrect = selectedOption === question.correct_option;
+        
         if (selectedOption) {
-          if (selectedOption === question.correct_option) {
-            correctCount++;
-          } else {
-            wrongCount++;
-          }
+          if (isCorrect) correctCount++;
+          else wrongCount++;
+
+          await supabase.from("exam_answers").insert({
+            attempt_id: attemptId,
+            question_id: question.id,
+            selected_option: selectedOption,
+            is_correct: isCorrect
+          });
         }
       }
 
       const unansweredCount = questions.length - correctCount - wrongCount;
       const score = Math.round((correctCount / questions.length) * 100);
 
+      // Capture end snapshot
+      await startCamera();
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const endSnapshot = captureSnapshot();
+
       // Update attempt with final scores
       await supabase
         .from("exam_attempts")
         .update({
-          status: "SUBMITTED",
           end_time: new Date().toISOString(),
           score,
           correct_answers: correctCount,
           wrong_answers: wrongCount,
           unanswered: unansweredCount,
-          remaining_time_seconds: 0,
-          can_reattempt: false
+          end_snapshot_url: endSnapshot
         })
         .eq("id", attemptId);
 
       toast({
-        title: "परीक्षा सबमिट झाली!",
-        description: `तुमचे गुण: ${score}%`,
+        title: "Exam Submitted",
+        description: `You scored ${score}%`,
       });
 
       navigate(`/exam/${examId}/results/${attemptId}`);
     } catch (error: any) {
       toast({
-        title: "त्रुटी",
+        title: "Error",
         description: error.message,
         variant: "destructive"
       });
@@ -622,38 +333,25 @@ const ExamTake = () => {
     return <CustomLoader />;
   }
 
-  // Marathi Instructions
-  if (showInstructions) {
-    return (
-      <ExamInstructionsMarathi 
-        examTitle={exam?.title || ""}
-        duration={exam?.duration_minutes || 0}
-        totalQuestions={exam?.total_questions || 0}
-        onAccept={handleInstructionsAccept}
-        onCancel={() => navigate("/exam")}
-      />
-    );
-  }
-
-  // Integrity Pledge Dialog (Marathi)
+  // Integrity Pledge Dialog
   if (showPledge) {
     return (
       <AlertDialog open={showPledge}>
         <AlertDialogContent className="max-w-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-2xl">
-              सत्यनिष्ठा प्रतिज्ञा
+              Integrity Pledge
             </AlertDialogTitle>
             <AlertDialogDescription className="text-base space-y-4">
               <p className="font-semibold text-foreground">
-                परीक्षा सुरू करण्यापूर्वी, कृपया खालील वाचा आणि स्वीकारा:
+                Before starting the exam, please read and accept the following:
               </p>
               <ul className="list-disc list-inside space-y-2 text-foreground">
-                <li>मी परीक्षेदरम्यान कोणतीही बाह्य मदत किंवा संसाधने वापरणार नाही</li>
-                <li>मी परीक्षेदरम्यान इतरांशी संवाद साधणार नाही</li>
-                <li>मला माहित आहे की माझा कॅमेरा सुरुवातीला आणि शेवटी फोटो घेईल</li>
-                <li>मी परीक्षा प्रामाणिकपणे आणि स्वतंत्रपणे पूर्ण करेन</li>
-                <li>मला माहित आहे की हा एकदाच प्रयत्न आहे</li>
+                <li>I will not use any external help or resources during the exam</li>
+                <li>I will not communicate with others during the exam</li>
+                <li>I understand that my camera will capture photos at the start and end</li>
+                <li>I will complete the exam honestly and independently</li>
+                <li>I understand that this is a one-time attempt</li>
               </ul>
               
               <div className="flex items-center space-x-2 mt-6">
@@ -666,17 +364,17 @@ const ExamTake = () => {
                   htmlFor="pledge"
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
-                  मी सत्यनिष्ठा प्रतिज्ञा स्वीकारतो आणि त्याचे पालन करण्यास सहमत आहे
+                  I accept and agree to follow the integrity pledge
                 </label>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex justify-end gap-3 mt-4">
             <Button variant="outline" onClick={() => navigate("/exam")}>
-              रद्द करा
+              Cancel
             </Button>
             <Button onClick={handlePledgeAccept}>
-              पुढे जा
+              Continue
             </Button>
           </div>
         </AlertDialogContent>
@@ -692,10 +390,10 @@ const ExamTake = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>
               <Camera className="h-6 w-6 inline mr-2" />
-              तुमचा फोटो घ्या
+              Take Your Photo
             </AlertDialogTitle>
             <AlertDialogDescription>
-              कृपया कॅमेऱ्यासमोर बसा आणि तुमचा फोटो घ्या
+              Please position yourself in front of the camera and capture your photo
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-4">
@@ -708,45 +406,7 @@ const ExamTake = () => {
             <canvas ref={canvasRef} className="hidden" />
             <Button onClick={handleCameraCapture} className="w-full">
               <Camera className="h-4 w-4 mr-2" />
-              फोटो घ्या
-            </Button>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
-    );
-  }
-
-  // Submit Confirmation Dialog (Marathi)
-  if (showSubmitConfirm) {
-    return (
-      <AlertDialog open={showSubmitConfirm} onOpenChange={setShowSubmitConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-yellow-500" />
-              परीक्षा सबमिट करायची आहे का?
-            </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-3">
-              <p className="text-foreground font-medium">
-                तुम्ही खात्री आहात का की तुम्हाला परीक्षा सबमिट करायची आहे?
-              </p>
-              <div className="bg-muted p-4 rounded-lg space-y-2">
-                <p>उत्तर दिलेले प्रश्न: <strong>{Object.keys(answers).length}</strong></p>
-                <p>एकूण प्रश्न: <strong>{questions.length}</strong></p>
-                <p>उर्वरित वेळ: <strong>{formatTime(timeRemaining)}</strong></p>
-              </div>
-              <p className="text-destructive font-medium">
-                ⚠️ एकदा सबमिट केल्यानंतर, तुम्ही उत्तरे बदलू शकणार नाही!
-              </p>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="flex justify-end gap-3 mt-4">
-            <Button variant="outline" onClick={() => setShowSubmitConfirm(false)}>
-              मागे जा
-            </Button>
-            <Button onClick={finalSubmitExam} className="bg-green-600 hover:bg-green-700">
-              <Send className="h-4 w-4 mr-2" />
-              सबमिट करा
+              Capture Photo
             </Button>
           </div>
         </AlertDialogContent>
@@ -756,7 +416,6 @@ const ExamTake = () => {
 
   const currentQuestion = questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
-  const isLastQuestion = currentQuestionIndex === questions.length - 1;
 
   return (
     <div className="min-h-screen bg-background">
@@ -767,18 +426,15 @@ const ExamTake = () => {
             <div>
               <h1 className="text-xl font-bold">{exam?.title}</h1>
               <p className="text-sm opacity-90">
-                प्रश्न {currentQuestionIndex + 1} पैकी {questions.length}
+                Question {currentQuestionIndex + 1} of {questions.length}
               </p>
             </div>
-            <div className="flex items-center gap-4">
-              <AutoSaveIndicator status={autoSaveStatus} lastSaved={lastSaveTime} />
-              <div className="text-right">
-                <div className={`flex items-center gap-2 text-lg font-bold ${timeRemaining < 300 ? 'text-red-300 animate-pulse' : ''}`}>
-                  <Clock className="h-5 w-5" />
-                  {formatTime(timeRemaining)}
-                </div>
-                <p className="text-sm opacity-90">उर्वरित वेळ</p>
+            <div className="text-right">
+              <div className="flex items-center gap-2 text-lg font-bold">
+                <Clock className="h-5 w-5" />
+                {formatTime(timeRemaining)}
               </div>
+              <p className="text-sm opacity-90">Time Remaining</p>
             </div>
           </div>
           <Progress value={progress} className="mt-3 h-2" />
@@ -829,21 +485,21 @@ const ExamTake = () => {
                 onClick={handlePrevious}
                 disabled={currentQuestionIndex === 0}
               >
-                मागील
+                Previous
               </Button>
               
               <div className="text-sm text-muted-foreground">
-                उत्तर दिलेले: {Object.keys(answers).length} / {questions.length}
+                Answered: {Object.keys(answers).length} / {questions.length}
               </div>
 
-              {isLastQuestion ? (
-                <Button onClick={handleSubmitClick} className="bg-green-600 hover:bg-green-700">
+              {currentQuestionIndex === questions.length - 1 ? (
+                <Button onClick={handleSubmitExam} className="bg-green-600 hover:bg-green-700">
                   <Send className="h-4 w-4 mr-2" />
-                  परीक्षा सबमिट करा
+                  Submit Exam
                 </Button>
               ) : (
                 <Button onClick={handleNext}>
-                  पुढील
+                  Next
                 </Button>
               )}
             </div>
@@ -853,7 +509,7 @@ const ExamTake = () => {
         {/* Question Grid */}
         <Card className="max-w-4xl mx-auto mt-6">
           <CardHeader>
-            <CardTitle className="text-lg">प्रश्न मार्गदर्शक</CardTitle>
+            <CardTitle className="text-lg">Question Navigator</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-10 gap-2">
@@ -863,31 +519,14 @@ const ExamTake = () => {
                   variant={index === currentQuestionIndex ? "default" : "outline"}
                   size="sm"
                   className={`
-                    ${answers[q.id] ? 'bg-green-100 border-green-500 hover:bg-green-200 text-green-800' : ''}
+                    ${answers[q.id] ? 'bg-green-100 border-green-500 hover:bg-green-200' : ''}
                     ${index === currentQuestionIndex ? 'ring-2 ring-primary' : ''}
                   `}
-                  onClick={() => {
-                    setCurrentQuestionIndex(index);
-                    questionStartTimeRef.current = Date.now();
-                  }}
+                  onClick={() => setCurrentQuestionIndex(index)}
                 >
                   {index + 1}
                 </Button>
               ))}
-            </div>
-            <div className="flex gap-4 mt-4 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-green-100 border border-green-500 rounded"></div>
-                <span>उत्तर दिलेले</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-primary rounded"></div>
-                <span>सध्याचा प्रश्न</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border rounded"></div>
-                <span>उत्तर न दिलेले</span>
-              </div>
             </div>
           </CardContent>
         </Card>

@@ -3,7 +3,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Upload, Loader2, X, ImagePlus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import useApiAuth from "@/hooks/useApiAuth";
 
 const CATEGORIES = [
   "Farming Tools",
@@ -43,7 +43,7 @@ interface PostItemFormProps {
 }
 
 const PostItemForm = ({ onSuccess }: PostItemFormProps) => {
-  const { user } = useAuth();
+  const { user } = useApiAuth();
   const [uploading, setUploading] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -160,7 +160,7 @@ const PostItemForm = ({ onSuccess }: PostItemFormProps) => {
         village: values.village,
         contact: values.contact,
         image_urls: imageUrls,
-        user_id: user.id
+        user_id: user.userId
       });
 
       if (error) throw error;
