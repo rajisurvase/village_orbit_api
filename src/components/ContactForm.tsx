@@ -7,7 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Send, CheckCircle2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import {
   Form,
@@ -49,6 +48,7 @@ const contactFormSchema = z.object({
     .trim()
     .min(10, { message: "Message must be at least 10 characters" })
     .max(2000, { message: "Message must be less than 2000 characters" }),
+  villageId: z.string(),
 });
 
 type ContactFormValues = z.infer<typeof contactFormSchema>;
@@ -72,8 +72,11 @@ const ContactForm = ({ villageId }: ContactFormProps) => {
       email: "",
       subject: "",
       message: "",
+      villageId: villageId,
     },
   });
+
+  console.log("form", form.formState.errors);
 
   const onSubmit = async (data: ContactFormValues) => {
     mutateAsync(data, {

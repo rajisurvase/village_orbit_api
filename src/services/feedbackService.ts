@@ -28,7 +28,20 @@ export interface FeedbackListParams {
 }
 
 export interface PaginatedFeedback {
-  feedback: Feedback[];
+  feedback?: Feedback[];
+  contacts? : {
+    id: string,
+    villageId :  string,
+    email : string,
+    message : string,
+    mobile : string
+    name : string,
+    createdAt : string,
+    updatedAt : string
+    subject : string
+    inquiryType: string
+    status : string
+  }[];
   total: number;
   page: number;
   limit: number;
@@ -163,6 +176,24 @@ export const ContactUs = async(contactData: any) => {
   const response = await apiClient.post<ApiWrapperResponse<null>>(
     `${apiConfig.endpoints.contact.submit}`,
     contactData
+  );
+  return response.data;
+}
+
+
+export const GetContactList = async(payload : {page : number, limit : number, villageId : string, status: string, date: string,  search : string})=> {
+      const response = await apiClient.get<ApiWrapperResponse<PaginatedFeedback>>(
+        `${apiConfig.endpoints.contact.list}`,
+        true,
+        { params: payload }
+      )
+      return response.data
+}
+
+export const UpdateContactStatus = async(payload : {contactId : string, status : string}) => {
+  const response = await apiClient.post<ApiWrapperResponse<null>>(
+    `${apiConfig.endpoints.contact.list}/${payload.contactId}/status`,
+    { status: payload.status }
   );
   return response.data;
 }

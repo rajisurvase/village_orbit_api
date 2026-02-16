@@ -154,11 +154,11 @@ export const apiConfig = {
     // Feedback & Contact endpoints
     feedback: {
       submit: '/feedback',
-      adminList: '/admin/feedback',
+      list: '/admin/feedback',
     },
     contact: {
       submit: '/contact',
-      adminList: '/admin/contact',
+      list: '/admin/contact',
     },
 
     // Exams endpoints

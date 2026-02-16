@@ -1,16 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import {
   Select,
@@ -19,111 +19,81 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Download, Filter, Mail, Phone, User, MessageSquare, ArrowLeft } from "lucide-react";
+import {
+  Calendar,
+  Download,
+  Filter,
+  Mail,
+  Phone,
+  User,
+  MessageSquare,
+  ArrowLeft,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import CustomLoader from "@/components/CustomLoader";
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
 import useApiAuth from "@/hooks/useApiAuth";
-
-interface ContactMessage {
-  id: string;
-  name: string;
-  mobile: string;
-  email: string | null;
-  subject: string;
-  message: string;
-  status: string;
-  created_at: string;
-}
+import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  GetContactList,
+  UpdateContactStatus,
+} from "@/services/feedbackService";
+import { VILLAGES } from "@/config/villageConfig";
+import useDebounce from "@/hooks/useDebounce";
 
 const ContactMessagesAdmin = () => {
   const navigate = useNavigate();
-  const { isAdmin, loading: authLoading, isSuperAdmin } = useApiAuth();
-  const [messages, setMessages] = useState<ContactMessage[]>([]);
-  const [filteredMessages, setFilteredMessages] = useState<ContactMessage[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { loading: authLoading, hasPermission } = useApiAuth();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const debouncedSearch = useDebounce(searchQuery, 500);
 
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: UpdateContactStatus,
+  });
 
-  useEffect(()=> {
-    fetchMessages()
-  },[])
-
-  const fetchMessages = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("contact_form_submissions" as any)
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setMessages((data as any as ContactMessage[]) || []);
-      setFilteredMessages((data as any as ContactMessage[]) || []);
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load contact messages",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    let filtered = messages;
-
-    // Status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((msg) => msg.status === statusFilter);
-    }
-
-    // Date filter
-    if (dateFilter) {
-      filtered = filtered.filter((msg) => {
-        const msgDate = new Date(msg.created_at).toISOString().split("T")[0];
-        return msgDate === dateFilter;
-      });
-    }
-
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (msg) =>
-          msg.name.toLowerCase().includes(query) ||
-          msg.mobile.includes(query) ||
-          msg.email?.toLowerCase().includes(query) ||
-          msg.subject.toLowerCase().includes(query) ||
-          msg.message.toLowerCase().includes(query)
-      );
-    }
-
-    setFilteredMessages(filtered);
-  }, [statusFilter, dateFilter, searchQuery, messages]);
+  const { data: contactList, isLoading } = useQuery({
+    queryKey: [
+      "contactMessages",
+      VILLAGES.shivankhed.id,
+      statusFilter,
+      dateFilter,
+      debouncedSearch,
+    ],
+    queryFn: () =>
+      GetContactList({
+        page: 0,
+        limit: 20,
+        villageId: VILLAGES.shivankhed.id,
+        status: statusFilter === "all" ? undefined : statusFilter,
+        date: dateFilter || undefined,
+        search: debouncedSearch || undefined,
+      }),
+    select(data) {
+      return data.data.contacts;
+    },
+  });
 
   const downloadExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(
-      filteredMessages.map((msg) => ({
-        Date: new Date(msg.created_at).toLocaleDateString(),
+      contactList.map((msg) => ({
+        Date: new Date(msg.createdAt).toLocaleDateString(),
         Name: msg.name,
         Mobile: msg.mobile,
         Email: msg.email || "N/A",
         Subject: msg.subject,
         Message: msg.message,
         Status: msg.status,
-      }))
+      })),
     );
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Contact Messages");
     XLSX.writeFile(
       workbook,
-      `contact_messages_${new Date().toISOString().split("T")[0]}.xlsx`
+      `contact_messages_${new Date().toISOString().split("T")[0]}.xlsx`,
     );
 
     toast({
@@ -133,30 +103,27 @@ const ContactMessagesAdmin = () => {
   };
 
   const updateStatus = async (id: string, newStatus: string) => {
-    try {
-      const { error } = await supabase
-        .from("contact_form_submissions" as any)
-        .update({ status: newStatus })
-        .eq("id", id);
-
-      if (error) throw error;
-
-      setMessages((prev) =>
-        prev.map((msg) => (msg.id === id ? { ...msg, status: newStatus } : msg))
-      );
-
-      toast({
-        title: "Status Updated",
-        description: `Message marked as ${newStatus}`,
-      });
-    } catch (error) {
-      console.error("Error updating status:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update status",
-        variant: "destructive",
-      });
-    }
+    mutateAsync(
+      {
+        contactId: id,
+        status: newStatus,
+      },
+      {
+        onSuccess() {
+          toast({
+            title: "Status Updated",
+            description: `Message marked as ${newStatus}`,
+          });
+        },
+        onError() {
+          toast({
+            title: "Error",
+            description: "Failed to update status. Please try again.",
+            variant: "destructive",
+          });
+        }
+      },
+    );
   };
 
   const getStatusColor = (status: string) => {
@@ -172,9 +139,8 @@ const ContactMessagesAdmin = () => {
     }
   };
 
-
-  if (authLoading || loading) return <CustomLoader />;
-  // if (isSuperAdmin) return null;
+  if (authLoading || isLoading) return <CustomLoader />;
+  if (!hasPermission("contact:view")) return null;
 
   return (
     <div className="min-h-screen bg-background py-8">
@@ -258,7 +224,7 @@ const ContactMessagesAdmin = () => {
             <CardTitle className="flex items-center justify-between">
               <span className="flex items-center gap-2">
                 <Mail className="h-5 w-5" />
-                Messages ({filteredMessages.length})
+                Messages ({contactList.length})
               </span>
             </CardTitle>
           </CardHeader>
@@ -277,19 +243,22 @@ const ContactMessagesAdmin = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredMessages.length === 0 ? (
+                  {contactList.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground">
+                      <TableCell
+                        colSpan={7}
+                        className="text-center text-muted-foreground"
+                      >
                         No messages found
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredMessages.map((msg) => (
+                    contactList.map((msg) => (
                       <TableRow key={msg.id}>
                         <TableCell className="whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4 text-muted-foreground" />
-                            {new Date(msg.created_at).toLocaleDateString()}
+                            {new Date(msg.createdAt).toLocaleDateString()}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -331,14 +300,18 @@ const ContactMessagesAdmin = () => {
                         <TableCell>
                           <Select
                             value={msg.status}
-                            onValueChange={(value) => updateStatus(msg.id, value)}
+                            onValueChange={(value) =>
+                              updateStatus(msg.id, value)
+                            }
                           >
                             <SelectTrigger className="w-[130px]">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="new">New</SelectItem>
-                              <SelectItem value="in_progress">In Progress</SelectItem>
+                              <SelectItem value="in_progress">
+                                In Progress
+                              </SelectItem>
                               <SelectItem value="resolved">Resolved</SelectItem>
                             </SelectContent>
                           </Select>
