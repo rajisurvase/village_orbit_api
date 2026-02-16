@@ -5,7 +5,7 @@
  */
 
 // Default API configuration - Single source of truth for API host
-const DEFAULT_API_BASE_URL = 'https://core-api-tlw6.onrender.com';
+const DEFAULT_API_BASE_URL = 'http://ec2-13-127-151-221.ap-south-1.compute.amazonaws.com:8001';
 const API_VERSION = 'v1';
 
 // Get API base URL from environment or use default
