@@ -1,8 +1,4 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
-import { GetVillageById } from "@/services/village-service";
-// import { getCurrentVillage } from "@/config/villageConfig";
+
 
 export interface Geography {
   altitude: string;

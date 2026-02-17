@@ -2,9 +2,8 @@ import { createContext, ReactNode, useMemo } from "react";
 import { VillageConfig } from "@/hooks/useVillageConfig";
 import { usePageVisibility } from "@/hooks/usePageVisibility";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
-import { GetVillageById } from "@/services/village-service";
 import { VILLAGES } from "@/config/villageConfig";
+import { useGetVillageConfigById } from "@/hooks/useVillagehooks";
 
 type VillageContextType = {
   config: VillageConfig | null;
@@ -33,14 +32,10 @@ export const VillageProvider = ({
   let id = VILLAGES.shivankhed.id;
   const { isPageVisible } = usePageVisibility();
 
-  const { data: config, isLoading } = useQuery({
-    queryKey: ["villageConfig", id, currentLanguage],
-    queryFn: () => GetVillageById({ id, language: currentLanguage }),
-    enabled: Boolean(id) && Boolean(currentLanguage),
-    select(data) {
-      return data.data;
-    },
-  });
+  const { data: config, isLoading } = useGetVillageConfigById({
+    id, 
+    language: currentLanguage
+  })
 
   const value = useMemo(
     () => ({

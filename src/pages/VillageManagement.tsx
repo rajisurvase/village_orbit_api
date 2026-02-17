@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -30,13 +29,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import {
   CreateUpdateVillage,
   DeleteVillage,
-  GetVillagesList,
   Village,
 } from "@/services/village-service";
+import { useVillages } from "@/hooks/useVillagehooks";
 
 const VillageManagement = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -63,13 +62,7 @@ const VillageManagement = () => {
     data: villagesData,
     isLoading,
     refetch,
-  } = useQuery({
-    queryKey: ["villages"],
-    queryFn: GetVillagesList,
-    select(data) {
-      return data.data;
-    },
-  });
+  } = useVillages()
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: CreateUpdateVillage,

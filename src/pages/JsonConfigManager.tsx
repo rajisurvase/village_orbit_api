@@ -1,184 +1,54 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, AlertCircle, CheckCircle2, FileText } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-
-interface Village {
-  id: string;
-  name: string;
-}
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, Save, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useGetVillageConfigById, useVillages } from "@/hooks/useVillagehooks";
+import { useMutation } from "@tanstack/react-query";
+import { UpdateVillageConfigById } from "@/services/village-service";
+import useApiAuth from "@/hooks/useApiAuth";
 
 const JsonConfigManager = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [villages, setVillages] = useState<Village[]>([]);
-  const [selectedVillage, setSelectedVillage] = useState<string>('');
-  const [selectedLanguage, setSelectedLanguage] = useState<string>('en');
-  const [jsonContent, setJsonContent] = useState('');
+  const { hasPermission, isAuthenticated, logout } = useApiAuth();
+  const [selectedVillage, setSelectedVillage] = useState<string>("");
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("mr");
+  const [jsonContent, setJsonContent] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
   const [validationSuccess, setValidationSuccess] = useState(false);
 
   const languages = [
-    { code: 'en', name: 'English' },
-    { code: 'hi', name: 'Hindi (हिंदी)' },
-    { code: 'mr', name: 'Marathi (मराठी)' }
+    { code: "en", name: "English" },
+    { code: "hi", name: "Hindi (हिंदी)" },
+    { code: "mr", name: "Marathi (मराठी)" },
   ];
+  const { data: villagesData, isLoading } = useVillages();
+  const { data: villageConfig, isLoading: isConfigLoading } =
+    useGetVillageConfigById({
+      id: selectedVillage,
+      language: selectedLanguage,
+    });
 
-  const quickServicesTemplate = {
-    quickServices: [
-      {
-        id: "birth-certificate",
-        title: "Birth Certificate",
-        description: "Apply for birth registration certificate",
-        requiredDocuments: [
-          "Hospital birth certificate or delivery note",
-          "Parents' Aadhar cards",
-          "Marriage certificate of parents",
-          "Address proof"
-        ],
-        tips: [
-          "Apply within 21 days of birth for free registration",
-          "After 30 days, late fee applies",
-          "Bring all original documents for verification"
-        ],
-        buttonText: "Got it, Thanks!"
-      },
-      {
-        id: "death-certificate",
-        title: "Death Certificate",
-        description: "Apply for death registration certificate",
-        requiredDocuments: [
-          "Hospital death certificate or medical practitioner's certificate",
-          "Deceased person's Aadhar card (if available)",
-          "Applicant's ID proof",
-          "Address proof"
-        ],
-        tips: [
-          "Apply within 21 days of death for free registration",
-          "Cremation/burial cannot proceed without death certificate",
-          "Required for claiming insurance and other benefits"
-        ],
-        buttonText: "Understood"
-      },
-      {
-        id: "property-tax",
-        title: "Property Tax Form",
-        description: "Submit property tax payment application",
-        requiredDocuments: [
-          "Property ownership documents",
-          "Previous tax receipt",
-          "Aadhar card",
-          "Property survey number details"
-        ],
-        tips: [
-          "Pay before due date to avoid late fees",
-          "Keep previous year's receipt handy",
-          "Online payment available"
-        ],
-        buttonText: "Proceed"
-      }
-    ]
-  };
-
-
-  useEffect(() => {
-    checkAdminAccess();
-    fetchVillages();
-  }, []);
-
-  useEffect(() => {
-    if (selectedVillage && selectedLanguage) {
-      loadVillageConfig();
-    }
-  }, [selectedVillage, selectedLanguage]);
-
-  const checkAdminAccess = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        navigate('/auth');
-        return;
-      }
-
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'admin')
-        .maybeSingle();
-
-      if (!roleData) {
-        navigate('/');
-        return;
-      }
-
-      setIsAdmin(true);
-    } catch (error) {
-      console.error('Error checking admin access:', error);
-      navigate('/');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchVillages = async () => {
-    const { data, error } = await supabase
-      .from('villages')
-      .select('id, name')
-      .eq('is_active', true)
-      .order('name');
-
-    if (!error && data) {
-      setVillages(data);
-    }
-  };
-
-  const loadVillageConfig = async () => {
-    try {
-      setLoading(true);
-      setValidationError(null);
-      setValidationSuccess(false);
-
-      const { data: configData, error } = await supabase
-        .from('village_config')
-        .select('config_data')
-        .eq('village_id', selectedVillage)
-        .eq('language', selectedLanguage)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error loading config:', error);
-      } else if (configData) {
-        setJsonContent(JSON.stringify(configData.config_data, null, 2));
-      } else {
-        // No config exists for this language yet
-        setJsonContent('');
-        toast({
-          title: 'No Configuration',
-          description: `No configuration found for this village in ${languages.find(l => l.code === selectedLanguage)?.name}. You can create one by entering JSON below.`,
-        });
-      }
-    } catch (err) {
-      console.error('Error in loadVillageConfig:', err);
-      toast({
-        title: 'Error',
-        description: 'Failed to load configuration',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: UpdateVillageConfigById,
+  });
 
   const validateJson = (text: string): boolean => {
     try {
@@ -187,7 +57,9 @@ const JsonConfigManager = () => {
       setValidationSuccess(true);
       return true;
     } catch (e) {
-      setValidationError(e instanceof Error ? e.message : 'Invalid JSON format');
+      setValidationError(
+        e instanceof Error ? e.message : "Invalid JSON format",
+      );
       setValidationSuccess(false);
       return false;
     }
@@ -203,127 +75,82 @@ const JsonConfigManager = () => {
     }
   };
 
-  const loadQuickServicesTemplate = () => {
-    try {
-      let currentConfig = jsonContent ? JSON.parse(jsonContent) : {};
-      currentConfig.quickServices = quickServicesTemplate.quickServices;
-      setJsonContent(JSON.stringify(currentConfig, null, 2));
-      validateJson(JSON.stringify(currentConfig, null, 2));
-      toast({
-        title: 'Template Loaded',
-        description: 'Quick Services template added to configuration. Review and save.',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to parse current configuration. Please fix JSON errors first.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!selectedVillage) {
       toast({
-        title: 'Error',
-        description: 'Please select a village',
-        variant: 'destructive',
+        title: "Error",
+        description: "Please select a village",
+        variant: "destructive",
       });
       return;
     }
 
     if (!validateJson(jsonContent)) {
       toast({
-        title: 'Invalid JSON',
-        description: 'Please fix the JSON syntax errors before saving',
-        variant: 'destructive',
+        title: "Invalid JSON",
+        description: "Please fix the JSON syntax errors before saving",
+        variant: "destructive",
       });
       return;
     }
 
-    try {
-      setSaving(true);
-      let parsedConfig = JSON.parse(jsonContent);
-      
-      // Strip metadata fields if they exist (in case user pasted entire request payload)
-      if (parsedConfig.village_id || parsedConfig.language || parsedConfig.updated_by) {
-        // User pasted entire payload, extract only config_data
-        if (parsedConfig.config_data) {
-          parsedConfig = parsedConfig.config_data;
-        }
-        // Remove metadata fields
-        delete parsedConfig.village_id;
-        delete parsedConfig.language;
-        delete parsedConfig.updated_by;
+    let parsedConfig = JSON.parse(jsonContent);
+
+    // Strip metadata fields if they exist (in case user pasted entire request payload)
+    if (
+      parsedConfig.village_id ||
+      parsedConfig.language ||
+      parsedConfig.updated_by
+    ) {
+      // User pasted entire payload, extract only config_data
+      if (parsedConfig.config_data) {
+        parsedConfig = parsedConfig.config_data;
       }
-      
-      const { data: { user } } = await supabase.auth.getUser();
-
-      // Check if config exists for this village and language
-      const { data: existingConfig } = await supabase
-        .from('village_config')
-        .select('id')
-        .eq('village_id', selectedVillage)
-        .eq('language', selectedLanguage)
-        .maybeSingle();
-
-      if (existingConfig) {
-        // Update existing
-        const { error } = await supabase
-          .from('village_config')
-          .update({
-            config_data: parsedConfig,
-            updated_by: user?.id,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('village_id', selectedVillage)
-          .eq('language', selectedLanguage);
-
-        if (error) throw error;
-      } else {
-        // Insert new
-        const { error } = await supabase
-          .from('village_config')
-          .insert({
-            village_id: selectedVillage,
-            language: selectedLanguage,
-            config_data: parsedConfig,
-            updated_by: user?.id,
-          });
-
-        if (error) throw error;
-      }
-
-      toast({
-        title: 'Success',
-        description: 'Configuration saved successfully',
-      });
-    } catch (error) {
-      console.error('Error saving config:', error);
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to save configuration',
-        variant: 'destructive',
-      });
-    } finally {
-      setSaving(false);
+      // Remove metadata fields
+      delete parsedConfig.village_id;
+      delete parsedConfig.language;
+      delete parsedConfig.updated_by;
     }
+
+    mutateAsync(
+      {
+        id: selectedVillage,
+        language: selectedLanguage,
+        ...parsedConfig,
+      },
+      {
+        onSuccess() {
+          toast({
+            title: "Success",
+            description: "Configuration saved successfully",
+          });
+        },
+        onError(error) {
+          toast({
+            title: "Error",
+            description:
+              error instanceof Error
+                ? error.message
+                : "Failed to save configuration",
+            variant: "destructive",
+          });
+        },
+      },
+    );
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/');
+    await logout();
+    navigate("/");
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (villageConfig && !isConfigLoading) {
+      setJsonContent(JSON.stringify(villageConfig, null, 2));
+    }
+  }, [villageConfig]);
 
-  if (!isAdmin) {
+  if (!hasPermission("village:config") && !isAuthenticated) {
     return null;
   }
 
@@ -332,7 +159,9 @@ const JsonConfigManager = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold mb-2">JSON Configuration Manager</h1>
+            <h1 className="text-3xl font-bold mb-2">
+              JSON Configuration Manager
+            </h1>
             <p className="text-muted-foreground">
               Manage village configuration data dynamically
             </p>
@@ -346,30 +175,43 @@ const JsonConfigManager = () => {
           <CardHeader>
             <CardTitle>Village Configuration Editor</CardTitle>
             <CardDescription>
-              Select a village and edit its configuration JSON. Changes are saved to the database.
+              Select a village and edit its configuration JSON. Changes are
+              saved to the database.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Select Village</label>
-                <Select value={selectedVillage} onValueChange={setSelectedVillage}>
+                <Select
+                  value={selectedVillage}
+                  onValueChange={setSelectedVillage}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Choose a village..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {villages.map((village) => (
-                      <SelectItem key={village.id} value={village.id}>
-                        {village.name}
-                      </SelectItem>
-                    ))}
+                    {isLoading ? (
+                      <div className="flex items-center justify-center p-4">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      </div>
+                    ) : (
+                      villagesData.map((village) => (
+                        <SelectItem key={village.id} value={village.id}>
+                          {village.name}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Select Language</label>
-                <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                <Select
+                  value={selectedLanguage}
+                  onValueChange={setSelectedLanguage}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -387,13 +229,21 @@ const JsonConfigManager = () => {
             {selectedVillage && selectedLanguage && (
               <>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Configuration JSON</label>
-                  <Textarea
-                    value={jsonContent}
-                    onChange={(e) => handleJsonChange(e.target.value)}
-                    className="font-mono text-sm min-h-[500px]"
-                    placeholder="Enter JSON configuration..."
-                  />
+                  <label className="text-sm font-medium">
+                    Configuration JSON
+                  </label>
+                  {isConfigLoading ? (
+                    <div className="flex items-center justify-center p-4">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    </div>
+                  ) : (
+                    <Textarea
+                      value={jsonContent}
+                      onChange={(e) => handleJsonChange(e.target.value)}
+                      className="font-mono text-sm min-h-[500px]"
+                      placeholder="Enter JSON configuration..."
+                    />
+                  )}
                 </div>
 
                 {validationError && (
@@ -414,18 +264,15 @@ const JsonConfigManager = () => {
 
                 <div className="flex justify-between gap-2">
                   <Button
-                    variant="outline"
-                    onClick={loadQuickServicesTemplate}
-                    disabled={!selectedVillage || !selectedLanguage}
-                  >
-                    <FileText className="mr-2 h-4 w-4" />
-                    Load Quick Services Template
-                  </Button>
-                  <Button
                     onClick={handleSave}
-                    disabled={saving || !!validationError || !jsonContent.trim()}
+                    disabled={
+                      isPending ||
+                      !!validationError ||
+                      !jsonContent.trim() ||
+                      isConfigLoading
+                    }
                   >
-                    {saving ? (
+                    {isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Saving...

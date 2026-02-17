@@ -59,7 +59,7 @@ const Header: React.FC = () => {
   const [desktopHomeOpen, setDesktopHomeOpen] = useState(false);
 
   const { t, i18n } = useTranslation();
-  const { user, isAdmin, isSuperAdmin, loading: authLoading } = useApiAuth();
+  const { user, isAdmin, isSuperAdmin, loading: authLoading, isAuthenticated } = useApiAuth();
   const isSubAdmin = false; // Will be determined by roles if needed
   const { isPageVisible } = usePageVisibility();
   const navigate = useNavigate();
@@ -301,7 +301,7 @@ const Header: React.FC = () => {
 
               {/* Desktop Auth Buttons */}
               <div className="hidden lg:flex items-center gap-2">
-                {user ? (
+                {isAuthenticated ? (
                   <>
                     {(isAdmin || isSuperAdmin || isSubAdmin) && (
                       <Button

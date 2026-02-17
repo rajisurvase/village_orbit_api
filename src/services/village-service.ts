@@ -23,6 +23,15 @@ export const GetVillageById = async (payload: {
   return village.data;
 };
 
+export const UpdateVillageConfigById = async (payload:GetVillageByIdResponse) => {
+  const { id, language, villageId, ...configData } = payload;
+  const response = await apiClient.put<ApiResponse<GetVillageByIdResponse>>(
+    apiConfig.endpoints.villages.config(villageId),
+    { ...configData, language }
+  );
+  return response.data;
+};
+
 export type Village = {
   id?: string;
   name: string;

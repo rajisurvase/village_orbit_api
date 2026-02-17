@@ -196,7 +196,6 @@ export const useApiAuth = (): UseApiAuthReturn => {
     roles: user?.roles ?? [],
   }), [user, roleNamesLower]);
 
-  console.log("isSuperAdmin", computedValues.isSuperAdmin)
   return {
     user,
     loading,
