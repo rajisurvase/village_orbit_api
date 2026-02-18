@@ -179,7 +179,7 @@ export const apiConfig = {
       adminSend: '/admin/push/send',
     },
     page_visibility: {  
-      get: '/page-visibility'
+      get: (villageId : string)=>`/villages/${villageId}/page-visibility`
     }
   },
 };

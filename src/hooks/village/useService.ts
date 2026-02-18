@@ -26,11 +26,11 @@ export const useServices = () => {
 };
 
 
-export const usePageVisibilityData = (enabled: boolean) => {
+export const usePageVisibilityData = (enabled: boolean, selectedVillageId: string) => {
   return useQuery({
-    queryKey: ["page-visibility"],
-    queryFn: GetVillagePageVisibility,
-    enabled,
+    queryKey: ["page-visibility", selectedVillageId],
+    queryFn: () => GetVillagePageVisibility(selectedVillageId),
+    enabled : enabled && Boolean(selectedVillageId),
     select(data) {
       return data.data;
     }

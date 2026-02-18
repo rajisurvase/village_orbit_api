@@ -19,12 +19,10 @@ export const VillageContext = createContext<VillageContextType>({
 
 type VillageProviderProps = {
   children: ReactNode;
-  villageName?: string;
 };
 
 export const VillageProvider = ({
-  children,
-  villageName = "Shivankhed",
+  children
 }: VillageProviderProps) => {
   const { i18n } = useTranslation();
   const currentLanguage = i18n.language;

@@ -37,6 +37,9 @@ import { CUSTOM_ROUTES } from "@/custom-routes";
 import { SuperAdminGuard } from "@/components/guards/PermissionGuard";
 import { usePageVisibilityData } from "@/hooks/village/useService";
 import { VILLAGES } from "@/config/villageConfig";
+import { useVillages } from "@/hooks/useVillagehooks";
+import { useMutation } from "@tanstack/react-query";
+import { UpdateVillagePageVisibility } from "@/services/village-service";
 
 const Admin = () => {
   const {
@@ -48,14 +51,56 @@ const Admin = () => {
     logout,
     hasPermission,
   } = useApiAuth();
-  const [selectedVillage, setSelectedVillage] = useState(VILLAGES.shivankhed.name);
+  const { data: villages, isLoading: villagesLoading } = useVillages();
+  const [selectedVillage, setSelectedVillage] = useState("");
   const [updating, setUpdating] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: UpdateVillagePageVisibility,
+  });
 
   // Check if user can access admin panel
   const canAccessAdmin = isSuperAdmin || isAdmin || isSubAdmin;
-  const { data: pages, isLoading } = usePageVisibilityData(canAccessAdmin);
+  const {
+    data: pages,
+    isLoading,
+    refetch,
+  } = usePageVisibilityData(canAccessAdmin, selectedVillage);
+
+  const handleToggleVisibility = async (
+    pageKey: string,
+    currentVisibility: boolean,
+  ) => {
+    mutateAsync(
+      {
+        pageKey,
+        villageId: selectedVillage,
+        isVisible: !currentVisibility,
+      },
+      {
+        onSuccess() {
+          toast({
+            title: "Success",
+            description: `Page visibility updated successfully`,
+          });
+          refetch();
+        },
+        onError() {
+          toast({
+            title: "Error",
+            description: `Failed to update page visibility. Please try again.`,
+            variant: "destructive",
+          });
+        },
+      },
+    );
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -68,74 +113,7 @@ const Admin = () => {
       });
       navigate("/");
     }
-  }, [authLoading, user, canAccessAdmin, navigate, toast, selectedVillage]);
-
-  // const fetchPageVisibility = async () => {
-  //   try {
-  //     const { data, error } = await supabase
-  //       .from("page_visibility")
-  //       .select("*")
-  //       .eq("village_name", selectedVillage)
-  //       .order("page_key");
-
-  //     if (error) throw error;
-  //     setPages(data || []);
-  //   } catch (error) {
-  //     console.error("Error fetching pages:", error);
-  //     toast({
-  //       title: "Error",
-  //       description: "Failed to load page visibility settings.",
-  //       variant: "destructive",
-  //     });
-  //   }
-  // };
-
-  const handleToggleVisibility = async (
-    pageId: string,
-    currentVisibility: boolean,
-  ) => {
-    setUpdating(true);
-    try {
-      const { error } = await supabase
-        .from("page_visibility")
-        .update({
-          is_visible: !currentVisibility,
-          updated_at: new Date().toISOString(),
-          updated_by: user?.userId,
-        })
-        .eq("id", pageId);
-
-      if (error) throw error;
-
-      // Update local state
-      // setPages(
-      //   pages.map((page) =>
-      //     page.id === pageId
-      //       ? { ...page, is_visible: !currentVisibility }
-      //       : page,
-      //   ),
-      // );
-
-      toast({
-        title: "Updated",
-        description: "Page visibility has been updated successfully.",
-      });
-    } catch (error) {
-      console.error("Error updating visibility:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update page visibility.",
-        variant: "destructive",
-      });
-    } finally {
-      setUpdating(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    await logout();
-    navigate("/");
-  };
+  }, [authLoading, user, canAccessAdmin, navigate, toast]);
 
   if (authLoading) {
     return (
@@ -333,22 +311,6 @@ const Admin = () => {
                   </Card>
                 )}
 
-                {/* {hasPermission('services:create') && (
-                  <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(CUSTOM_ROUTES.ADD_SERVICE)}>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Plus className="h-5 w-5" />
-                        Add Service
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">
-                        Add new services to the village directory
-                      </p>
-                    </CardContent>
-                  </Card>
-                )} */}
-
                 <Card
                   className="hover:shadow-lg transition-shadow cursor-pointer"
                   onClick={() => navigate(CUSTOM_ROUTES.MANAGE_CATEGORIES)}
@@ -406,57 +368,73 @@ const Admin = () => {
                   <SelectValue placeholder="Select village" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Shivankhed">Shivankhed</SelectItem>
-                  <SelectItem value="Gudsoor">Gudsoor</SelectItem>
+                  {villagesLoading ? (
+                    <div className="flex items-center justify-center p-4">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    </div>
+                  ) : (
+                    villages.map((village) => (
+                      <SelectItem key={village.id} value={village.name}>
+                        {village.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </CardContent>
           </Card>
 
           {/* Page Visibility Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Page Visibility for {selectedVillage}</CardTitle>
-              <CardDescription>
-                Toggle pages on/off for this village
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {/* {isLoading ? (
-                  <div className="flex items-center justify-center">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                  </div>
-                ) : pages.length >= 0 ? (
-                  pages.map((page) => (
-                    <div
-                      key={page.id}
-                      className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
-                    >
-                      <Label
-                        htmlFor={page.id}
-                        className="text-base font-medium cursor-pointer"
-                      >
-                        {page.pageLabel}
-                      </Label>
-                      <Switch
-                        id={page.id}
-                        checked={page.isVisible}
-                        onCheckedChange={() =>
-                          handleToggleVisibility(page.id, page.isVisible)
-                        }
-                        disabled={updating}
-                      />
+          {selectedVillage && (
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  Page Visibility for{" "}
+                  {selectedVillage
+                    ? villages.find((v) => v.name === selectedVillage)?.name
+                    : "No Village Selected"}
+                </CardTitle>
+                <CardDescription>
+                  Toggle pages on/off for this village
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No page visibility settings found for this village.
-                  </p>
-                )} */}
-              </div>
-            </CardContent>
-          </Card>
+                  ) : pages.length >= 0 ? (
+                    pages.map((page) => (
+                      <div
+                        key={page.id}
+                        className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors"
+                      >
+                        <Label
+                          htmlFor={page.id}
+                          className="text-base font-medium cursor-pointer"
+                        >
+                          {page.pageLabel}
+                        </Label>
+                        <Switch
+                          id={page.id}
+                          checked={page.isVisible}
+                          onCheckedChange={() =>
+                            handleToggleVisibility(page.pageKey, page.isVisible)
+                          }
+                          disabled={updating}
+                        />
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      No page visibility settings found for this village.
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </main>
     </div>

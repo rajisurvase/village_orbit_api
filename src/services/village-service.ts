@@ -105,18 +105,19 @@ export type PageVisibilityType = {
   villageId : string;
 }
 
-export const GetVillagePageVisibility = async () => {
+export const GetVillagePageVisibility = async (villageId : string) => {
   const response = await apiClient.get<ApiResponse<PageVisibilityType[]>>(
-    apiConfig.endpoints.page_visibility.get,
+    apiConfig.endpoints.page_visibility.get(villageId),
     true
   );
   return response.data;
 }
 
-export const UpdateVillagePageVisibility = async (payload: {pageKey: string, villageId : string}) => {
-  const response = await apiClient.put<ApiResponse<null>>(
-    apiConfig.endpoints.page_visibility.get,
-    payload,
+export const UpdateVillagePageVisibility = async (payload: {pageKey: string, villageId : string, isVisible: boolean}) => {
+  const {pageKey, villageId, isVisible} = payload;
+  const response = await apiClient.put<ApiResponse<PageVisibilityType>>(
+    `${apiConfig.endpoints.page_visibility.get(villageId)}/${pageKey}`,
+    { isVisible },
     true
   );
   return response.data;
