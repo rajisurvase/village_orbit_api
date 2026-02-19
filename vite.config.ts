@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => ({
       registerType: "prompt",
       includeAssets: ["index.html", "robots.txt", "placeholder.svg"],
       devOptions: {
-        enabled: false
+        enabled: true
       },
       manifest: {
         name: "शिवनखेड (खु) ग्रामपंचायत",
@@ -31,15 +31,15 @@ export default defineConfig(({ mode }) => ({
         start_url: "/",
         icons: [
           {
-            src: "/favicon.ico",
+            src: "/pwa-192.png",
             sizes: "192x192",
-            type: "image/svg+xml",
+            type: "image/png",
             purpose: "any maskable"
           },
           {
-            src: "/favicon.ico",
+            src: "/pwa-512.png",
             sizes: "512x512",
-            type: "image/svg+xml",
+            type: "image/png",
             purpose: "any maskable"
           }
         ],
@@ -59,7 +59,7 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp}"],
-        navigateFallback: null,
+    navigateFallback: "/index.html",
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
