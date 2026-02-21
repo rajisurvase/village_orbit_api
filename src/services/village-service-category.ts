@@ -10,7 +10,7 @@ type ServiceCategory = {
 
 export const GetAllCategories = async () => {
   const response = await apiClient.get<ApiResponse<ServiceCategory[]>>(
-    apiConfig.endpoints.services.categories
+    apiConfig.endpoints.services.categories,
   );
   return response.data;
 };
@@ -21,28 +21,56 @@ export const CreateUpdateCategory = async (payload: ServiceCategory) => {
   if (id) {
     response = await apiClient.put<ApiResponse<ServiceCategory>>(
       `${apiConfig.endpoints.services.categories}/${id}`,
-      rest
+      rest,
     );
   } else {
-     response = await apiClient.post<ApiResponse<ServiceCategory>>(
+    response = await apiClient.post<ApiResponse<ServiceCategory>>(
       apiConfig.endpoints.services.categories,
-      rest
+      rest,
     );
     return response.data;
   }
 };
 
-export const GetAllServices = async () => {
-  const response = await apiClient.get<ApiResponse<any[]>>(
-    apiConfig.endpoints.services.list,
-  );
-  return response.data;
+export interface IGetServiceListPayload {
+  villageId: string;
+  category?: string;
+  search?: string;
+  page: number;
+  limit: number;
+  sortOrder: "asc" | "desc";
 }
 
+export type IService = {
+  id: string;
+  villageId: string;
+  category: string;
+  name: string;
+  owner: string;
+  contact: string;
+  address: string;
+  hours: string;
+  speciality: string;
+  imageUrl: string;
+};
+
+export const GetAllServices = async (queryParams: IGetServiceListPayload) => {
+  const response = await apiClient.get<
+    ApiResponse<{
+      services: IService[];
+      total: number;
+      limit: number;
+      totalpages: number;
+      page: number;
+    }>
+  >(apiConfig.endpoints.services.list, true, { params: queryParams });
+  return response.data;
+};
+
 export const CreateService = async (payload: {}) => {
-const response = await apiClient.post<ApiResponse<any>>(
+  const response = await apiClient.post<ApiResponse<any>>(
     apiConfig.endpoints.services.create,
-    payload
+    payload,
   );
   return response.data;
-}
+};

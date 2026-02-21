@@ -2,6 +2,7 @@ import { GetVillagePageVisibility } from "@/services/village-service";
 import {
   GetAllCategories,
   GetAllServices,
+  IGetServiceListPayload,
 } from "@/services/village-service-category";
 import { useQuery } from "@tanstack/react-query";
 
@@ -15,10 +16,10 @@ export const useServiceCategory = () => {
   });
 };
 
-export const useServices = () => {
+export const useServices = (payload : IGetServiceListPayload) => {
   return useQuery({
-    queryKey: ["services"],
-    queryFn: GetAllServices,
+    queryKey: ["services", payload],
+    queryFn: () => GetAllServices(payload),
     select(data) {
       return data.data;
     },

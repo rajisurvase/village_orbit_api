@@ -24,7 +24,7 @@ export interface ApiError {
 
 export interface RequestOptions extends RequestInit {
   /** Query parameters */
-  params?: Record<string, string | number | boolean | undefined>;
+  params?: Record<string, any>;
 
   /** Skip caching for this request */
   skipCache?: boolean;
@@ -149,7 +149,13 @@ class ApiClient {
       try {
         const headers = requiresAuth
           ? this.getAuthHeaders()
-          : this.defaultHeaders;
+          : { ...this.defaultHeaders };
+
+        // If body is FormData, let the browser set the Content-Type (including boundary)
+        if (fetchOptions.body instanceof FormData) {
+          // remove content-type header so fetch will set multipart/form-data with boundary
+          if (headers["Content-Type"]) delete headers["Content-Type"];
+        }
 
         const response = await fetch(url, {
           ...fetchOptions,
@@ -298,7 +304,7 @@ class ApiClient {
       endpoint,
       {
         method: "POST",
-        body: JSON.stringify(body),
+        body: body instanceof FormData ? body : JSON.stringify(body),
         skipCache: true,
       },
       requiresAuth
@@ -319,7 +325,7 @@ class ApiClient {
       endpoint,
       {
         method: "PUT",
-        body: JSON.stringify(body),
+        body: body instanceof FormData ? body : JSON.stringify(body),
         skipCache: true,
       },
       requiresAuth

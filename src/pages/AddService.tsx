@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/form";
 import { UploadVillageFile } from "@/services/village-service";
 import { VILLAGES } from "@/config/villageConfig";
+import { CUSTOM_ROUTES } from "@/custom-routes";
 
 const AddService = () => {
   const navigate = useNavigate();
@@ -74,7 +75,7 @@ const AddService = () => {
             {
               onSuccess: () => {
                 toast.success("Service added successfully!");
-                navigate("/admin/dashboard");
+                navigate(CUSTOM_ROUTES.SERVICES_ADMIN);
               },
               onError: (error: any) => {
                 toast.error(error.message || "Failed to add service");

@@ -14,7 +14,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { usePageSEO } from "@/hooks/usePageSEO";
 import { useApiAuth } from "@/hooks/useApiAuth";
 import { adminService, AdminUser } from "@/services/adminService";
 import { PermissionGuard } from "@/components/guards/PermissionGuard";
@@ -23,10 +22,6 @@ import { ArrowLeft, Search, Check, X, Trash2, Download, RefreshCw } from "lucide
 import { format } from "date-fns";
 
 const UserManagementDashboardApi = () => {
-  usePageSEO({ 
-    title: "User Management", 
-    description: "Manage user registrations and approvals" 
-  });
   
   const navigate = useNavigate();
   const { toast } = useToast();

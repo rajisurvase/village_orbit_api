@@ -1,43 +1,61 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { ArrowLeft, Pencil, Trash2, Upload } from "lucide-react";
-import CustomLoader from "@/components/CustomLoader";
 import { useServices } from "@/hooks/village/useService";
-
-interface Service {
-  id: string;
-  category: string;
-  name: string;
-  owner: string | null;
-  contact: string | null;
-  address: string | null;
-  hours: string | null;
-  speciality: string | null;
-  image_url: string | null;
-}
+import { VILLAGES } from "@/config/villageConfig";
+import { IService } from "@/services/village-service-category";
 
 const ServicesAdminDashboard = () => {
   const navigate = useNavigate();
-  const [services, setServices] = useState<Service[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [selectedService, setSelectedService] = useState<IService | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
 
-  const handleEdit = (service: Service) => {
+  const {
+    data,
+    isLoading,
+  } = useServices({
+    villageId: VILLAGES.shivankhed.id,
+    page: 1,
+    limit: 20,
+    sortOrder: "asc",
+  });
+
+  const { services = [] } = data || {};
+
+  const handleEdit = (service: IService) => {
     setSelectedService(service);
-    setImagePreview(service.image_url || "");
+    setImagePreview(service.imageUrl || "");
     setImageFile(null);
     setEditDialogOpen(true);
   };
@@ -45,7 +63,10 @@ const ServicesAdminDashboard = () => {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this service?")) return;
 
-    const { error } = await supabase.from("village_services").delete().eq("id", id);
+    const { error } = await supabase
+      .from("village_services")
+      .delete()
+      .eq("id", id);
 
     if (error) {
       toast.error("Failed to delete service");
@@ -129,10 +150,6 @@ const ServicesAdminDashboard = () => {
     }
   };
 
-  if (loading && services.length === 0) {
-    return <CustomLoader />;
-  }
-
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
@@ -165,16 +182,21 @@ const ServicesAdminDashboard = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {services.length === 0 ? (
+                {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      No services found. Add your first service!
+                    <TableCell
+                      colSpan={5}
+                      className="text-center py-8 text-muted-foreground"
+                    >
+                      Loading services...
                     </TableCell>
                   </TableRow>
-                ) : (
+                ) : services.length > 0 ? (
                   services.map((service) => (
                     <TableRow key={service.id}>
-                      <TableCell className="font-medium">{service.name}</TableCell>
+                      <TableCell className="font-medium">
+                        {service.name}
+                      </TableCell>
                       <TableCell>{service.category}</TableCell>
                       <TableCell>{service.owner || "-"}</TableCell>
                       <TableCell>{service.contact || "-"}</TableCell>
@@ -198,6 +220,15 @@ const ServicesAdminDashboard = () => {
                       </TableCell>
                     </TableRow>
                   ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      className="text-center py-8 text-muted-foreground"
+                    >
+                      No services available.
+                    </TableCell>
+                  </TableRow>
                 )}
               </TableBody>
             </Table>
@@ -239,7 +270,10 @@ const ServicesAdminDashboard = () => {
                 <Input
                   value={selectedService.name}
                   onChange={(e) =>
-                    setSelectedService({ ...selectedService, name: e.target.value })
+                    setSelectedService({
+                      ...selectedService,
+                      name: e.target.value,
+                    })
                   }
                   required
                 />
@@ -250,7 +284,10 @@ const ServicesAdminDashboard = () => {
                 <Input
                   value={selectedService.owner || ""}
                   onChange={(e) =>
-                    setSelectedService({ ...selectedService, owner: e.target.value })
+                    setSelectedService({
+                      ...selectedService,
+                      owner: e.target.value,
+                    })
                   }
                 />
               </div>
@@ -261,7 +298,10 @@ const ServicesAdminDashboard = () => {
                   type="tel"
                   value={selectedService.contact || ""}
                   onChange={(e) =>
-                    setSelectedService({ ...selectedService, contact: e.target.value })
+                    setSelectedService({
+                      ...selectedService,
+                      contact: e.target.value,
+                    })
                   }
                 />
               </div>
@@ -271,7 +311,10 @@ const ServicesAdminDashboard = () => {
                 <Input
                   value={selectedService.address || ""}
                   onChange={(e) =>
-                    setSelectedService({ ...selectedService, address: e.target.value })
+                    setSelectedService({
+                      ...selectedService,
+                      address: e.target.value,
+                    })
                   }
                 />
               </div>
@@ -281,7 +324,10 @@ const ServicesAdminDashboard = () => {
                 <Input
                   value={selectedService.hours || ""}
                   onChange={(e) =>
-                    setSelectedService({ ...selectedService, hours: e.target.value })
+                    setSelectedService({
+                      ...selectedService,
+                      hours: e.target.value,
+                    })
                   }
                 />
               </div>
@@ -291,7 +337,10 @@ const ServicesAdminDashboard = () => {
                 <Textarea
                   value={selectedService.speciality || ""}
                   onChange={(e) =>
-                    setSelectedService({ ...selectedService, speciality: e.target.value })
+                    setSelectedService({
+                      ...selectedService,
+                      speciality: e.target.value,
+                    })
                   }
                   rows={3}
                 />

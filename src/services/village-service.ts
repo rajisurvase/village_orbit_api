@@ -87,10 +87,9 @@ export const DeleteVillage = async (id: string) => {
 export const UploadVillageFile = async ({ file, villageId }) => {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("villageId", villageId);
 
   const response = await apiClient.post<ApiResponse<{ fileUrl: string }>>(
-    apiConfig.endpoints.villages.fileUpload,
+    `${apiConfig.endpoints.villages.fileUpload}?villageId=${villageId}`,
     formData
   );
   return response.data;
