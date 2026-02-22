@@ -33,7 +33,6 @@ import LanguageToggle from "./LanguageToggle";
 import ThemeToggle from "./ThemeToggle";
 
 import { useApiAuth } from "@/hooks/useApiAuth";
-import { usePageVisibility } from "@/hooks/usePageVisibility";
 import { authService } from "@/services/authService";
 import { CUSTOM_ROUTES } from "@/custom-routes";
 import { VillageContext } from "@/context/VillageContextConfig";
@@ -61,12 +60,10 @@ const Header: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { user, isAdmin, isSuperAdmin, loading: authLoading, isAuthenticated } = useApiAuth();
   const isSubAdmin = false; // Will be determined by roles if needed
-  const { isPageVisible } = usePageVisibility();
   const navigate = useNavigate();
   const location = useLocation();
-  const { config } = useContext(VillageContext);
+  const { config, isPageVisible } = useContext(VillageContext);
 
-  const navConfig = (config as any)?.navigationConfig || null;
   const currentLang = (i18n.language?.split("-")[0] || "en") as
     | "en"
     | "hi"
@@ -79,7 +76,7 @@ const Header: React.FC = () => {
   };
 
   const navigationData = useMemo(() => {
-    const configToUse = navConfig || getDefaultNavigationConfig();
+    const configToUse = getDefaultNavigationConfig();
 
     const standaloneNavItems = configToUse.standaloneItems
       .filter((item) => item.isVisible && isPageVisible(item.pageKey))
@@ -87,7 +84,7 @@ const Header: React.FC = () => {
       .map((item) => ({
         name: item.label[currentLang] || item.label.en,
         href: item.href,
-        pageKey: item.pageKey,
+        pageKey: item.pageKey
       }));
 
     const homeMenuSections = configToUse.homeMenuSections
@@ -107,9 +104,11 @@ const Header: React.FC = () => {
       .filter((section) => section.items.length > 0);
 
     return { standaloneNavItems, homeMenuSections };
-  }, [navConfig, currentLang, isPageVisible]);
+  }, [currentLang, isPageVisible]);
 
   const { standaloneNavItems, homeMenuSections } = navigationData;
+
+  console.log("navigationData", navigationData, isPageVisible("exams"))
 
   // ------------------------------------------------------------------
   // YELLOW CONTACT BAR (NON-STICKY)

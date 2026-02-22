@@ -66,7 +66,7 @@ const Admin = () => {
     data: pages,
     isLoading,
     refetch,
-  } = usePageVisibilityData(canAccessAdmin, selectedVillage);
+  } = usePageVisibilityData(canAccessAdmin, VILLAGES.shivankhed.id);
 
   const handleToggleVisibility = async (
     pageKey: string,
@@ -75,7 +75,7 @@ const Admin = () => {
     mutateAsync(
       {
         pageKey,
-        villageId: selectedVillage,
+        villageId: VILLAGES.shivankhed.id,
         isVisible: !currentVisibility,
       },
       {

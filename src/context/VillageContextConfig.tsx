@@ -1,12 +1,11 @@
 import { createContext, ReactNode, useMemo } from "react";
-import { VillageConfig } from "@/hooks/useVillageConfig";
-import { usePageVisibility } from "@/hooks/usePageVisibility";
 import { useTranslation } from "react-i18next";
-import { VILLAGES } from "@/config/villageConfig";
+import { VillageConfigData, VILLAGES } from "@/config/villageConfig";
 import { useGetVillageConfigById } from "@/hooks/useVillagehooks";
+import { usePageVisibilityData } from "@/hooks/village/useService";
 
 type VillageContextType = {
-  config: VillageConfig | null;
+  config: VillageConfigData | null;
   loading: boolean;
   isPageVisible: (pageKey: string) => boolean;
 };
@@ -28,12 +27,19 @@ export const VillageProvider = ({
   const currentLanguage = i18n.language;
 
   let id = VILLAGES.shivankhed.id;
-  const { isPageVisible } = usePageVisibility();
+  const{data: pageVisibilityData} = usePageVisibilityData(true, id)
+
 
   const { data: config, isLoading } = useGetVillageConfigById({
     id, 
     language: currentLanguage
   })
+
+const isPageVisible = (pageKey: string): boolean => {
+  return pageVisibilityData?.some(
+    (page) =>  page.pageKey === pageKey && page.isVisible
+  );
+};
 
   const value = useMemo(
     () => ({

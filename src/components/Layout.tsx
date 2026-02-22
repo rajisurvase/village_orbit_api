@@ -2,18 +2,17 @@ import Header from "./Header";
 import Footer from "./Footer";
 import FeedbackFormWithShare from "./FeedbackFormWithShare";
 import VillageChatbot from "./VillageChatbot";
-// import { VillageProvider } from "@/context/VillageContextConfig";
 
 const Layout = ({ children }) => {
+  const isChatbotEnabled = import.meta.env.VITE_VILLAGE_ORBIT_CHATBOT==="true";
+
   return (
     <div>
-      {/* <VillageProvider villageName="Shivankhed"> */}
         <Header />
         {children}
         <Footer />
         <FeedbackFormWithShare />
-        <VillageChatbot />
-      {/* </VillageProvider> */}
+        {!!isChatbotEnabled && <VillageChatbot />}
     </div>
   );
 };
