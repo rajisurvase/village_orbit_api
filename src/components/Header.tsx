@@ -185,7 +185,7 @@ const Header: React.FC = () => {
       {YellowBar}
 
       {/* WHITE HEADER (STICKY) */}
-      <header className="sticky top-0 z-[200] w-full bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
+      <header className="sticky top-0 z-[49] w-full bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
         <div className="container mx-auto px-3 sm:px-4 lg:px-6">
           <div className="flex items-center justify-between py-2.5 sm:py-3 md:py-4">
             {/* Logo */}

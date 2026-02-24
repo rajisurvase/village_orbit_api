@@ -21,8 +21,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useQuery } from "@tanstack/react-query";
-import { GetAllCategories } from "@/services/village-service-category";
 import { useServiceCategory } from "@/hooks/village/useService";
 
 const ManageCategories = () => {

@@ -1,3 +1,4 @@
+import { GetFullFilePath } from "@/services/commonService";
 import { GetVillageById, GetVillagesList } from "@/services/village-service";
 import { useQuery } from "@tanstack/react-query";
 
@@ -22,4 +23,16 @@ export const useGetVillageConfigById = (params: { id: string; language: string }
         return data.data;
       },
     });
+}
+
+
+export const useGetFullFilePath = (filePath: string) => {
+  return useQuery({
+    queryKey: ["fullFilePath", filePath],
+    queryFn: () => GetFullFilePath(filePath),
+    enabled: Boolean(filePath),
+    select(data) {
+      return data.data
+    },
+  })
 }

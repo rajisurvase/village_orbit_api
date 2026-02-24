@@ -2,16 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -20,33 +10,22 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ArrowLeft, Pencil, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { useServices } from "@/hooks/village/useService";
 import { VILLAGES } from "@/config/villageConfig";
 import { IService } from "@/services/village-service-category";
+import { CUSTOM_ROUTES } from "@/custom-routes";
 
 const ServicesAdminDashboard = () => {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedService, setSelectedService] = useState<IService | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>("");
 
   const {
     data,
     isLoading,
   } = useServices({
     villageId: VILLAGES.shivankhed.id,
-    page: 1,
+    page: 0,
     limit: 20,
     sortOrder: "asc",
   });
@@ -54,10 +33,7 @@ const ServicesAdminDashboard = () => {
   const { services = [] } = data || {};
 
   const handleEdit = (service: IService) => {
-    setSelectedService(service);
-    setImagePreview(service.imageUrl || "");
-    setImageFile(null);
-    setEditDialogOpen(true);
+    navigate(`${CUSTOM_ROUTES.ADD_SERVICE}?serviceId=${service.id}`);
   };
 
   const handleDelete = async (id: string) => {
@@ -74,79 +50,6 @@ const ServicesAdminDashboard = () => {
     } else {
       toast.success("Service deleted successfully");
       // fetchServices();
-    }
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const uploadImage = async (): Promise<string | null> => {
-    if (!imageFile) return null;
-
-    const fileExt = imageFile.name.split(".").pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `services/${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("items")
-      .upload(filePath, imageFile);
-
-    if (uploadError) {
-      toast.error("Failed to upload image");
-      console.error(uploadError);
-      return null;
-    }
-
-    const { data } = supabase.storage.from("items").getPublicUrl(filePath);
-    return data.publicUrl;
-  };
-
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedService) return;
-
-    setLoading(true);
-
-    try {
-      const imageUrl = await uploadImage();
-      const updateData: any = {
-        category: selectedService.category,
-        name: selectedService.name,
-        owner: selectedService.owner || null,
-        contact: selectedService.contact || null,
-        address: selectedService.address || null,
-        hours: selectedService.hours || null,
-        speciality: selectedService.speciality || null,
-      };
-
-      if (imageUrl) {
-        updateData.image_url = imageUrl;
-      }
-
-      const { error } = await supabase
-        .from("village_services")
-        .update(updateData)
-        .eq("id", selectedService.id);
-
-      if (error) throw error;
-
-      toast.success("Service updated successfully");
-      setEditDialogOpen(false);
-      // fetchServices();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update service");
-      console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -235,165 +138,6 @@ const ServicesAdminDashboard = () => {
           </div>
         </div>
       </div>
-
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Service</DialogTitle>
-          </DialogHeader>
-
-          {selectedService && (
-            <form onSubmit={handleUpdate} className="space-y-4">
-              <div>
-                <Label>Category *</Label>
-                <Select
-                  value={selectedService.category}
-                  onValueChange={(value) =>
-                    setSelectedService({ ...selectedService, category: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.name}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Service Name *</Label>
-                <Input
-                  value={selectedService.name}
-                  onChange={(e) =>
-                    setSelectedService({
-                      ...selectedService,
-                      name: e.target.value,
-                    })
-                  }
-                  required
-                />
-              </div>
-
-              <div>
-                <Label>Owner/Provider Name</Label>
-                <Input
-                  value={selectedService.owner || ""}
-                  onChange={(e) =>
-                    setSelectedService({
-                      ...selectedService,
-                      owner: e.target.value,
-                    })
-                  }
-                />
-              </div>
-
-              <div>
-                <Label>Contact Number</Label>
-                <Input
-                  type="tel"
-                  value={selectedService.contact || ""}
-                  onChange={(e) =>
-                    setSelectedService({
-                      ...selectedService,
-                      contact: e.target.value,
-                    })
-                  }
-                />
-              </div>
-
-              <div>
-                <Label>Address</Label>
-                <Input
-                  value={selectedService.address || ""}
-                  onChange={(e) =>
-                    setSelectedService({
-                      ...selectedService,
-                      address: e.target.value,
-                    })
-                  }
-                />
-              </div>
-
-              <div>
-                <Label>Operating Hours</Label>
-                <Input
-                  value={selectedService.hours || ""}
-                  onChange={(e) =>
-                    setSelectedService({
-                      ...selectedService,
-                      hours: e.target.value,
-                    })
-                  }
-                />
-              </div>
-
-              <div>
-                <Label>Description/Speciality</Label>
-                <Textarea
-                  value={selectedService.speciality || ""}
-                  onChange={(e) =>
-                    setSelectedService({
-                      ...selectedService,
-                      speciality: e.target.value,
-                    })
-                  }
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <Label>Service Image</Label>
-                <div className="mt-2">
-                  <label
-                    htmlFor="edit-image"
-                    className="flex items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                  >
-                    {imagePreview ? (
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="h-full object-cover rounded-lg"
-                      />
-                    ) : (
-                      <div className="text-center">
-                        <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-                        <p className="mt-2 text-sm text-muted-foreground">
-                          Click to upload new image
-                        </p>
-                      </div>
-                    )}
-                    <input
-                      id="edit-image"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setEditDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={loading}>
-                  {loading ? "Updating..." : "Update Service"}
-                </Button>
-              </div>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

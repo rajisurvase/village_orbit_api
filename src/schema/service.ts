@@ -12,6 +12,7 @@ export const AddServiceSchema = z.object({
   address: z.string().max(255).optional(),
   hours: z.string().max(100).optional(),
   speciality: z.string().max(100).optional(),
+  id : z.string().optional()
 });
 
 export type AddServiceFormData = z.infer<typeof AddServiceSchema>;

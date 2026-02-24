@@ -1,5 +1,6 @@
 import apiConfig from "@/config/apiConfig";
 import apiClient, { ApiResponse } from "./apiClient";
+import { AddServiceFormData } from "@/schema/service";
 
 type ServiceCategory = {
   id?: string;
@@ -11,6 +12,13 @@ type ServiceCategory = {
 export const GetAllCategories = async () => {
   const response = await apiClient.get<ApiResponse<ServiceCategory[]>>(
     apiConfig.endpoints.services.categories,
+  );
+  return response.data;
+};
+
+export const GetServiceById = async (serviceId: string) => {
+  const response = await apiClient.get<ApiResponse<IService>>(
+    apiConfig.endpoints.services.byId(serviceId),
   );
   return response.data;
 };
@@ -67,10 +75,21 @@ export const GetAllServices = async (queryParams: IGetServiceListPayload) => {
   return response.data;
 };
 
-export const CreateService = async (payload: {}) => {
-  const response = await apiClient.post<ApiResponse<any>>(
-    apiConfig.endpoints.services.create,
-    payload,
-  );
-  return response.data;
+export const CreateService = async (
+  payload: AddServiceFormData & { image_url: string; villageId : string, id?: string,  },
+) => {
+  const { id, ...rest } = payload;
+  if (id) {
+    const response = await apiClient.put<ApiResponse<IService>>(
+      `${apiConfig.endpoints.services.byId(id)}`,
+      rest,
+    );
+    return response.data;
+  } else {
+    const response = await apiClient.post<ApiResponse<IService>>(
+      apiConfig.endpoints.services.create,
+      rest,
+    );
+    return response.data;
+  }
 };

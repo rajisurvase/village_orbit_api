@@ -1,6 +1,6 @@
 import apiConfig from "@/config/apiConfig";
 import apiClient, { ApiResponse } from "./apiClient";
-import { VillageConfig } from "@/hooks/useVillageConfig";
+import { VillageConfig } from "@/config/villageConfig";
 
 export type GetVillageByIdResponse = {
   id: string;
@@ -88,7 +88,7 @@ export const UploadVillageFile = async ({ file, villageId }) => {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await apiClient.post<ApiResponse<{ fileUrl: string }>>(
+  const response = await apiClient.post<ApiResponse<{ fileKey: string }>>(
     `${apiConfig.endpoints.villages.fileUpload}?villageId=${villageId}`,
     formData
   );

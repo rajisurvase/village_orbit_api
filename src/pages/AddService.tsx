@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,10 +12,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { ArrowLeft, Upload } from "lucide-react";
+import { ArrowLeft, Loader2, Upload } from "lucide-react";
 import { useServiceCategory } from "@/hooks/village/useService";
-import { useMutation } from "@tanstack/react-query";
-import { CreateService } from "@/services/village-service-category";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  CreateService,
+  GetServiceById,
+} from "@/services/village-service-category";
 import { useForm } from "react-hook-form";
 import { AddServiceFormData, AddServiceSchema } from "@/schema/service";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,14 +33,30 @@ import {
 import { UploadVillageFile } from "@/services/village-service";
 import { VILLAGES } from "@/config/villageConfig";
 import { CUSTOM_ROUTES } from "@/custom-routes";
+import { useGetFullFilePath } from "@/hooks/useVillagehooks";
+import { GetFullFilePath } from "@/services/commonService";
 
 const AddService = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const serviceId = searchParams.get("serviceId");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
+  const ViLLAGE_ID = VILLAGES.shivankhed.id; // Replace with dynamic village ID if needed
 
   const { data: categoriesData, isLoading } = useServiceCategory();
+  const { data: serviceDetails, isLoading: isServiceLoading } = useQuery({
+    queryKey: ["serviceDetails", serviceId],
+    queryFn: () => GetServiceById(serviceId),
+    enabled: !!serviceId,
+    select(data) {
+      return data.data;
+    },
+  });
 
+ const {mutateAsync: mutateFullFilePath, isPending: isFullFilePathPending} = useMutation({
+  mutationFn : GetFullFilePath
+ })
   const { mutateAsync, isPending } = useMutation({
     mutationFn: CreateService,
   });
@@ -51,6 +70,7 @@ const AddService = () => {
 
   const form = useForm<AddServiceFormData>({
     resolver: zodResolver(AddServiceSchema),
+    mode: "onChange",
   });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,28 +85,58 @@ const AddService = () => {
     }
   };
 
-  const onSubmit = (formData: AddServiceFormData) => {
-    uploadImage(
-      { file: imageFile, villageId: VILLAGES.shivankhed.id },
+  const handleAddEditService = (formData: AddServiceFormData, url: string) => {
+    mutateAsync(
       {
-        onSuccess: (uploadResponse) => {
-          mutateAsync(
-            { ...formData, image_url: uploadResponse.data.fileUrl },
-            {
-              onSuccess: () => {
-                toast.success("Service added successfully!");
-                navigate(CUSTOM_ROUTES.SERVICES_ADMIN);
-              },
-              onError: (error: any) => {
-                toast.error(error.message || "Failed to add service");
-              },
-            }
-          );
+        ...formData,
+        image_url: url,
+        villageId: ViLLAGE_ID,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Service added successfully!");
+          navigate(CUSTOM_ROUTES.SERVICES_ADMIN);
         },
-      }
+        onError: (error: any) => {
+          toast.error(error.message || "Failed to add service");
+        },
+      },
     );
   };
 
+  const onSubmit = (formData: AddServiceFormData) => {
+    if (imagePreview) {
+      uploadImage(
+        { file: imageFile, villageId: ViLLAGE_ID },
+        {
+          onSuccess: (uploadResponse) => {
+            handleAddEditService(formData, uploadResponse.data.fileKey);
+          },
+        },
+      );
+    } else {
+      toast.error("Please upload an image for the service");
+    }
+  };
+
+  useEffect(() => {
+    if (serviceDetails) {
+      form.reset({ ...serviceDetails });
+      mutateFullFilePath(serviceDetails.imageUrl, {
+        onSuccess(data) {
+          setImagePreview(data.data.url);
+        },
+      })
+    }
+  }, [serviceDetails]);
+
+  if (isServiceLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-3xl mx-auto">
@@ -100,7 +150,9 @@ const AddService = () => {
         </Button>
 
         <div className="bg-card rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold mb-6">Add New Service</h1>
+          <h1 className="text-3xl font-bold mb-6">
+            {serviceId ? "Edit" : "Add New"} Service
+          </h1>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Category Selection */}
@@ -121,7 +173,7 @@ const AddService = () => {
                           <SelectItem value="Loading" disabled>
                             Loading...
                           </SelectItem>
-                        ) : categoriesData.length > 0 ? (
+                        ) : Number(categoriesData?.length) > 0 ? (
                           categoriesData.map((category) => (
                             <SelectItem key={category.id} value={category.name}>
                               {category.name}
@@ -285,7 +337,9 @@ const AddService = () => {
                     htmlFor="image"
                     className="flex items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
                   >
-                    {imagePreview ? (
+                    {isFullFilePathPending? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : imagePreview ? (
                       <img
                         src={imagePreview}
                         alt="Preview"
@@ -316,9 +370,7 @@ const AddService = () => {
                 disabled={isPending || isSubmitting}
                 className="w-full"
               >
-                {isPending || isSubmitting
-                  ? "Adding Service..."
-                  : "Add Service"}
+                {serviceId ? "Update Service..." : "Add Service"}
               </Button>
             </form>
           </Form>
