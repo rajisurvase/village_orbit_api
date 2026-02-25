@@ -76,7 +76,7 @@ export const GetAllServices = async (queryParams: IGetServiceListPayload) => {
 };
 
 export const CreateService = async (
-  payload: AddServiceFormData & { image_url: string; villageId : string, id?: string,  },
+  payload: AddServiceFormData & { imageUrl: string; villageId : string, id?: string,  },
 ) => {
   const { id, ...rest } = payload;
   if (id) {

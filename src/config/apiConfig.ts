@@ -69,7 +69,7 @@ export const apiConfig = {
     health: '/health',
 
     // take file full path
-    file : (filePath: string) => `files/signed-url?filePath=${filePath}`,
+    file : (filePath: string) => `/files/signed-url?filePath=${filePath}`,
     
     // Auth endpoints
     auth: {

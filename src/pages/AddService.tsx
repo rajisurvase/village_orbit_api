@@ -89,7 +89,7 @@ const AddService = () => {
     mutateAsync(
       {
         ...formData,
-        image_url: url,
+        imageUrl: url,
         villageId: ViLLAGE_ID,
       },
       {
@@ -119,15 +119,17 @@ const AddService = () => {
     }
   };
 
+  // console.log('serviceDetails', serviceDetails.imageUrl)
+
   useEffect(() => {
     if (serviceDetails) {
       form.reset({ ...serviceDetails });
-      mutateFullFilePath(serviceDetails.imageUrl, {
-        onSuccess(data) {
-          setImagePreview(data.data.url);
-        },
-      })
-    }
+        mutateFullFilePath(serviceDetails.imageUrl, {
+          onSuccess(data) {
+            setImagePreview(data.data.url);
+          },
+        })
+      }
   }, [serviceDetails]);
 
   if (isServiceLoading) {
