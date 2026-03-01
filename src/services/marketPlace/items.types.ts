@@ -10,7 +10,7 @@ export interface Item {
   village: string;
   contact: string;
   seller_name?: string;
-  image_urls?: string[];
+  imageUrls?: string[];
   status?: 'pending' | 'approved' | 'rejected';
   is_available?: boolean;
   rejection_reason?: string;
@@ -42,7 +42,7 @@ export type ItemPayload = Omit<
   Partial<Item>,
   'id' | 'created_at' | 'updated_at' | 'status' | 'rejection_reason'
 > & {
-  item_name: string;
+  itemName: string;
   category: string;
   price: number;
   contact: string;

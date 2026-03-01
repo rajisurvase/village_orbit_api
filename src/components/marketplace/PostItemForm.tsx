@@ -21,7 +21,7 @@ import { VILLAGES } from "@/config/villageConfig";
 
 const formSchema = z.object({
   seller_name: z.string().min(2, "Seller name must be at least 2 characters").max(100),
-  item_name: z.string().min(3, "Item name must be at least 3 characters").max(100),
+  itemName: z.string().min(3, "Item name must be at least 3 characters").max(100),
   category: z.string().min(1, "Please select a category"),
   price: z.string().min(1, "Price is required").refine(val => !isNaN(Number(val)) && Number(val) > 0, "Price must be a positive number"),
   description: z.string().max(1000).optional(),
@@ -44,7 +44,7 @@ const PostItemForm = ({ onSuccess }: PostItemFormProps) => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       seller_name: "",
-      item_name: "",
+      itemName: "",
       category: "",
       price: "",
       description: "",
@@ -119,7 +119,7 @@ const PostItemForm = ({ onSuccess }: PostItemFormProps) => {
       await createItemWithImages(
         {
           seller_name: values.seller_name,
-          item_name: values.item_name,
+          itemName: values.itemName,
           category: values.category,
           price: Number(values.price),
           description: values.description || null,
@@ -232,7 +232,7 @@ const PostItemForm = ({ onSuccess }: PostItemFormProps) => {
 
             <FormField
               control={form.control}
-              name="item_name"
+              name="itemName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Item Name *</FormLabel>

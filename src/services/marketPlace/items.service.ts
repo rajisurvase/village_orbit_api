@@ -210,13 +210,8 @@ class ItemsService {
       if (!response.success || !response.data?.fileKey) {
         throw new Error('Failed to get signed url');
       }
-      const { fileKey, } = response.data;
-      // upload using fetch
-      const uploadResp = await GetFullFilePath(fileKey);
-      if (!uploadResp.success || !uploadResp.data?.url) {
-        throw new Error('Failed to get file url');
-      }
-      urls.push(uploadResp.data.url);
+      const { fileKey } = response.data;
+      urls.push(fileKey);
     }
     return urls;
   }

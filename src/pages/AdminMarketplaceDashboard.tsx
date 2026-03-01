@@ -45,14 +45,10 @@ export default function AdminMarketplaceDashboard() {
   const { sendNotification } = usePushNotifications();
 
   useEffect(() => {
-    if (!authLoading && !isAdmin) {
-      navigate("/");
-      return;
-    }
-    if (isAdmin) {
+    // if (isAdmin) {
       fetchItems();
-    }
-  }, [isAdmin, authLoading, navigate]);
+    // }
+  }, []);
 
   const fetchItems = async () => {
     try {

@@ -26,7 +26,7 @@ export async function createItemWithImages(
   // payload is already snake_case per ItemPayload
   const result = await itemsService.createItem({
     ...payload,
-    image_urls: imageUrls,
+    imageUrls,
   } as any);
 
   if (!result.success) {
