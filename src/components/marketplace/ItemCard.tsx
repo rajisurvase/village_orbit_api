@@ -1,17 +1,9 @@
 import { Calendar, MapPin, Phone, Tag } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Item } from "@/services";
+import dayjs from "dayjs";
 
-interface Item {
-  id: string;
-  item_name: string;
-  category: string;
-  price: number;
-  village: string;
-  contact: string;
-  image_urls: string[];
-  created_at: string;
-}
 
 interface ItemCardProps {
   item: Item;
@@ -21,27 +13,22 @@ interface ItemCardProps {
 const getCategoryIcon = (category: string) => {
   const icons: { [key: string]: string } = {
     "Farming Tools": "🚜",
-    "Vegetables": "🥬",
-    "Electronics": "📱",
-    "Vehicles": "🚗",
+    Vegetables: "🥬",
+    Electronics: "📱",
+    Vehicles: "🚗",
     "Mobile Phones": "📱",
-    "Animals": "🐄",
+    Animals: "🐄",
     "Household Items": "🏠",
-    "Furniture": "🪑",
+    Furniture: "🪑",
     "Construction Tools": "🔨",
     "Seeds & Fertilizers": "🌱",
-    "Other": "📦"
+    Other: "📦",
   };
   return icons[category] || "📦";
 };
 
 const ItemCard = ({ item, onClick }: ItemCardProps) => {
-  const formattedDate = new Date(item.created_at).toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric'
-  });
-
+  const formattedDate = dayjs(item.created_at).format("DD MMMM YYYY")
   return (
     <Card
       onClick={onClick}
@@ -49,12 +36,17 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
     >
       {/* Image */}
       <div className="aspect-square bg-muted overflow-hidden relative">
-        {item.image_urls[0] ? (
+        {item.image_urls?.[0] ? (
           <img
-            src={item.image_urls[0]}
+            src={item.image_urls[0] || ""}
             alt={item.item_name}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
             loading="lazy"
+            onError={() => (
+              <div className="w-full h-full flex items-center justify-center text-3xl md:text-4xl bg-muted">
+                📦
+              </div>
+            )}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-6xl">
@@ -74,7 +66,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
 
         {/* Price */}
         <div className="text-2xl font-bold text-primary">
-          ₹{item.price.toLocaleString('en-IN')}
+          ₹{item.price.toLocaleString("en-IN")}
         </div>
 
         {/* Details */}

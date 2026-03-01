@@ -5,19 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useToast } from "@/hooks/use-toast";
 import { LazyLoadImage } from "react-lazy-load-image-component";
+import { Item } from "@/services";
+import dayjs from "dayjs";
 
-interface Item {
-  id: string;
-  item_name: string;
-  category: string;
-  price: number;
-  description: string | null;
-  village: string;
-  contact: string;
-  image_urls: string[];
-  created_at: string;
-  seller_name?: string | null;
-}
 
 interface ItemPopupProps {
   item: Item;
@@ -46,11 +36,7 @@ const getCategoryIcon = (category: string) => {
 const ItemPopup = ({ item, open, onClose }: ItemPopupProps) => {
   const { toast } = useToast();
 
-  const formattedDate = new Date(item.created_at).toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  });
+  const formattedDate = dayjs(item.created_at).format('DD MMM YYYY');
 
   const handleWhatsApp = () => {
     const cleanContact = item.contact.replace(/\D/g, '');

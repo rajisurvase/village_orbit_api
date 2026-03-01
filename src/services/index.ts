@@ -38,12 +38,16 @@ export type {
 export { healthService } from './healthService';
 export type { HealthStatus } from './healthService';
 
-export { marketplaceService } from './marketplaceService';
-export type {
-  MarketplaceItem,
-  MarketplaceListParams,
-  PaginatedItems,
-} from './marketplaceService';
+// marketplaceService has been replaced by itemsService;
+// export { marketplaceService } from './marketplaceService';
+// export type {
+//   MarketplaceItem,
+//   MarketplaceListParams,
+//   PaginatedItems,
+// } from './marketplaceService';
+
+// buy-sell / items module
+export { itemsService } from './marketPlace/items.service';
 
 export { noticesService } from './noticesService';
 export type {

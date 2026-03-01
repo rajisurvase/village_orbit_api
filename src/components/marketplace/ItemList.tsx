@@ -1,57 +1,47 @@
-import { useState, useEffect, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, ChevronDown, ChevronUp, X, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Search,
+  Filter,
+  ChevronDown,
+  ChevronUp,
+  X,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import ItemCard from "./ItemCard";
 import ItemPopup from "./ItemPopup";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
-
-interface Item {
-  id: string;
-  item_name: string;
-  category: string;
-  price: number;
-  description: string | null;
-  village: string;
-  contact: string;
-  image_urls: string[];
-  created_at: string;
-  seller_name: string | null;
-}
-
-const CATEGORIES = [
-  "All Categories",
-  "Farming Tools",
-  "Vegetables",
-  "Electronics",
-  "Vehicles",
-  "Mobile Phones",
-  "Animals",
-  "Household Items",
-  "Furniture",
-  "Construction Tools",
-  "Seeds & Fertilizers",
-  "Accessories",
-  "Other"
-];
+import { VILLAGES } from "@/config/villageConfig";
+import { CATEGORIES } from ".";
+import { Item } from "@/services/marketPlace/items.types";
+import { useItems } from "@/services/marketPlace/items.query";
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest First" },
   { value: "priceLowToHigh", label: "Price: Low → High" },
   { value: "priceHighToLow", label: "Price: High → Low" },
-  { value: "nameAtoZ", label: "Name: A to Z" }
+  { value: "nameAtoZ", label: "Name: A to Z" },
 ];
 
 const ITEMS_PER_PAGE = 20;
 
 const ItemList = () => {
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [sortBy, setSortBy] = useState("newest");
@@ -60,85 +50,52 @@ const ItemList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchItems();
-  }, []);
+  // fetch using react query
+  const { data, isLoading, isError } = useItems({
+    page: currentPage - 1,
+    limit: ITEMS_PER_PAGE,
+    search: searchQuery,
+    category:
+      selectedCategory === "All Categories" ? undefined : selectedCategory,
+    villageId: VILLAGES.shivankhed.id,
+  });
 
-  // Reset to page 1 when filters change
+  // notify on error
   useEffect(() => {
+    if (isError) {
+      toast({
+        title: "Error",
+        description: "Unable to load marketplace items",
+        variant: "destructive",
+      });
+    }
+  }, [isError, toast]);
+
+  // reset to first page when filters change
+  useMemo(() => {
     setCurrentPage(1);
   }, [searchQuery, selectedCategory, sortBy]);
 
-  const fetchItems = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("items")
-        .select("*")
-        .eq("status", "approved")
-        .eq("is_available", true)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setItems(data || []);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to load items. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Memoized filtered and sorted items
+  // we rely on the backend for search/category/pagination; client-sort only used for `sortBy`
   const filteredItems = useMemo(() => {
-    let filtered = [...items];
-
-    // Filter by search query (search across ALL categories)
-    if (searchQuery.trim()) {
-      const searchLower = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(item => {
-        const nameMatch = item.item_name.toLowerCase().includes(searchLower);
-        const descMatch = item.description?.toLowerCase().includes(searchLower) || false;
-        const categoryMatch = item.category.toLowerCase().includes(searchLower);
-        return nameMatch || descMatch || categoryMatch;
-      });
-    } else if (selectedCategory !== "All Categories") {
-      // Only apply category filter if NO search query
-      filtered = filtered.filter(item => 
-        item.category.toLowerCase() === selectedCategory.toLowerCase()
-      );
-    }
-
-    // Sort items
+    const list = data?.content || [];
     switch (sortBy) {
       case "priceLowToHigh":
-        filtered.sort((a, b) => a.price - b.price);
-        break;
+        return [...list].sort((a, b) => a.price - b.price);
       case "priceHighToLow":
-        filtered.sort((a, b) => b.price - a.price);
-        break;
+        return [...list].sort((a, b) => b.price - a.price);
       case "nameAtoZ":
-        filtered.sort((a, b) => a.item_name.localeCompare(b.item_name));
-        break;
+        return [...list].sort((a, b) => a.itemName.localeCompare(b.itemName));
       case "newest":
       default:
-        filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        break;
+        return list; // already sorted by newest from backend
     }
+  }, [data, sortBy]);
 
-    return filtered;
-  }, [items, searchQuery, selectedCategory, sortBy]);
-
-  // Paginated items
-  const paginatedItems = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredItems.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredItems, currentPage]);
-
-  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+  // pagination is handled by query results
+  const paginatedItems = filteredItems;
+  const totalPages = data?.totalPages || 1;
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -146,7 +103,20 @@ const ItemList = () => {
     setSortBy("newest");
   };
 
-  const hasActiveFilters = searchQuery || selectedCategory !== "All Categories" || sortBy !== "newest";
+  const hasActiveFilters =
+    searchQuery || selectedCategory !== "All Categories" || sortBy !== "newest";
+
+  const CategorySelect = () => (
+    <SelectContent>
+      {CATEGORIES.map((category) => (
+        <SelectItem key={category} value={category}>
+          {category}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  );
+
+  console.log(data?.content, "content")
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -179,31 +149,34 @@ const ItemList = () => {
                 <Filter className="h-4 w-4" />
                 Filters & Sort
                 {hasActiveFilters && (
-                  <Badge variant="secondary" className="ml-1 text-xs">Active</Badge>
+                  <Badge variant="secondary" className="ml-1 text-xs">
+                    Active
+                  </Badge>
                 )}
               </span>
-              {filtersOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              {filtersOpen ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-3 space-y-3 animate-accordion-down">
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <Select
+              value={selectedCategory}
+              onValueChange={setSelectedCategory}
+            >
               <SelectTrigger className="w-full h-12">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
+              <CategorySelect />
             </Select>
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-full h-12">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
-                {SORT_OPTIONS.map(option => (
+                {SORT_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>
@@ -225,20 +198,14 @@ const ItemList = () => {
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Select category" />
           </SelectTrigger>
-          <SelectContent>
-            {CATEGORIES.map(category => (
-              <SelectItem key={category} value={category}>
-                {category}
-              </SelectItem>
-            ))}
-          </SelectContent>
+          <CategorySelect />
         </Select>
         <Select value={sortBy} onValueChange={setSortBy}>
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
-            {SORT_OPTIONS.map(option => (
+            {SORT_OPTIONS.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
               </SelectItem>
@@ -251,50 +218,67 @@ const ItemList = () => {
           </Button>
         )}
         <div className="ml-auto text-sm text-muted-foreground">
-          {filteredItems.length} {filteredItems.length === 1 ? "item" : "items"} found
+          {filteredItems.length} {filteredItems.length === 1 ? "item" : "items"}{" "}
+          found
         </div>
       </div>
 
       {/* Results Count - Mobile */}
       <div className="md:hidden text-sm text-muted-foreground text-center">
-        {filteredItems.length} {filteredItems.length === 1 ? "item" : "items"} found
+        {filteredItems.length} {filteredItems.length === 1 ? "item" : "items"}{" "}
+        found
       </div>
 
       {/* Recently Added Scroller */}
-      {items.length > 0 && !searchQuery && selectedCategory === "All Categories" && (
-        <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-3 md:p-4 rounded-lg border border-border">
-          <h3 className="text-base md:text-lg font-semibold mb-3 text-foreground">🔥 Recently Added</h3>
-          <div className="flex gap-3 md:gap-4 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory">
-            {items.slice(0, 8).map(item => (
-              <div
-                key={item.id}
-                onClick={() => setSelectedItem(item)}
-                className="flex-shrink-0 w-36 md:w-48 bg-card p-2 md:p-3 rounded-lg border border-border cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] snap-start"
-              >
-                <div className="aspect-square bg-muted rounded-md mb-2 overflow-hidden">
-                  {item.image_urls && item.image_urls[0] ? (
-                    <img
-                      src={item.image_urls[0]}
-                      alt={item.item_name}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-3xl md:text-4xl bg-muted">
-                      📦
-                    </div>
-                  )}
+      {data?.content.length &&
+        !searchQuery &&
+        selectedCategory === "All Categories" && (
+          <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-3 md:p-4 rounded-lg border border-border">
+            <h3 className="text-base md:text-lg font-semibold mb-3 text-foreground">
+              🔥 Recently Added
+            </h3>
+            <div className="flex gap-3 md:gap-4 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory">
+              {data.content.slice(0, 8).map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => setSelectedItem(item)}
+                  className="flex-shrink-0 w-36 md:w-48 bg-card p-2 md:p-3 rounded-lg border border-border cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] snap-start"
+                >
+                  <div className="aspect-square bg-muted rounded-md mb-2 overflow-hidden">
+                    {item.image_urls && item.image_urls[0] ? (
+                      <img
+                        src={item.image_urls[0]}
+                        alt={item.itemName}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        onError={() => {
+                          <>
+                            <div className="w-full h-full flex items-center justify-center text-3xl md:text-4xl bg-muted">
+                              📦
+                            </div>
+                          </>;
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-3xl md:text-4xl bg-muted">
+                        📦
+                      </div>
+                    )}
+                  </div>
+                  <h4 className="font-medium text-xs md:text-sm truncate">
+                    {item.itemName}
+                  </h4>
+                  <p className="text-primary font-bold text-sm md:text-base">
+                    ₹{item.price.toLocaleString()}
+                  </p>
                 </div>
-                <h4 className="font-medium text-xs md:text-sm truncate">{item.item_name}</h4>
-                <p className="text-primary font-bold text-sm md:text-base">₹{item.price.toLocaleString()}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Items Grid */}
-      {loading ? (
+      {isLoading ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
           {[...Array(8)].map((_, i) => (
             <div key={i} className="space-y-3">
@@ -307,7 +291,9 @@ const ItemList = () => {
       ) : filteredItems.length === 0 ? (
         <div className="text-center py-12 px-4">
           <div className="text-6xl mb-4">🔍</div>
-          <p className="text-muted-foreground text-lg font-medium">No items found</p>
+          <p className="text-muted-foreground text-lg font-medium">
+            No items found
+          </p>
           <p className="text-sm text-muted-foreground mt-2 mb-4">
             Try adjusting your search or filter criteria
           </p>
@@ -320,7 +306,7 @@ const ItemList = () => {
       ) : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 animate-fade-in">
-            {paginatedItems.map(item => (
+            {paginatedItems.map((item) => (
               <ItemCard
                 key={item.id}
                 item={item}
@@ -336,7 +322,7 @@ const ItemList = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                   className="h-10 w-10"
                 >
@@ -357,7 +343,9 @@ const ItemList = () => {
                     return (
                       <Button
                         key={pageNum}
-                        variant={currentPage === pageNum ? "default" : "outline"}
+                        variant={
+                          currentPage === pageNum ? "default" : "outline"
+                        }
                         size="icon"
                         onClick={() => setCurrentPage(pageNum)}
                         className="h-10 w-10"
@@ -370,7 +358,9 @@ const ItemList = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
                   disabled={currentPage === totalPages}
                   className="h-10 w-10"
                 >

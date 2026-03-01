@@ -9,55 +9,17 @@ import { Trash2, Eye, EyeOff, Loader2, Package, Edit, CheckCircle2 } from "lucid
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import EditItemDialog from "./EditItemDialog";
 import useApiAuth from "@/hooks/useApiAuth";
-
-interface Item {
-  id: string;
-  item_name: string;
-  category: string;
-  price: number;
-  description: string | null;
-  village: string;
-  contact: string;
-  image_urls: string[] | null;
-  status: string;
-  is_available: boolean;
-  sold: boolean | null;
-  created_at: string;
-  rejection_reason: string | null;
-  seller_name: string | null;
-}
+import { useActionTriggerItem, useMyItems } from "@/services/marketPlace/items.query";
+import { Item } from "@/services/marketPlace/items.types";
 
 const MyListings = () => {
   const { user } = useApiAuth();
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const { data , isLoading, refetch } = useMyItems({ villageId: user?.villageId || '' });
 
-  const fetchMyItems = async () => {
-    if (!user) return;
-
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("items")
-        .select("*")
-        .eq("user_id", user.userId)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setItems(data || []);
-    } catch (error: any) {
-      toast.error("Failed to load your listings");
-      console.error("Error fetching items:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchMyItems();
-  }, [user]);
+  const {content : items = []} = data || {};
+  const { mutateAsync: actionTriggerItem, isPending: isDeleting } = useActionTriggerItem();
 
   const handleToggleAvailability = async (itemId: string, currentStatus: boolean) => {
     try {
@@ -69,10 +31,7 @@ const MyListings = () => {
 
       if (error) throw error;
 
-      setItems(items.map(item => 
-        item.id === itemId ? { ...item, is_available: !currentStatus } : item
-      ));
-
+      refetch();
       toast.success(!currentStatus ? "Item marked as available" : "Item marked as unavailable");
     } catch (error: any) {
       toast.error("Failed to update item status");
@@ -91,9 +50,7 @@ const MyListings = () => {
 
       if (error) throw error;
 
-      setItems(items.map(item => 
-        item.id === itemId ? { ...item, sold: true, is_available: false } : item
-      ));
+      refetch();
 
       toast.success("Item marked as sold! Congratulations! 🎉");
     } catch (error: any) {
@@ -112,7 +69,7 @@ const MyListings = () => {
 
       if (error) throw error;
 
-      setItems(items.filter(item => item.id !== itemId));
+      refetch()
       toast.success("Item deleted successfully");
     } catch (error: any) {
       toast.error("Failed to delete item");
@@ -120,9 +77,7 @@ const MyListings = () => {
   };
 
   const handleItemUpdated = (updatedItem: Item) => {
-    setItems(items.map(item => 
-      item.id === updatedItem.id ? updatedItem : item
-    ));
+    refetch()
     setEditingItem(null);
   };
 
@@ -142,7 +97,7 @@ const MyListings = () => {
     return <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20">Active</Badge>;
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -186,7 +141,7 @@ const MyListings = () => {
                   {item.image_urls && item.image_urls.length > 0 ? (
                     <img
                       src={item.image_urls[0]}
-                      alt={item.item_name}
+                      alt={item.itemName}
                       className="w-full h-full object-cover rounded-lg"
                       loading="lazy"
                     />
@@ -201,7 +156,7 @@ const MyListings = () => {
                 <div className="flex-1 space-y-2 md:space-y-3 min-w-0">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <h3 className="text-lg md:text-xl font-semibold truncate">{item.item_name}</h3>
+                      <h3 className="text-lg md:text-xl font-semibold truncate">{item.itemName}</h3>
                       <p className="text-xs md:text-sm text-muted-foreground">{item.category}</p>
                     </div>
                     {getStatusBadge(item)}
@@ -267,12 +222,12 @@ const MyListings = () => {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Mark as Sold?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              This will mark "{item.item_name}" as sold. The item will no longer be visible to buyers.
+                              This will mark "{item.itemName}" as sold. The item will no longer be visible to buyers.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleMarkAsSold(item.id)} className="bg-blue-600 hover:bg-blue-700">
+                            <AlertDialogAction onClick={() => actionTriggerItem({id: item.id, type: "SOLD"})} className="bg-blue-600 hover:bg-blue-700">
                               Yes, Mark as Sold
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -291,13 +246,20 @@ const MyListings = () => {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete this item?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              This action cannot be undone. This will permanently delete your listing "{item.item_name}".
+                              This action cannot be undone. This will permanently delete your listing "{item.itemName}".
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDeleteItem(item.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                              Delete
+                            <AlertDialogAction disabled={isDeleting} onClick={() => actionTriggerItem({id: item.id, type: "DELETE"})} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                              {isDeleting ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Deleting...
+                                </>
+                              ) : (
+                                "Delete"
+                              )}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>

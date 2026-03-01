@@ -23,7 +23,6 @@ import { useTranslation } from "react-i18next";
 import MemberPopupModal from "./MemberPopupModal";
 import GalleryModal from "./GalleryModal";
 import StarRating from "./StarRating";
-import { VillageContext } from "@/context/VillageContextConfig";
 
 const CATEGORY_ID_MAP: Record<string, string> = {
   "Retail & Grocery": "shops",

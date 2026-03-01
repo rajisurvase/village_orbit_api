@@ -2,7 +2,6 @@ import { VillageContext } from "@/context/VillageContextConfig";
 import { useContext, useEffect, useState } from "react";
 import NotFound from "./NotFound";
 import Services from "@/components/Services";
-import { usePageSEO } from "@/hooks/usePageSEO";
 import SectionSkeleton from "@/components/ui/skeletons/SectionSkeleton";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -10,12 +9,6 @@ const ServicePage = () => {
   const { config, isPageVisible, loading } = useContext(VillageContext);
   const [services, setServices] = useState<any[]>([]);
   const [servicesLoading, setServicesLoading] = useState(true);
-
-  usePageSEO({
-    title: `Village Services - ${config?.village.name || 'Village'} Gram Panchayat`,
-    description: `Essential services available in ${config?.village.name || 'Village'} including healthcare, education, shops, and other facilities for residents.`,
-    keywords: ['village services', 'healthcare', 'education', 'shops', 'facilities', 'public services']
-  });
 
   useEffect(() => {
     const fetchServices = async () => {

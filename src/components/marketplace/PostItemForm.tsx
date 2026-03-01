@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { supabase } from "@/integrations/supabase/client";
+// supabase is no longer used directly; image upload goes through backend API
+// import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,20 +14,10 @@ import { Upload, Loader2, X, ImagePlus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import useApiAuth from "@/hooks/useApiAuth";
 
-const CATEGORIES = [
-  "Farming Tools",
-  "Vegetables",
-  "Electronics",
-  "Vehicles",
-  "Mobile Phones",
-  "Animals",
-  "Household Items",
-  "Furniture",
-  "Construction Tools",
-  "Seeds & Fertilizers",
-  "Accessories",
-  "Other"
-];
+// marketplace helper used by submit handler
+import { createItemWithImages } from '@/services/marketPlace/buySell';
+import { CATEGORIES } from ".";
+import { VILLAGES } from "@/config/villageConfig";
 
 const formSchema = z.object({
   seller_name: z.string().min(2, "Seller name must be at least 2 characters").max(100),
@@ -108,38 +99,15 @@ const PostItemForm = ({ onSuccess }: PostItemFormProps) => {
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
-  const uploadImages = async (): Promise<string[]> => {
-    const uploadedUrls: string[] = [];
+  // helper is now provided by the service; call in onSubmit
 
-    for (const file of imageFiles) {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('items')
-        .upload(filePath, file);
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('items')
-        .getPublicUrl(filePath);
-
-      uploadedUrls.push(publicUrl);
-    }
-
-    return uploadedUrls;
-  };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user) {
       toast({
         title: "Login Required",
         description: "Please login to post items",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -147,30 +115,27 @@ const PostItemForm = ({ onSuccess }: PostItemFormProps) => {
     try {
       setUploading(true);
 
-      // Upload images first
-      const imageUrls = await uploadImages();
-
-      // Insert item data
-      const { error } = await supabase.from("items").insert({
-        seller_name: values.seller_name,
-        item_name: values.item_name,
-        category: values.category,
-        price: parseFloat(values.price),
-        description: values.description || null,
-        village: values.village,
-        contact: values.contact,
-        image_urls: imageUrls,
-        user_id: user.userId
-      });
-
-      if (error) throw error;
+      // upload + create via helper that bundles both operations
+      await createItemWithImages(
+        {
+          seller_name: values.seller_name,
+          item_name: values.item_name,
+          category: values.category,
+          price: Number(values.price),
+          description: values.description || null,
+          village: values.village,
+          contact: values.contact,
+          user_id: user.userId,
+          villageId : VILLAGES.shivankhed.id
+        },
+        imageFiles
+      );
 
       toast({
         title: "Success! 🎉",
-        description: "Item posted! It will be visible after admin approval."
+        description: "Item posted! It will be visible after admin approval.",
       });
 
-      // Reset form
       form.reset();
       setImageFiles([]);
       setImagePreviews([]);
@@ -179,7 +144,7 @@ const PostItemForm = ({ onSuccess }: PostItemFormProps) => {
       toast({
         title: "Error",
         description: error.message || "Failed to post item. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setUploading(false);

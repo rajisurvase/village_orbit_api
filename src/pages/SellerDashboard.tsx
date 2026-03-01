@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+// supabase removed - replaced by API service
 import { useApiAuth } from "@/hooks/useApiAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,10 +9,19 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Package, CheckCircle, Clock, XCircle, TrendingUp, PlusCircle } from "lucide-react";
+import {
+  Package,
+  CheckCircle,
+  Clock,
+  XCircle,
+  TrendingUp,
+  PlusCircle,
+} from "lucide-react";
 import { usePageSEO } from "@/hooks/usePageSEO";
 import CustomLoader from "@/components/CustomLoader";
 import PostItemForm from "@/components/marketplace/PostItemForm";
+import { useMyItems } from "@/services/marketPlace/items.query";
+import { itemsService } from "@/services";
 
 interface SellerItem {
   id: string;
@@ -33,65 +42,57 @@ interface SellerItem {
 export default function SellerDashboard() {
   usePageSEO({
     title: "Seller Dashboard - Manage Your Listings",
-    description: "View and manage your marketplace listings, track approval status, and mark items as sold.",
+    description:
+      "View and manage your marketplace listings, track approval status, and mark items as sold.",
     keywords: ["seller dashboard", "my items", "marketplace", "listings"],
-    canonical: window.location.origin + "/seller-dashboard"
+    canonical: window.location.origin + "/seller-dashboard",
   });
 
   const { user, loading: authLoading } = useApiAuth();
   const navigate = useNavigate();
-  const [items, setItems] = useState<SellerItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("items");
+
+  // query for seller's own items
+  const {
+    data: myItemsResponse,
+    isLoading: itemsLoading,
+    refetch: refetchItems,
+  } = useMyItems({ page: 0, limit: 100 });
+
+  const items = myItemsResponse?.content || [];
+  const loading = authLoading || itemsLoading;
 
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/auth");
-    } else if (user) {
-      fetchSellerItems();
     }
   }, [authLoading, user, navigate]);
 
-  const fetchSellerItems = async () => {
-    if (!user?.userId) return;
-    
+  const handleToggleAvailability = async (
+    itemId: string,
+    currentStatus: boolean,
+  ) => {
     try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("items")
-        .select("*")
-        .eq("user_id", user.userId)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setItems(data || []);
-    } catch (error) {
-      console.error("Error fetching items:", error);
-      toast.error("Failed to load your items");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleToggleAvailability = async (itemId: string, currentStatus: boolean) => {
-    try {
-      const { error } = await supabase
-        .from("items")
-        .update({ is_available: !currentStatus })
-        .eq("id", itemId);
-
-      if (error) throw error;
-      toast.success(!currentStatus ? "Item marked as available" : "Item marked as unavailable");
-      fetchSellerItems();
-    } catch (error) {
-      console.error("Error updating item:", error);
+      await itemsService.updateItem(itemId, { is_available: !currentStatus });
+      toast.success(
+        !currentStatus
+          ? "Item marked as available"
+          : "Item marked as unavailable",
+      );
+      refetchItems();
+    } catch (err) {
+      console.error("Error updating item:", err);
       toast.error("Failed to update item");
     }
   };
 
   const getStatusBadge = (status: string, isAvailable: boolean) => {
     if (!isAvailable) {
-      return <Badge variant="secondary" className="bg-gray-500">Unavailable</Badge>;
+      return (
+        <Badge variant="secondary" className="bg-gray-500">
+          Unavailable
+        </Badge>
+      );
     }
     const variants: Record<string, "default" | "secondary" | "destructive"> = {
       pending: "secondary",
@@ -103,11 +104,13 @@ export default function SellerDashboard() {
 
   const stats = {
     total: items.length,
-    approved: items.filter(item => item.status === "approved" && item.is_available).length,
-    pending: items.filter(item => item.status === "pending").length,
-    unavailable: items.filter(item => !item.is_available).length,
+    approved: items.filter(
+      (item) => item.status === "approved" && item.is_available,
+    ).length,
+    pending: items.filter((item) => item.status === "pending").length,
+    unavailable: items.filter((item) => !item.is_available).length,
     totalValue: items
-      .filter(item => item.status === "approved" && item.is_available)
+      .filter((item) => item.status === "approved" && item.is_available)
       .reduce((sum, item) => sum + Number(item.price), 0),
   };
 
@@ -153,7 +156,9 @@ export default function SellerDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+              <p className="text-2xl font-bold text-yellow-600">
+                {stats.pending}
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -164,7 +169,9 @@ export default function SellerDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-green-600">{stats.approved}</p>
+              <p className="text-2xl font-bold text-green-600">
+                {stats.approved}
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -175,7 +182,9 @@ export default function SellerDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-gray-600">{stats.unavailable}</p>
+              <p className="text-2xl font-bold text-gray-600">
+                {stats.unavailable}
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -186,7 +195,9 @@ export default function SellerDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">₹{stats.totalValue.toLocaleString()}</p>
+              <p className="text-2xl font-bold">
+                ₹{stats.totalValue.toLocaleString()}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -206,10 +217,11 @@ export default function SellerDashboard() {
 
           <TabsContent value="post" className="mt-0">
             <div className="max-w-2xl mx-auto">
-              <PostItemForm onSuccess={() => {
-                setActiveTab("items");
-                fetchSellerItems();
-              }} />
+              <PostItemForm
+                onSuccess={() => {
+                  setActiveTab("items");
+                }}
+              />
             </div>
           </TabsContent>
 
@@ -234,25 +246,36 @@ export default function SellerDashboard() {
                         {item.image_urls[0] && (
                           <img
                             src={item.image_urls[0]}
-                            alt={item.item_name}
+                            alt={item.itemName}
                             className="w-24 h-24 object-cover rounded"
                           />
                         )}
                         <div className="flex-1">
                           <div className="flex justify-between items-start mb-2">
                             <div>
-                              <h3 className="font-semibold text-lg">{item.item_name}</h3>
-                              <p className="text-sm text-muted-foreground">{item.category}</p>
+                              <h3 className="font-semibold text-lg">
+                                {item.itemName}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                {item.category}
+                              </p>
                             </div>
                             {getStatusBadge(item.status, item.is_available)}
                           </div>
-                          <p className="text-sm mb-2 line-clamp-2">{item.description}</p>
+                          <p className="text-sm mb-2 line-clamp-2">
+                            {item.description}
+                          </p>
                           <div className="flex gap-4 text-sm text-muted-foreground">
-                            <span className="font-semibold text-foreground">₹{item.price}</span>
+                            <span className="font-semibold text-foreground">
+                              ₹{item.price}
+                            </span>
                             <span>•</span>
                             <span>{item.village}</span>
                             <span>•</span>
-                            <span>Posted: {new Date(item.created_at).toLocaleDateString()}</span>
+                            <span>
+                              Posted:{" "}
+                              {new Date(item.created_at).toLocaleDateString()}
+                            </span>
                           </div>
                         </div>
                         <div className="flex flex-col gap-3">
@@ -261,18 +284,29 @@ export default function SellerDashboard() {
                               <Switch
                                 id={`available-${item.id}`}
                                 checked={item.is_available}
-                                onCheckedChange={() => handleToggleAvailability(item.id, item.is_available)}
+                                onCheckedChange={() =>
+                                  handleToggleAvailability(
+                                    item.id,
+                                    item.is_available,
+                                  )
+                                }
                               />
-                              <Label htmlFor={`available-${item.id}`} className="text-sm cursor-pointer">
-                                {item.is_available ? "Available" : "Unavailable"}
+                              <Label
+                                htmlFor={`available-${item.id}`}
+                                className="text-sm cursor-pointer"
+                              >
+                                {item.is_available
+                                  ? "Available"
+                                  : "Unavailable"}
                               </Label>
                             </div>
                           )}
-                          {item.status === "rejected" && item.rejection_reason && (
-                            <p className="text-xs text-destructive">
-                              Reason: {item.rejection_reason}
-                            </p>
-                          )}
+                          {item.status === "rejected" &&
+                            item.rejection_reason && (
+                              <p className="text-xs text-destructive">
+                                Reason: {item.rejection_reason}
+                              </p>
+                            )}
                         </div>
                       </div>
                     </CardContent>

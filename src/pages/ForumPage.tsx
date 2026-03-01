@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useApiAuth } from "@/hooks/useApiAuth";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -8,24 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Heart, MessageCircle, Trash2 } from "lucide-react";
+import { Heart, Loader, MessageCircle, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { CUSTOM_ROUTES } from "@/custom-routes";
-import { useMutation } from "@tanstack/react-query";
-import { CreateForumPost } from "@/services/forum";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  CreateForumPost,
+  GetAllCommentsForPost,
+  actionForumPost,
+  addCommentToPost,
+} from "@/services/forum";
 import { useForumPostList } from "@/hooks/village/useForumPost";
 import { VILLAGES } from "@/config/villageConfig";
-
-interface Comment {
-  id: string;
-  content: string;
-  created_at: string;
-  user_id: string;
-  profiles?: {
-    full_name: string | null;
-    email: string | null;
-  } | null;
-}
+import dayjs from "dayjs";
 
 export default function ForumPage() {
   const { user } = useApiAuth();
@@ -38,8 +32,16 @@ export default function ForumPage() {
     imageUrl: "",
   });
   const [selectedPost, setSelectedPost] = useState<string | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
+
+  const { mutateAsync: mutatetForum, isPending: isLikePending } = useMutation({
+    mutationFn: actionForumPost,
+  });
+
+  const { mutateAsync: mutateAddComment, isPending: isCommentPending } =
+    useMutation({
+      mutationFn: addCommentToPost,
+    });
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: CreateForumPost,
@@ -50,45 +52,22 @@ export default function ForumPage() {
     isLoading,
     refetch,
   } = useForumPostList({
-    villageId:  VILLAGES.shivankhed.id,
-    page: 1,
-    size: 10,
+    villageId: VILLAGES.shivankhed.id,
+    page: 0,
+    size: 20,
   });
 
   const { content = [] } = forumPosts?.data || {};
 
-  const fetchComments = async (postId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("comments")
-        .select("*")
-        .eq("post_id", postId)
-        .order("created_at", { ascending: true });
-
-      if (error) throw error;
-
-      // Fetch profiles for each comment
-      const commentsWithProfiles = await Promise.all(
-        (data || []).map(async (comment) => {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("full_name, email")
-            .eq("id", comment.user_id)
-            .maybeSingle();
-
-          return { ...comment, profiles: profile };
-        }),
-      );
-
-      setComments(commentsWithProfiles);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
+  const { data : comments, isLoading: isCommentsLoading, refetch: refetchComments } = useQuery({
+    queryKey: ["comments", selectedPost],
+    queryFn: () =>
+      GetAllCommentsForPost({ postId: selectedPost, page: 0, size: 20 }),
+    enabled: !!selectedPost,
+    select(data) {
+      return data.data.content || [];
+    },
+  });
 
   const handleCreatePost = async () => {
     if (!newPost.title.trim() || !newPost.content.trim()) {
@@ -126,39 +105,6 @@ export default function ForumPage() {
     );
   };
 
-  const handleLikePost = async (postId: string, hasLiked: boolean) => {
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to like posts",
-        variant: "destructive",
-      });
-      navigate(CUSTOM_ROUTES.AUTH);
-      return;
-    }
-
-    try {
-      if (hasLiked) {
-        await supabase
-          .from("post_likes")
-          .delete()
-          .eq("post_id", postId)
-          .eq("user_id", user?.userId);
-      } else {
-        await supabase
-          .from("post_likes")
-          .insert({ post_id: postId, user_id: user?.userId });
-      }
-      refetch();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleAddComment = async (postId: string) => {
     if (!user) {
       toast({
@@ -172,55 +118,58 @@ export default function ForumPage() {
 
     if (!newComment.trim()) return;
 
-    try {
-      const { error } = await supabase.from("comments").insert({
-        post_id: postId,
-        user_id: user?.userId,
+    mutateAddComment(
+      {
+        postId,
         content: newComment.trim(),
-      });
-
-      if (error) throw error;
-
-      setNewComment("");
-      fetchComments(postId);
-      refetch();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+      },
+      {
+        onSuccess: () => {
+          setNewComment("");
+          refetchComments()
+        },
+        onError: (error: any) => {
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        },
+      },
+    );
   };
 
   const handleDeletePost = async (postId: string) => {
-    if (!confirm("Are you sure you want to delete this post?")) return;
-
-    try {
-      const { error } = await supabase.from("posts").delete().eq("id", postId);
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Post deleted successfully",
-      });
-      refetch();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    mutatetForum(
+      {
+        postId,
+        type: "DELETE",
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Success",
+            description: "Post deleted successfully",
+          });
+          refetch();
+        },
+        onError: (error: any) => {
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        },
+      },
+    );
   };
 
   const toggleComments = (postId: string) => {
     if (selectedPost === postId) {
       setSelectedPost(null);
-      setComments([]);
     } else {
       setSelectedPost(postId);
-      fetchComments(postId);
+      refetchComments();
     }
   };
 
@@ -320,18 +269,21 @@ export default function ForumPage() {
                         {post.authorName || "User"}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {formatDistanceToNow(new Date(post.createdAt), {
-                          addSuffix: true,
-                        })}
+                        {dayjs(post.createdAt).format("MMM D, YYYY h:mm A")}
                       </p>
                     </div>
                     {user?.userId && post.userId === user.userId && (
                       <Button
                         variant="ghost"
                         size="sm"
+                        disabled={isLikePending}
                         onClick={() => handleDeletePost(post.id)}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        {isLikePending ? (
+                          <Loader className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
                       </Button>
                     )}
                   </div>
@@ -351,14 +303,27 @@ export default function ForumPage() {
                 <Button
                   variant="ghost"
                   size="sm"
+                  disabled={isLikePending}
                   onClick={() =>
-                    handleLikePost(post.id, post.likedByCurrentUser || false)
+                    mutatetForum(
+                      {
+                        postId: post.id,
+                        type: "LIKE",
+                      },
+                      {
+                        onSuccess: () => refetch(),
+                      },
+                    )
                   }
                   className={post.likedByCurrentUser ? "text-red-500" : ""}
                 >
-                  <Heart
-                    className={`h-4 w-4 mr-1 ${post.likedByCurrentUser ? "fill-current" : ""}`}
-                  />
+                  {isLikePending ? (
+                    <Loader className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Heart
+                      className={`h-4 w-4 mr-1 ${post.likedByCurrentUser ? "fill-current" : ""}`}
+                    />
+                  )}
                   {post.likesCount}
                 </Button>
                 <Button
@@ -383,39 +348,43 @@ export default function ForumPage() {
                           e.key === "Enter" && handleAddComment(post.id)
                         }
                       />
-                      <Button onClick={() => handleAddComment(post.id)}>
-                        Post
+                      <Button
+                        disabled={isCommentPending}
+                        onClick={() => handleAddComment(post.id)}
+                      >
+                        {isCommentPending ? "Posting..." : "Post Comment"}
                       </Button>
                     </div>
                   )}
                   <div className="space-y-3">
-                    {comments.map((comment) => (
-                      <div
-                        key={comment.id}
-                        className="flex gap-3 bg-muted/50 p-3 rounded-lg"
-                      >
-                        <Avatar className="h-8 w-8">
+                    {isCommentsLoading ? (
+                      <div className="flex justify-center items-center h-16">
+                        <Loader className="h-4 w-4 animate-spin" />
+                      </div>
+                    ) : (
+                      comments.map((comment) => (
+                        <div
+                          key={comment.id}
+                          className="flex gap-3 bg-muted/50 p-3 rounded-lg"
+                        >
+                          <Avatar className="h-8 w-8">
                           <AvatarFallback className="text-xs">
-                            {comment.profiles?.full_name?.charAt(0) ||
-                              comment.profiles?.email?.charAt(0) ||
+                            {comment.authorName?.charAt(0)||
                               "U"}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
                           <p className="text-sm font-semibold">
-                            {comment.profiles?.full_name ||
-                              comment.profiles?.email ||
+                            {comment.authorName ||
                               "User"}
                           </p>
                           <p className="text-sm">{comment.content}</p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {formatDistanceToNow(new Date(comment.created_at), {
-                              addSuffix: true,
-                            })}
+                            {dayjs(comment.created_at).format("MMM D, YYYY h:mm A")}
                           </p>
                         </div>
                       </div>
-                    ))}
+                    )))}
                   </div>
                 </div>
               )}

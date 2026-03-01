@@ -236,14 +236,14 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="users">Users</TabsTrigger>
+      <Tabs defaultValue="posts" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          {/* <TabsTrigger value="users">Users</TabsTrigger> */}
           <TabsTrigger value="posts">Posts</TabsTrigger>
           <TabsTrigger value="ratings">Ratings</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="users" className="space-y-4">
+        {/* <TabsContent value="users" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Registered Users</CardTitle>
@@ -272,7 +272,7 @@ export default function AdminDashboard() {
               </Table>
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent> */}
 
         <TabsContent value="posts" className="space-y-4">
           <Card>

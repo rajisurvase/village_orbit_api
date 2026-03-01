@@ -1,57 +1,54 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { Item } from "@/services/marketPlace/items.types";
+import { CATEGORIES } from ".";
+import { useUpdateItem } from "@/services/marketPlace/items.query";
 
-const CATEGORIES = [
-  "Farming Tools",
-  "Vegetables",
-  "Electronics",
-  "Vehicles",
-  "Mobile Phones",
-  "Animals",
-  "Household Items",
-  "Furniture",
-  "Construction Tools",
-  "Seeds & Fertilizers",
-  "Accessories",
-  "Other"
-];
 
 const formSchema = z.object({
-  item_name: z.string().min(3, "Item name must be at least 3 characters").max(100),
+  itemName: z
+    .string()
+    .min(3, "Item name must be at least 3 characters")
+    .max(100),
   category: z.string().min(1, "Please select a category"),
-  price: z.string().min(1, "Price is required").refine(val => !isNaN(Number(val)) && Number(val) > 0, "Price must be a positive number"),
+  price: z
+    .string()
+    .min(1, "Price is required")
+    .refine(
+      (val) => !isNaN(Number(val)) && Number(val) > 0,
+      "Price must be a positive number",
+    ),
   description: z.string().max(1000).optional(),
   village: z.string().min(1, "Village is required"),
-  contact: z.string().regex(/^[6-9]\d{9}$/, "Invalid mobile number")
+  contact: z.string().regex(/^[6-9]\d{9}$/, "Invalid mobile number"),
 });
-
-interface Item {
-  id: string;
-  item_name: string;
-  category: string;
-  price: number;
-  description: string | null;
-  village: string;
-  contact: string;
-  image_urls: string[] | null;
-  status: string;
-  is_available: boolean;
-  sold: boolean | null;
-  created_at: string;
-  rejection_reason: string | null;
-  seller_name: string | null;
-}
 
 interface EditItemDialogProps {
   item: Item;
@@ -60,56 +57,52 @@ interface EditItemDialogProps {
   onItemUpdated: (item: Item) => void;
 }
 
-const EditItemDialog = ({ item, open, onClose, onItemUpdated }: EditItemDialogProps) => {
-  const [saving, setSaving] = useState(false);
-
+const EditItemDialog = ({
+  item,
+  open,
+  onClose,
+  onItemUpdated,
+}: EditItemDialogProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      item_name: item.item_name,
+      itemName: item.itemName,
       category: item.category,
       price: item.price.toString(),
       description: item.description || "",
       village: item.village,
-      contact: item.contact
-    }
+      contact: item.contact,
+    },
   });
 
+  const { mutateAsync, isPending } = useUpdateItem(item.id);
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    try {
-      setSaving(true);
-
-      const { error } = await supabase
-        .from("items")
-        .update({
-          item_name: values.item_name,
-          category: values.category,
-          price: parseFloat(values.price),
-          description: values.description || null,
-          village: values.village,
-          contact: values.contact
-        })
-        .eq("id", item.id);
-
-      if (error) throw error;
-
-      const updatedItem: Item = {
-        ...item,
-        item_name: values.item_name,
-        category: values.category,
+    mutateAsync(
+      {
+        ...values,
         price: parseFloat(values.price),
-        description: values.description || null,
-        village: values.village,
-        contact: values.contact
-      };
-
-      onItemUpdated(updatedItem);
-      toast.success("Item updated successfully!");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update item");
-    } finally {
-      setSaving(false);
-    }
+      },
+      {
+        onSuccess: (response) => {
+          if (response.success && response.data) {
+            toast.success("Item updated successfully");
+            onClose();
+            onItemUpdated({
+              ...item,
+              ...response.data,
+            });
+          } else {
+            toast.error(response.error || "Failed to update item");
+          }
+        },
+        onError: (error) => {
+          toast.error(
+            error.message || "An error occurred while updating the item",
+          );
+        },
+      },
+    );
   };
 
   return (
@@ -123,7 +116,7 @@ const EditItemDialog = ({ item, open, onClose, onItemUpdated }: EditItemDialogPr
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="item_name"
+              name="itemName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Item Name *</FormLabel>
@@ -148,7 +141,7 @@ const EditItemDialog = ({ item, open, onClose, onItemUpdated }: EditItemDialogPr
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {CATEGORIES.map(category => (
+                      {CATEGORIES.map((category) => (
                         <SelectItem key={category} value={category}>
                           {category}
                         </SelectItem>
@@ -167,7 +160,12 @@ const EditItemDialog = ({ item, open, onClose, onItemUpdated }: EditItemDialogPr
                 <FormItem>
                   <FormLabel>Price (₹) *</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="e.g., 2500" min="1" {...field} />
+                    <Input
+                      type="number"
+                      placeholder="e.g., 2500"
+                      min="1"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -222,11 +220,16 @@ const EditItemDialog = ({ item, open, onClose, onItemUpdated }: EditItemDialogPr
             />
 
             <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                className="flex-1"
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={saving} className="flex-1">
-                {saving ? (
+              <Button type="submit" disabled={isPending} className="flex-1">
+                {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Saving...
