@@ -34,14 +34,8 @@ import {
 import { Item } from "@/services/marketPlace/items.types";
 import CommonImage from "../CommonImage";
 
-const MyListings = () => {
-  const { user } = useApiAuth();
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
-  const [editingItem, setEditingItem] = useState<Item | null>(null);
-  const { data, isLoading, refetch } = useMyItems({
-    villageId: user?.villageId || "",
-  });
-  const { content: items = [] } = data || {};
+const RenderItem = ({ item, refetch }: { item: Item; refetch: () => void }) => {
+  const [editingItem, setEditingItem] = useState(false);
   const { mutateAsync: actionTriggerItem, isPending: isDeleting } =
     useActionTriggerItem();
 
@@ -49,66 +43,15 @@ const MyListings = () => {
     itemId: string,
     currentStatus: boolean,
   ) => {
-    try {
-      setUpdatingId(itemId);
-      const { error } = await supabase
-        .from("items")
-        .update({ is_available: !currentStatus })
-        .eq("id", itemId);
-
-      if (error) throw error;
-
-      refetch();
-      toast.success(
-        !currentStatus
-          ? "Item marked as available"
-          : "Item marked as unavailable",
-      );
-    } catch (error: any) {
-      toast.error("Failed to update item status");
-    } finally {
-      setUpdatingId(null);
-    }
+    actionTriggerItem({
+      id: itemId,
+      type: "IS_AVAILABLE",
+      item : {
+        ...item,
+        isAvailable : currentStatus
+      } ,
+    });
   };
-
-  const handleMarkAsSold = async (itemId: string) => {
-    try {
-      setUpdatingId(itemId);
-      const { error } = await supabase
-        .from("items")
-        .update({ sold: true, is_available: false })
-        .eq("id", itemId);
-
-      if (error) throw error;
-
-      refetch();
-
-      toast.success("Item marked as sold! Congratulations! 🎉");
-    } catch (error: any) {
-      toast.error("Failed to mark item as sold");
-    } finally {
-      setUpdatingId(null);
-    }
-  };
-
-  const handleDeleteItem = async (itemId: string) => {
-    try {
-      const { error } = await supabase.from("items").delete().eq("id", itemId);
-
-      if (error) throw error;
-
-      refetch();
-      toast.success("Item deleted successfully");
-    } catch (error: any) {
-      toast.error("Failed to delete item");
-    }
-  };
-
-  const handleItemUpdated = (updatedItem: Item) => {
-    refetch();
-    setEditingItem(null);
-  };
-
 
   const getStatusBadge = (item: Item) => {
     if (item.sold) {
@@ -131,7 +74,7 @@ const MyListings = () => {
     if (item.status === "rejected") {
       return <Badge variant="destructive">Rejected</Badge>;
     }
-    if (!item.is_available) {
+    if (!item.isAvailable) {
       return <Badge variant="secondary">Unavailable</Badge>;
     }
     return (
@@ -140,6 +83,217 @@ const MyListings = () => {
       </Badge>
     );
   };
+
+  return (
+    <>
+      <Card key={item.id} className="overflow-hidden">
+        <CardContent className="p-4 md:p-6">
+          <div className="flex flex-col sm:flex-row gap-4 md:gap-6">
+            {/* Image */}
+            <div className="w-full sm:w-32 md:w-48 h-32 md:h-48 flex-shrink-0">
+              {item.imageUrls && item.imageUrls.length > 0 ? (
+                <CommonImage
+                  fileKey={item.imageUrls?.[0] || ""}
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              ) : (
+                <div className="w-full h-full bg-muted rounded-lg flex items-center justify-center">
+                  <Package className="h-12 w-12 text-muted-foreground" />
+                </div>
+              )}
+            </div>
+
+            {/* Details */}
+            <div className="flex-1 space-y-2 md:space-y-3 min-w-0">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h3 className="text-lg md:text-xl font-semibold truncate">
+                    {item.itemName}
+                  </h3>
+                  <p className="text-xs md:text-sm text-muted-foreground">
+                    {item.category}
+                  </p>
+                </div>
+                {getStatusBadge(item)}
+              </div>
+
+              <p className="text-xl md:text-2xl font-bold text-primary">
+                ₹{item.price.toLocaleString()}
+              </p>
+
+              {item.description && (
+                <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">
+                  {item.description}
+                </p>
+              )}
+
+              <div className="flex flex-wrap gap-2 text-xs md:text-sm text-muted-foreground">
+                <span>📍 {item.village}</span>
+                <span className="hidden sm:inline">•</span>
+                <a
+                  href={`tel:${item.contact}`}
+                  className="text-primary hover:underline"
+                >
+                  📞 {item.contact}
+                </a>
+              </div>
+
+              {item.status === "rejected" && item.rejection_reason && (
+                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-2 md:p-3">
+                  <p className="text-xs md:text-sm font-semibold text-destructive mb-1">
+                    Rejection Reason:
+                  </p>
+                  <p className="text-xs md:text-sm text-destructive/90">
+                    {item.rejection_reason}
+                  </p>
+                </div>
+              )}
+
+              {/* Actions */}
+              {item.status === "approved" && !item.sold && (
+                <div className="flex flex-wrap items-center gap-2 md:gap-4 pt-2">
+                  {/* Availability Toggle */}
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={item.isAvailable}
+                      onCheckedChange={(value) =>{
+                        console.log("value", value)
+                        handleToggleAvailability(item.id, value)
+                       } }
+                    />
+                    <span className="text-xs md:text-sm flex items-center gap-1">
+                      {item.isAvailable ? (
+                        <Eye className="h-4 w-4" />
+                      ) : (
+                        <EyeOff className="h-4 w-4" />
+                      )}
+                      <span className="hidden sm:inline">
+                        {item.isAvailable ? "Available" : "Unavailable"}
+                      </span>
+                    </span>
+                  </div>
+
+                  {/* Edit Button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditingItem(true)}
+                    className="gap-1"
+                  >
+                    <Edit className="h-4 w-4" />
+                    <span className="hidden sm:inline">Edit</span>
+                  </Button>
+
+                  {/* Mark as Sold Button */}
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1 border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950"
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        <span className="hidden sm:inline">Mark Sold</span>
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Mark as Sold?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will mark "{item.itemName}" as sold. The item
+                          will no longer be visible to buyers.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() =>
+                            actionTriggerItem({ id: item.id, type: "SOLD" })
+                          }
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          Yes, Mark as Sold
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  {/* Delete Button */}
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm" className="gap-1">
+                        <Trash2 className="h-4 w-4" />
+                        <span className="hidden sm:inline">Delete</span>
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete this item?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently
+                          delete your listing "{item.itemName}".
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          disabled={isDeleting}
+                          onClick={() =>
+                            actionTriggerItem({
+                              id: item.id,
+                              type: "DELETE",
+                            })
+                          }
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          {isDeleting ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Deleting...
+                            </>
+                          ) : (
+                            "Delete"
+                          )}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
+
+              {/* Sold Badge Message */}
+              {item.sold && (
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 md:p-3">
+                  <p className="text-xs md:text-sm text-blue-700 dark:text-blue-400 flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4" />
+                    This item has been sold. Congratulations!
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      {/* Edit Dialog */}
+      {editingItem && (
+        <EditItemDialog
+          item={item}
+          open={!!editingItem}
+          onClose={() => setEditingItem(null)}
+          onItemUpdated={() => refetch()}
+        />
+      )}
+    </>
+  );
+};
+
+const MyListings = () => {
+  const { user } = useApiAuth();
+  const { data, isLoading, refetch } = useMyItems({
+    villageId: user?.villageId || "",
+  });
+
+  const { content: items = [] } = data || {};
 
   if (isLoading) {
     return (
@@ -185,212 +339,9 @@ const MyListings = () => {
 
       <div className="grid gap-4">
         {items.map((item) => (
-          <Card key={item.id} className="overflow-hidden">
-            <CardContent className="p-4 md:p-6">
-              <div className="flex flex-col sm:flex-row gap-4 md:gap-6">
-                {/* Image */}
-                <div className="w-full sm:w-32 md:w-48 h-32 md:h-48 flex-shrink-0">
-                  {item.imageUrls && item.imageUrls.length > 0 ? (
-                    <CommonImage
-                      fileKey={item.imageUrls?.[0] || ""}
-                      className="w-full h-full object-cover rounded-lg"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-muted rounded-lg flex items-center justify-center">
-                      <Package className="h-12 w-12 text-muted-foreground" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Details */}
-                <div className="flex-1 space-y-2 md:space-y-3 min-w-0">
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <h3 className="text-lg md:text-xl font-semibold truncate">
-                        {item.itemName}
-                      </h3>
-                      <p className="text-xs md:text-sm text-muted-foreground">
-                        {item.category}
-                      </p>
-                    </div>
-                    {getStatusBadge(item)}
-                  </div>
-
-                  <p className="text-xl md:text-2xl font-bold text-primary">
-                    ₹{item.price.toLocaleString()}
-                  </p>
-
-                  {item.description && (
-                    <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">
-                      {item.description}
-                    </p>
-                  )}
-
-                  <div className="flex flex-wrap gap-2 text-xs md:text-sm text-muted-foreground">
-                    <span>📍 {item.village}</span>
-                    <span className="hidden sm:inline">•</span>
-                    <a
-                      href={`tel:${item.contact}`}
-                      className="text-primary hover:underline"
-                    >
-                      📞 {item.contact}
-                    </a>
-                  </div>
-
-                  {item.status === "rejected" && item.rejection_reason && (
-                    <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-2 md:p-3">
-                      <p className="text-xs md:text-sm font-semibold text-destructive mb-1">
-                        Rejection Reason:
-                      </p>
-                      <p className="text-xs md:text-sm text-destructive/90">
-                        {item.rejection_reason}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Actions */}
-                  {item.status === "approved" && !item.sold && (
-                    <div className="flex flex-wrap items-center gap-2 md:gap-4 pt-2">
-                      {/* Availability Toggle */}
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={item.is_available}
-                          onCheckedChange={() =>
-                            handleToggleAvailability(item.id, item.is_available)
-                          }
-                          disabled={updatingId === item.id}
-                        />
-                        <span className="text-xs md:text-sm flex items-center gap-1">
-                          {item.is_available ? (
-                            <Eye className="h-4 w-4" />
-                          ) : (
-                            <EyeOff className="h-4 w-4" />
-                          )}
-                          <span className="hidden sm:inline">
-                            {item.is_available ? "Available" : "Unavailable"}
-                          </span>
-                        </span>
-                      </div>
-
-                      {/* Edit Button */}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setEditingItem(item)}
-                        className="gap-1"
-                      >
-                        <Edit className="h-4 w-4" />
-                        <span className="hidden sm:inline">Edit</span>
-                      </Button>
-
-                      {/* Mark as Sold Button */}
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-1 border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950"
-                          >
-                            <CheckCircle2 className="h-4 w-4" />
-                            <span className="hidden sm:inline">Mark Sold</span>
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Mark as Sold?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This will mark "{item.itemName}" as sold. The item
-                              will no longer be visible to buyers.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() =>
-                                actionTriggerItem({ id: item.id, type: "SOLD" })
-                              }
-                              className="bg-blue-600 hover:bg-blue-700"
-                            >
-                              Yes, Mark as Sold
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-
-                      {/* Delete Button */}
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            className="gap-1"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="hidden sm:inline">Delete</span>
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              Delete this item?
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will
-                              permanently delete your listing "{item.itemName}".
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              disabled={isDeleting}
-                              onClick={() =>
-                                actionTriggerItem({
-                                  id: item.id,
-                                  type: "DELETE",
-                                })
-                              }
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              {isDeleting ? (
-                                <>
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  Deleting...
-                                </>
-                              ) : (
-                                "Delete"
-                              )}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  )}
-
-                  {/* Sold Badge Message */}
-                  {item.sold && (
-                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 md:p-3">
-                      <p className="text-xs md:text-sm text-blue-700 dark:text-blue-400 flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4" />
-                        This item has been sold. Congratulations!
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <RenderItem item={item} refetch={refetch} />
         ))}
       </div>
-
-      {/* Edit Dialog */}
-      {editingItem && (
-        <EditItemDialog
-          item={editingItem}
-          open={!!editingItem}
-          onClose={() => setEditingItem(null)}
-          onItemUpdated={handleItemUpdated}
-        />
-      )}
     </div>
   );
 };

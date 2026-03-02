@@ -25,7 +25,7 @@ const MarketPricesPage = () => {
     queryFn: ({ pageParam = 0 }) =>
       GetAllMarketPrices({
         page: pageParam,
-        size: 20,
+        size: 20
       }),
 
     getNextPageParam: (lastPage) => {

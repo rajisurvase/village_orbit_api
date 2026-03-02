@@ -5,19 +5,23 @@
  */
 
 // Default API configuration - Single source of truth for API host
-const DEFAULT_API_BASE_URL =  "http://localhost:8001"//'http://ec2-13-127-151-221.ap-south-1.compute.amazonaws.com:8001';
-const API_VERSION = 'v1';
+const DEFAULT_API_BASE_URL =
+  "http://ec2-13-127-151-221.ap-south-1.compute.amazonaws.com:8001";
+const API_VERSION = "v1";
 
 // Get API base URL from environment or use default
 export const getApiBaseUrl = (): string => {
   // Check environment variable first
-  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) {
+  if (
+    typeof import.meta !== "undefined" &&
+    import.meta.env?.VITE_API_BASE_URL
+  ) {
     return import.meta.env.VITE_API_BASE_URL;
   }
-  
+
   // Check localStorage for admin-configured URL (future-ready)
-  if (typeof window !== 'undefined') {
-    const adminConfig = localStorage.getItem('admin_api_config');
+  if (typeof window !== "undefined") {
+    const adminConfig = localStorage.getItem("admin_api_config");
     if (adminConfig) {
       try {
         const config = JSON.parse(adminConfig);
@@ -25,27 +29,27 @@ export const getApiBaseUrl = (): string => {
           return config.apiBaseUrl;
         }
       } catch (e) {
-        console.warn('Failed to parse admin API config:', e);
+        console.warn("Failed to parse admin API config:", e);
       }
     }
   }
-  
+
   return DEFAULT_API_BASE_URL;
 };
 
 // Get village ID from localStorage or default
 export const getDefaultVillageId = (): string => {
-  if (typeof window !== 'undefined') {
-    const villageId = localStorage.getItem('village_id');
+  if (typeof window !== "undefined") {
+    const villageId = localStorage.getItem("village_id");
     if (villageId) return villageId;
   }
-  return 'shivankhed'; // Default village
+  return "shivankhed"; // Default village
 };
 
 // Set village ID in localStorage
 export const setVillageId = (villageId: string): void => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('village_id', villageId);
+  if (typeof window !== "undefined") {
+    localStorage.setItem("village_id", villageId);
   }
 };
 
@@ -54,7 +58,7 @@ export const apiConfig = {
   get baseUrl() {
     return getApiBaseUrl();
   },
-  
+
   get apiUrl() {
     return `${this.baseUrl}/api/${API_VERSION}`;
   },
@@ -62,67 +66,69 @@ export const apiConfig = {
   get villageId() {
     return getDefaultVillageId();
   },
-  
+
   // Endpoints
   endpoints: {
     // Health
-    health: '/health',
+    health: "/health",
 
     // take file full path
-    file : (filePath: string) => `/files/signed-url?filePath=${filePath}`,
-    
+    file: (filePath: string) => `/files/signed-url?filePath=${filePath}`,
+
     // Auth endpoints
     auth: {
-      signup: '/auth/signup',
-      login: '/auth/login',
-      logout: '/auth/logout',
-      refreshToken: '/auth/refresh-token',
-      me: '/auth/me',
+      signup: "/auth/signup",
+      login: "/auth/login",
+      logout: "/auth/logout",
+      refreshToken: "/auth/refresh-token",
+      me: "/auth/me",
     },
 
     // User Profile endpoints
     profile: {
-      get: '/users/profile',
-      update: '/users/profile',
+      get: "/users/profile",
+      update: "/users/profile",
     },
-    
+
     // Admin User Management endpoints
     admin: {
-      users: '/admin/users',
+      users: "/admin/users",
       userById: (userId: string) => `/admin/users/${userId}`,
-      approveUser: ({userId, villageId}) => `/admin/users/${userId}/approve?villageId=${villageId}`,
+      approveUser: ({ userId, villageId }) =>
+        `/admin/users/${userId}/approve?villageId=${villageId}`,
       rejectUser: (userId: string) => `/admin/users/${userId}/reject`,
     },
-    
+
     // RBAC endpoints
     rbac: {
-      permissions: '/rbac/permissions',
-      permissionById: (permissionId: string) => `/rbac/permissions/${permissionId}`,
-      roles: '/rbac/roles',
+      permissions: "/rbac/permissions",
+      permissionById: (permissionId: string) =>
+        `/rbac/permissions/${permissionId}`,
+      roles: "/rbac/roles",
       roleById: (roleId: string) => `/rbac/roles/${roleId}`,
       rolePermissions: (roleId: string) => `/rbac/roles/${roleId}/permissions`,
-      rolePermissionById: (roleId: string, permissionId: string) => 
+      rolePermissionById: (roleId: string, permissionId: string) =>
         `/rbac/roles/${roleId}/permissions/${permissionId}`,
       userRoles: (userId: string) => `/rbac/users/${userId}/roles`,
-      userRoleById: (userId: string, roleId: string) => 
+      userRoleById: (userId: string, roleId: string) =>
         `/rbac/users/${userId}/roles/${roleId}`,
     },
 
     // Village endpoints
     villages: {
-      list: '/villages',
+      list: "/villages",
       byId: (villageId: string) => `/villages/${villageId}`,
       config: (villageId: string) => `/villages/${villageId}/config`,
-      create: '/villages',
-      fileUpload : "/files/upload"
+      create: "/villages",
+      fileUpload: "/files/upload",
     },
 
     // Village Services endpoints
     services: {
-      list: '/services',
+      list: "/services",
       byId: (serviceId: string) => `/services/${serviceId}`,
-      categories: '/services/categories',
-      create: '/services',
+      categories: "/services/categories",
+      create: "/services",
       update: (serviceId: string) => `/services/${serviceId}`,
       delete: (serviceId: string) => `/services/${serviceId}`,
       rate: (serviceId: string) => `/services/${serviceId}/rating`,
@@ -130,21 +136,29 @@ export const apiConfig = {
 
     // Marketplace/Items endpoints
     items: {
-      list: '/items',
+      list: "/items",
       byId: (itemId: string) => `/items/${itemId}`,
-      create: '/items',
+      create: "/items",
       update: (itemId: string) => `/items/${itemId}`,
       delete: (itemId: string) => `/items/${itemId}`,
+      // verify 
       approve: (itemId: string) => `/items/${itemId}/approve`,
       reject: (itemId: string) => `/items/${itemId}/reject`,
-      myItems: '/items/my-items',
+      // 
+      myItems: "/items/my-items",
+      admin: {
+        list: "/admin/items",
+        approve: (itemId: string) => `/admin/items/${itemId}/approve`,
+        reject: (itemId: string) => `/admin/items/${itemId}/reject`,
+        analytics : "/admin/items/statistics"
+      },
     },
 
     // Forum/Posts endpoints
     posts: {
-      list: '/posts',
+      list: "/posts",
       byId: (postId: string) => `/posts/${postId}`,
-      create: '/posts',
+      create: "/posts",
       update: (postId: string) => `/posts/${postId}`,
       delete: (postId: string) => `/posts/${postId}`,
       like: (postId: string) => `/posts/${postId}/like`,
@@ -156,17 +170,17 @@ export const apiConfig = {
 
     // Feedback & Contact endpoints
     feedback: {
-      submit: '/feedback',
-      list: '/admin/feedback',
+      submit: "/feedback",
+      list: "/admin/feedback",
     },
     contact: {
-      submit: '/contact',
-      list: '/admin/contact',
+      submit: "/contact",
+      list: "/admin/contact",
     },
 
     // Exams endpoints
     exams: {
-      list: '/exams',
+      list: "/exams",
       byId: (examId: string) => `/exams/${examId}`,
       questions: (examId: string) => `/exams/${examId}/questions`,
       startAttempt: (examId: string) => `/exams/${examId}/attempts`,
@@ -177,35 +191,35 @@ export const apiConfig = {
 
     // Push Notifications endpoints
     push: {
-      subscribe: '/push/subscribe',
-      unsubscribe: '/push/unsubscribe',
-      adminSend: '/admin/push/send',
+      subscribe: "/push/subscribe",
+      unsubscribe: "/push/unsubscribe",
+      adminSend: "/admin/push/send",
     },
-    page_visibility: {  
-      get: (villageId : string)=>`/villages/${villageId}/page-visibility`
+    page_visibility: {
+      get: (villageId: string) => `/villages/${villageId}/page-visibility`,
     },
 
     // market-prices
     market_prices: {
-      list : "/market-prices",
-    }
+      list: "/market-prices",
+    },
   },
 };
 
 // Helper to update admin API config (for future admin panel)
 export const updateApiConfig = (config: { apiBaseUrl?: string }) => {
-  if (typeof window !== 'undefined') {
-    const existingConfig = localStorage.getItem('admin_api_config');
+  if (typeof window !== "undefined") {
+    const existingConfig = localStorage.getItem("admin_api_config");
     const parsed = existingConfig ? JSON.parse(existingConfig) : {};
     const newConfig = { ...parsed, ...config };
-    localStorage.setItem('admin_api_config', JSON.stringify(newConfig));
+    localStorage.setItem("admin_api_config", JSON.stringify(newConfig));
   }
 };
 
 // Helper to reset API config to default
 export const resetApiConfig = () => {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('admin_api_config');
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("admin_api_config");
   }
 };
 

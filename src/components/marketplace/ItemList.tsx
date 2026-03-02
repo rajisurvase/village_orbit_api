@@ -109,6 +109,7 @@ const ItemList = () => {
 
   const CategorySelect = () => (
     <SelectContent>
+      <SelectItem value="All Categories" >All Categories</SelectItem>
       {CATEGORIES.map((category) => (
         <SelectItem key={category} value={category}>
           {category}
@@ -195,7 +196,7 @@ const ItemList = () => {
       <div className="hidden md:flex gap-4 bg-card p-4 rounded-lg border border-border items-center">
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select category" />
+            <SelectValue  placeholder="Select category" />
           </SelectTrigger>
           <CategorySelect />
         </Select>
@@ -229,7 +230,7 @@ const ItemList = () => {
       </div>
 
       {/* Recently Added Scroller */}
-      {data?.content.length &&
+      {!!data?.content.length &&
         !searchQuery &&
         selectedCategory === "All Categories" && (
           <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-3 md:p-4 rounded-lg border border-border">

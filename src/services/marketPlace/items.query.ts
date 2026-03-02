@@ -57,12 +57,13 @@ export const useUpdateItem = (id: string) => {
 
 export const useActionTriggerItem = () => {
   const qc = useQueryClient();
-  return useMutation<ApiResponse<{ message: string }>, Error, { id: string; type: "DELETE" | "SOLD" }>({
-    mutationFn: ({id, type}) => {
+  return useMutation<ApiResponse<{ message: string } | Item>, Error, { id: string; type: "DELETE" | "SOLD" | "IS_AVAILABLE", item?: Partial<Item> }>({
+    mutationFn: ({id, type, item}) => {
       if (type === "SOLD") {
         return itemsService.soldItem(id);
-      }
-      return itemsService.deleteItem(id);
+      } else if(type ==="DELETE") {
+        return itemsService.deleteItem(id);
+      } return itemsService.updateItem(id, item)
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['items'] });
@@ -71,19 +72,16 @@ export const useActionTriggerItem = () => {
   });
 };
 
-export const useApproveItem = () => {
+
+
+
+// admin action
+
+export const useAdminActionOnBuySellItem = () => {
   const qc = useQueryClient();
-  return useMutation<ApiResponse<{ message: string }>, Error, string>({
-    mutationFn: (id: string) => itemsService.approveItem(id),
+  return useMutation<ApiResponse<{ message: string }>, Error, { id: string;  type: "approve" | "reject" | "delete", reason: string }>({
+    mutationFn: ({ id, type, reason }: { id: string; type: "approve" | "reject", reason: string }) => type ==="approve" ? itemsService.approveItem(id) : type==="reject"? itemsService.rejectItem(id, reason) : itemsService.deleteItem(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['items'] }),
   });
 };
 
-export const useRejectItem = () => {
-  const qc = useQueryClient();
-  return useMutation<ApiResponse<{ message: string }>, Error, { id: string; reason: string }>({
-    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-      itemsService.rejectItem(id, reason),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['items'] }),
-  });
-};

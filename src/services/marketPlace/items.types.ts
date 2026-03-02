@@ -12,7 +12,7 @@ export interface Item {
   seller_name?: string;
   imageUrls?: string[];
   status?: 'pending' | 'approved' | 'rejected';
-  is_available?: boolean;
+  isAvailable?: boolean;
   rejection_reason?: string;
   user_id?: string;
   created_at?: string;
@@ -24,8 +24,9 @@ export interface Item {
 export interface ItemListParams {
   page?: number;
   limit?: number;
+  size? : number;
   category?: string;
-  status?: string;
+  status?: "pending" | "approved" | "rejected";
   search?: string;
   villageId?: string;
 }
@@ -35,6 +36,7 @@ export interface PaginatedItems {
   totalElements: number;
   totalPages: number;
   number: number; // current page index
+  page: number
 }
 
 // payload used during create/update (snake_case keys)
@@ -47,4 +49,5 @@ export type ItemPayload = Omit<
   price: number;
   contact: string;
   village: string;
+  is_available: boolean
 };

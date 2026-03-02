@@ -1,9 +1,12 @@
-import { apiConfig } from '@/config/apiConfig';
-;
-import apiClient, { ApiResponse } from '../apiClient';
-import { GetFullFilePath } from '../commonService';
-import { UploadVillageFile } from '../village-service';
-import { Item, ItemListParams, ItemPayload, PaginatedItems } from './items.types';
+import { apiConfig } from "@/config/apiConfig";
+import apiClient, { ApiResponse } from "../apiClient";
+import { UploadVillageFile } from "../village-service";
+import {
+  Item,
+  ItemListParams,
+  ItemPayload,
+  PaginatedItems,
+} from "./items.types";
 
 interface ApiWrapperResponse<T> {
   success: boolean;
@@ -16,18 +19,21 @@ class ItemsService {
   /**
    * Fetch paginated list of items
    */
-  async getItems(params: ItemListParams = {}): Promise<ApiResponse<PaginatedItems>> {
+  async getItems(
+    params: ItemListParams = {},
+  ): Promise<ApiResponse<PaginatedItems>> {
     const query = new URLSearchParams();
 
-    if (params.page !== undefined) query.append('page', String(params.page));
-    if (params.limit !== undefined) query.append('limit', String(params.limit));
-    if (params.category) query.append('category', params.category);
-    if (params.status) query.append('status', params.status);
-    if (params.search) query.append('search', params.search);
-    if(params.villageId) query.append('villageId', params.villageId);
+    if (params.page !== undefined) query.append("page", String(params.page));
+    if (params.limit !== undefined) query.append("limit", String(params.limit));
+    if (params.category) query.append("category", params.category);
+    if (params.status) query.append("status", params.status);
+    if (params.search) query.append("search", params.search);
+    if (params.villageId) query.append("villageId", params.villageId);
 
     const endpoint = `${apiConfig.endpoints.items.list}?${query.toString()}`;
-    const response = await apiClient.get<ApiWrapperResponse<PaginatedItems>>(endpoint);
+    const response =
+      await apiClient.get<ApiWrapperResponse<PaginatedItems>>(endpoint);
 
     if (response.success && response.data?.data) {
       return {
@@ -38,7 +44,7 @@ class ItemsService {
     }
 
     return {
-      error: response.error || 'Failed to fetch items',
+      error: response.error || "Failed to fetch items",
       status: response.status,
       success: false,
     };
@@ -49,7 +55,7 @@ class ItemsService {
    */
   async getItemById(id: string): Promise<ApiResponse<Item>> {
     const response = await apiClient.get<ApiWrapperResponse<Item>>(
-      apiConfig.endpoints.items.byId(id)
+      apiConfig.endpoints.items.byId(id),
     );
 
     if (response.success && response.data?.data) {
@@ -61,7 +67,7 @@ class ItemsService {
     }
 
     return {
-      error: response.error || 'Failed to fetch item',
+      error: response.error || "Failed to fetch item",
       status: response.status,
       success: false,
     };
@@ -70,16 +76,19 @@ class ItemsService {
   /**
    * Fetch items belonging to logged in user
    */
-  async getMyItems(params: ItemListParams = {}): Promise<ApiResponse<PaginatedItems>> {
+  async getMyItems(
+    params: ItemListParams = {},
+  ): Promise<ApiResponse<PaginatedItems>> {
     const query = new URLSearchParams();
-    if (params.page !== undefined) query.append('page', String(params.page));
-    if (params.limit !== undefined) query.append('limit', String(params.limit));
-    if (params.category) query.append('category', params.category);
-    if (params.status) query.append('status', params.status);
-    if (params.search) query.append('search', params.search);
+    if (params.page !== undefined) query.append("page", String(params.page));
+    if (params.limit !== undefined) query.append("limit", String(params.limit));
+    if (params.category) query.append("category", params.category);
+    if (params.status) query.append("status", params.status);
+    if (params.search) query.append("search", params.search);
 
     const endpoint = `${apiConfig.endpoints.items.myItems}?${query.toString()}`;
-    const response = await apiClient.get<ApiWrapperResponse<PaginatedItems>>(endpoint);
+    const response =
+      await apiClient.get<ApiWrapperResponse<PaginatedItems>>(endpoint);
 
     if (response.success && response.data?.data) {
       return {
@@ -90,7 +99,7 @@ class ItemsService {
     }
 
     return {
-      error: response.error || 'Failed to fetch user items',
+      error: response.error || "Failed to fetch user items",
       status: response.status,
       success: false,
     };
@@ -100,10 +109,10 @@ class ItemsService {
    * Create an item
    */
   async createItem(payload: ItemPayload): Promise<ApiResponse<Item>> {
-    const {villageId, ...rest} = payload 
+    const { villageId, ...rest } = payload;
     const response = await apiClient.post<ApiWrapperResponse<Item>>(
       `${apiConfig.endpoints.items.create}?villageId=${villageId}`,
-      {...rest}
+      { ...rest },
     );
 
     if (response.success && response.data?.data) {
@@ -115,7 +124,7 @@ class ItemsService {
     }
 
     return {
-      error: response.error || 'Failed to create item',
+      error: response.error || "Failed to create item",
       status: response.status,
       success: false,
     };
@@ -124,10 +133,13 @@ class ItemsService {
   /**
    * Update existing item
    */
-  async updateItem(id: string, updates: Partial<ItemPayload>): Promise<ApiResponse<Item>> {
+  async updateItem(
+    id: string,
+    updates: Partial<ItemPayload>,
+  ): Promise<ApiResponse<Item>> {
     const response = await apiClient.put<ApiWrapperResponse<Item>>(
       apiConfig.endpoints.items.update(id),
-      updates
+      updates,
     );
 
     if (response.success && response.data?.data) {
@@ -139,7 +151,7 @@ class ItemsService {
     }
 
     return {
-      error: response.error || 'Failed to update item',
+      error: response.error || "Failed to update item",
       status: response.status,
       success: false,
     };
@@ -149,10 +161,12 @@ class ItemsService {
    * Delete item
    */
   async deleteItem(id: string): Promise<ApiResponse<{ message: string }>> {
-    const response = await apiClient.delete<ApiWrapperResponse<any>>(apiConfig.endpoints.items.delete(id));
+    const response = await apiClient.delete<ApiWrapperResponse<any>>(
+      apiConfig.endpoints.items.delete(id),
+    );
 
     return {
-      data: { message: response.data?.message || 'Item deleted' },
+      data: { message: response.data?.message || "Item deleted" },
       status: response.status,
       success: response.success,
       error: response.error,
@@ -160,10 +174,13 @@ class ItemsService {
   }
 
   async soldItem(id: string): Promise<ApiResponse<{ message: string }>> {
-    const response = await apiClient.put<ApiWrapperResponse<any>>(`${apiConfig.endpoints.items.update(id)}/sold`, { sold: true });
+    const response = await apiClient.put<ApiWrapperResponse<any>>(
+      `${apiConfig.endpoints.items.update(id)}/sold`,
+      { sold: true },
+    );
 
     return {
-      data: { message: response.data?.message || 'Item sold' },
+      data: { message: response.data?.message || "Item sold" },
       status: response.status,
       success: response.success,
       error: response.error,
@@ -174,9 +191,12 @@ class ItemsService {
    * Approve (admin)
    */
   async approveItem(id: string): Promise<ApiResponse<{ message: string }>> {
-    const response = await apiClient.post<ApiWrapperResponse<any>>(apiConfig.endpoints.items.approve(id), {});
+    const response = await apiClient.post<ApiWrapperResponse<Item>>(
+      apiConfig.endpoints.items.admin.approve(id),
+      {},
+    );
     return {
-      data: { message: response.data?.message || 'Item approved' },
+      data: { message: response.data?.message || "Item approved" },
       status: response.status,
       success: response.success,
       error: response.error,
@@ -186,14 +206,16 @@ class ItemsService {
   /**
    * Reject (admin) with reason
    */
-  async rejectItem(id: string, reason: string): Promise<ApiResponse<{ message: string }>> {
-    const encoded = encodeURIComponent(reason);
+  async rejectItem(
+    id: string,
+    reason: string,
+  ): Promise<ApiResponse<{ message: string }>> {
     const response = await apiClient.post<ApiWrapperResponse<any>>(
-      apiConfig.endpoints.items.reject(id),
-      { reason }
+      apiConfig.endpoints.items.admin.reject(id),
+      { reason },
     );
     return {
-      data: { message: response.data?.message || 'Item rejected' },
+      data: { message: response.data?.message || "Item rejected" },
       status: response.status,
       success: response.success,
       error: response.error,
@@ -206,9 +228,9 @@ class ItemsService {
   async uploadImages(files: File[], villageId: string): Promise<string[]> {
     const urls: string[] = [];
     for (const file of files) {
-     const response = await UploadVillageFile({ file, villageId});
+      const response = await UploadVillageFile({ file, villageId });
       if (!response.success || !response.data?.fileKey) {
-        throw new Error('Failed to get signed url');
+        throw new Error("Failed to get signed url");
       }
       const { fileKey } = response.data;
       urls.push(fileKey);
@@ -219,3 +241,27 @@ class ItemsService {
 
 export const itemsService = new ItemsService();
 export default itemsService;
+
+export const GetAdminItems = async (params: ItemListParams) => {
+  const response = await apiClient.get<ApiResponse<PaginatedItems>>(
+    apiConfig.endpoints.items.admin.list,
+    true,
+    {
+      params,
+    },
+  );
+  return response.data;
+};
+
+export const GetAdminItemAnalytics = async (payload : {villageId : string}) => {
+  const response = await apiClient.get<
+    ApiResponse<{
+      totalItems: number;
+      approvedItems: number;
+      pendingItems: number;
+      availableItems: number;
+      rejectedItems: number;
+    }>
+  >(apiConfig.endpoints.items.admin.analytics, true, {params : payload});
+  return response.data;
+};

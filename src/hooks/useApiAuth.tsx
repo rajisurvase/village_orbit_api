@@ -137,7 +137,7 @@ export const useApiAuth = (): UseApiAuthReturn => {
     }
   }, []);
 
-  const logout = useCallback(async () => {
+  const logout =async () => {
     setLoading(true);
     try {
       await authService.logout();
@@ -145,7 +145,7 @@ export const useApiAuth = (): UseApiAuthReturn => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   const refreshUser = useCallback(async () => {
     if (!tokenService.hasTokens()) return;

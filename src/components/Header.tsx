@@ -1,4 +1,4 @@
-import { useState, useContext, useMemo, memo } from "react";
+import { useState, useContext, useMemo, memo, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { LazyLoadImage } from "react-lazy-load-image-component";
@@ -38,6 +38,7 @@ import { CUSTOM_ROUTES } from "@/custom-routes";
 import { VillageContext } from "@/context/VillageContextConfig";
 import { cn } from "@/lib/utils";
 import { getDefaultNavigationConfig } from "@/hooks/useNavigationConfig";
+import { Avatar, AvatarFallback } from "./ui/avatar";
 
 // Header.tsx (top)
 type Visible =
@@ -57,8 +58,19 @@ const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [desktopHomeOpen, setDesktopHomeOpen] = useState(false);
 
+  // avatar dropdown state for desktop
+  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
+  const avatarRef = useRef<HTMLDivElement>(null);
+
   const { t, i18n } = useTranslation();
-  const { user, isAdmin, isSuperAdmin, loading: authLoading, isAuthenticated } = useApiAuth();
+  const {
+    user,
+    isAdmin,
+    isSuperAdmin,
+    loading: authLoading,
+    isAuthenticated,
+    logout,
+  } = useApiAuth();
   const isSubAdmin = false; // Will be determined by roles if needed
   const navigate = useNavigate();
   const location = useLocation();
@@ -70,10 +82,26 @@ const Header: React.FC = () => {
     | "mr";
 
   const handleLogout = async () => {
-    await authService.logout();
+    await logout();
     setIsMenuOpen(false);
+    setAvatarMenuOpen(false);
     navigate("/");
   };
+
+  // close avatar menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        avatarMenuOpen &&
+        avatarRef.current &&
+        !avatarRef.current.contains(e.target as Node)
+      ) {
+        setAvatarMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [avatarMenuOpen]);
 
   const navigationData = useMemo(() => {
     const configToUse = getDefaultNavigationConfig();
@@ -84,7 +112,7 @@ const Header: React.FC = () => {
       .map((item) => ({
         name: item.label[currentLang] || item.label.en,
         href: item.href,
-        pageKey: item.pageKey
+        pageKey: item.pageKey,
       }));
 
     const homeMenuSections = configToUse.homeMenuSections
@@ -107,8 +135,6 @@ const Header: React.FC = () => {
   }, [currentLang, isPageVisible]);
 
   const { standaloneNavItems, homeMenuSections } = navigationData;
-
-  console.log("navigationData", navigationData, isPageVisible("exams"))
 
   // ------------------------------------------------------------------
   // YELLOW CONTACT BAR (NON-STICKY)
@@ -260,7 +286,7 @@ const Header: React.FC = () => {
                                     className={cn(
                                       "block py-2 px-3 text-sm rounded-md transition-colors hover:bg-accent hover:text-accent-foreground",
                                       location.pathname === item.href &&
-                                        "bg-accent text-accent-foreground"
+                                        "bg-accent text-accent-foreground",
                                     )}
                                   >
                                     {item.name}
@@ -283,7 +309,7 @@ const Header: React.FC = () => {
                     className={cn(
                       "text-foreground hover:text-primary hover:bg-primary/10",
                       location.pathname === item.href &&
-                        "bg-primary/10 text-primary"
+                        "bg-primary/10 text-primary",
                     )}
                     asChild
                   >
@@ -301,38 +327,60 @@ const Header: React.FC = () => {
               {/* Desktop Auth Buttons */}
               <div className="hidden lg:flex items-center gap-2">
                 {isAuthenticated ? (
-                  <>
-                    {(isAdmin || isSuperAdmin || isSubAdmin) && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2"
-                        onClick={() => navigate("/admin/dashboard")}
-                      >
-                        <Shield className="h-4 w-4" />
-                        {t("header.admin")}
-                      </Button>
-                    )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2"
-                      onClick={() => navigate(CUSTOM_ROUTES.USER_DASHBOARD)}
+                  <div ref={avatarRef} className="relative">
+                    <Avatar
+                      className="h-10 w-10 cursor-pointer"
+                      onClick={() => setAvatarMenuOpen((o) => !o)}
                     >
-                      <User className="h-4 w-4" />
-                      {t("header.myProfile")}
-                    </Button>
+                      <AvatarFallback className="text-1xl">
+                        {user?.fullName?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
 
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="gap-2"
-                      onClick={handleLogout}
-                    >
-                      <LogOut className="h-4 w-4" />
-                      {t("header.logout")}
-                    </Button>
-                  </>
+                    {avatarMenuOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-md shadow-lg p-2 flex flex-col gap-2 z-50">
+                        {(isAdmin || isSuperAdmin || isSubAdmin) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-2"
+                            onClick={() => {
+                              navigate("/admin/dashboard");
+                              setAvatarMenuOpen(false);
+                            }}
+                          >
+                            <Shield className="h-4 w-4" />
+                            {t("header.admin")}
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => {
+                            navigate(CUSTOM_ROUTES.USER_DASHBOARD);
+                            setAvatarMenuOpen(false);
+                          }}
+                        >
+                          <User className="h-4 w-4" />
+                          {t("header.myProfile")}
+                        </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => {
+                            handleLogout();
+                            setAvatarMenuOpen(false);
+                          }}
+                        >
+                          <LogOut className="h-4 w-4" />
+                          {t("header.logout")}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <Button
                     variant="default"
@@ -400,7 +448,7 @@ const Header: React.FC = () => {
                               className={cn(
                                 "block py-2 px-3 text-sm rounded-md hover:bg-accent",
                                 location.pathname === item.href &&
-                                  "bg-accent text-accent-foreground"
+                                  "bg-accent text-accent-foreground",
                               )}
                             >
                               {item.name}
@@ -418,7 +466,7 @@ const Header: React.FC = () => {
                       className={cn(
                         "justify-start text-foreground hover:text-primary",
                         location.pathname === item.href &&
-                          "bg-primary/10 text-primary"
+                          "bg-primary/10 text-primary",
                       )}
                       asChild
                       onClick={() => setIsMenuOpen(false)}
@@ -481,7 +529,7 @@ const Header: React.FC = () => {
                 </div>
               </nav>
             </>,
-            document.body
+            document.body,
           )}
       </header>
     </>
