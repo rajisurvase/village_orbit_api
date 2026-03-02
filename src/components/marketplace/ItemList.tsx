@@ -31,6 +31,7 @@ import { VILLAGES } from "@/config/villageConfig";
 import { CATEGORIES } from ".";
 import { Item } from "@/services/marketPlace/items.types";
 import { useItems } from "@/services/marketPlace/items.query";
+import CommonImage from "../CommonImage";
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest First" },
@@ -115,8 +116,6 @@ const ItemList = () => {
       ))}
     </SelectContent>
   );
-
-  console.log(data?.content, "content")
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -245,19 +244,10 @@ const ItemList = () => {
                   className="flex-shrink-0 w-36 md:w-48 bg-card p-2 md:p-3 rounded-lg border border-border cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] snap-start"
                 >
                   <div className="aspect-square bg-muted rounded-md mb-2 overflow-hidden">
-                    {item.image_urls && item.image_urls[0] ? (
-                      <img
-                        src={item.image_urls[0]}
-                        alt={item.itemName}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        onError={() => {
-                          <>
-                            <div className="w-full h-full flex items-center justify-center text-3xl md:text-4xl bg-muted">
-                              📦
-                            </div>
-                          </>;
-                        }}
+                    {item.imageUrls && item.imageUrls?.[0] ? (
+                      <CommonImage
+                        fileKey={item.imageUrls[0] || ""}
+                        className="w-full h-full object-cover"                        
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-3xl md:text-4xl bg-muted">

@@ -1,8 +1,9 @@
 import { Calendar, MapPin, Phone, Tag } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Item } from "@/services";
 import dayjs from "dayjs";
+import { Item } from "@/services/marketPlace/items.types";
+import CommonImage from "../CommonImage";
 
 
 interface ItemCardProps {
@@ -36,18 +37,8 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
     >
       {/* Image */}
       <div className="aspect-square bg-muted overflow-hidden relative">
-        {item.image_urls?.[0] ? (
-          <img
-            src={item.image_urls[0] || ""}
-            alt={item.item_name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-            loading="lazy"
-            onError={() => (
-              <div className="w-full h-full flex items-center justify-center text-3xl md:text-4xl bg-muted">
-                📦
-              </div>
-            )}
-          />
+        {item.imageUrls?.[0] ? (
+         <CommonImage fileKey={item.imageUrls?.[0] ||""} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" /> 
         ) : (
           <div className="w-full h-full flex items-center justify-center text-6xl">
             {getCategoryIcon(item.category)}
@@ -61,7 +52,7 @@ const ItemCard = ({ item, onClick }: ItemCardProps) => {
       <CardContent className="p-4 space-y-3">
         {/* Item Name */}
         <h3 className="font-semibold text-lg line-clamp-2 text-foreground group-hover:text-primary transition-colors">
-          {item.item_name}
+          {item.itemName}
         </h3>
 
         {/* Price */}

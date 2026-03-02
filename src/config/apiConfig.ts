@@ -183,6 +183,11 @@ export const apiConfig = {
     },
     page_visibility: {  
       get: (villageId : string)=>`/villages/${villageId}/page-visibility`
+    },
+
+    // market-prices
+    market_prices: {
+      list : "/market-prices",
     }
   },
 };

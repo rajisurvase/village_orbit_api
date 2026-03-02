@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +32,7 @@ import {
   useMyItems,
 } from "@/services/marketPlace/items.query";
 import { Item } from "@/services/marketPlace/items.types";
-import { useGetFullFilePath } from "@/hooks/useVillagehooks";
+import CommonImage from "../CommonImage";
 
 const MyListings = () => {
   const { user } = useApiAuth();
@@ -109,19 +109,6 @@ const MyListings = () => {
     setEditingItem(null);
   };
 
-  const ItemImage = ({
-    fileKey,
-    className,
-  }: {
-    fileKey: string;
-    className?: string;
-  }) => {
-    const { data: signedUrl } = useGetFullFilePath(fileKey);
-
-    if (!signedUrl?.url) return null;
-
-    return <img src={signedUrl.url || ""} alt={fileKey} className={className} />;
-  };
 
   const getStatusBadge = (item: Item) => {
     if (item.sold) {
@@ -204,8 +191,8 @@ const MyListings = () => {
                 {/* Image */}
                 <div className="w-full sm:w-32 md:w-48 h-32 md:h-48 flex-shrink-0">
                   {item.imageUrls && item.imageUrls.length > 0 ? (
-                    <ItemImage
-                      fileKey={item.imageUrls[0]}
+                    <CommonImage
+                      fileKey={item.imageUrls?.[0] || ""}
                       className="w-full h-full object-cover rounded-lg"
                     />
                   ) : (

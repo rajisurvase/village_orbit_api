@@ -1,7 +1,6 @@
-import { useState, useEffect, useContext } from 'react';
-import { TrendingUp, Loader2, RefreshCw } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { TrendingUp } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -9,73 +8,58 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { supabase } from '@/integrations/supabase/client';
-import { usePageSEO } from '@/hooks/usePageSEO';
-import SectionSkeleton from '@/components/ui/skeletons/SectionSkeleton';
-import { VillageContext } from '@/context/VillageContextConfig';
-
-interface MarketPrice {
-  id: string;
-  crop_name: string;
-  price: number;
-  unit: string;
-  last_updated: string;
-}
+} from "@/components/ui/table";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { GetAllMarketPrices } from "@/services/marketPrice";
+import SectionSkeleton from "@/components/ui/skeletons/SectionSkeleton";
 
 const MarketPricesPage = () => {
-  const [prices, setPrices] = useState<MarketPrice[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const { config } = useContext(VillageContext);
+  const {
+    data: prices,
+    isLoading,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["marketPrices"],
+    queryFn: ({ pageParam = 0 }) =>
+      GetAllMarketPrices({
+        page: pageParam,
+        size: 20,
+      }),
 
-  usePageSEO({
-    title: `Market Prices - ${config?.village.name || 'Village'} Gram Panchayat`,
-    description: `Current agricultural market prices in ${config?.village.name || 'Village'}. Stay updated with crop rates.`,
-    keywords: ['market prices', 'crop prices', 'agriculture', 'farming', 'commodity prices'],
+    getNextPageParam: (lastPage) => {
+      const currentPage = lastPage.data.page;
+      const totalPages = lastPage.data.totalPages;
+      return currentPage + 1 < totalPages ? currentPage + 1 : undefined;
+    },
+    initialPageParam: 0,
+    select(data) {
+      return data.pages.flatMap((page) => page.data.prices);
+    },
   });
 
-  useEffect(() => {
-    loadPrices();
-  }, [config]);
-
-  const loadPrices = async (refresh = false) => {
-    if (refresh) setRefreshing(true);
-    try {
-      const { data, error } = await supabase
-        .from('market_prices')
-        .select('*')
-        .order('crop_name', { ascending: true });
-
-      if (error) throw error;
-      setPrices(data || []);
-    } catch (error) {
-      console.error('Error loading market prices:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-IN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(dateString).toLocaleString("en-IN", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const getLatestUpdate = () => {
     if (prices.length === 0) return null;
     const latest = prices.reduce((prev, current) =>
-      new Date(current.last_updated) > new Date(prev.last_updated) ? current : prev
+      new Date(current.lastUpdated) > new Date(prev.lastUpdated)
+        ? current
+        : prev,
     );
-    return formatDate(latest.last_updated);
+    return formatDate(latest.lastUpdated);
   };
 
-  if (loading) return <SectionSkeleton />;
+  if (isLoading) return <SectionSkeleton />;
 
   return (
     <section className="py-20 bg-muted/30 min-h-screen">
@@ -84,9 +68,7 @@ const MarketPricesPage = () => {
         <div className="text-center mb-12 animate-fade-in">
           <div className="flex items-center justify-center gap-2 mb-4">
             <TrendingUp className="h-10 w-10 text-primary" />
-            <h1 className="text-4xl font-bold text-gradient">
-              Market Prices
-            </h1>
+            <h1 className="text-4xl font-bold text-gradient">Market Prices</h1>
           </div>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Real-time agricultural commodity prices for farmers
@@ -103,26 +85,15 @@ const MarketPricesPage = () => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-2xl">Crop Prices Today</CardTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => loadPrices(true)}
-                disabled={refreshing}
-              >
-                {refreshing ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                )}
-                Refresh
-              </Button>
             </div>
           </CardHeader>
           <CardContent>
             {prices.length === 0 ? (
               <div className="text-center py-12">
                 <TrendingUp className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-xl font-semibold mb-2">No Prices Available</h3>
+                <h3 className="text-xl font-semibold mb-2">
+                  No Prices Available
+                </h3>
                 <p className="text-muted-foreground">
                   Market price data will be displayed here once available.
                 </p>
@@ -133,7 +104,9 @@ const MarketPricesPage = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="font-bold">Crop Name</TableHead>
-                      <TableHead className="font-bold text-right">Price</TableHead>
+                      <TableHead className="font-bold text-right">
+                        Price
+                      </TableHead>
                       <TableHead className="font-bold">Unit</TableHead>
                       <TableHead className="font-bold">Last Updated</TableHead>
                     </TableRow>
@@ -141,7 +114,9 @@ const MarketPricesPage = () => {
                   <TableBody>
                     {prices.map((price) => (
                       <TableRow key={price.id} className="hover:bg-muted/50">
-                        <TableCell className="font-medium">{price.crop_name}</TableCell>
+                        <TableCell className="font-medium">
+                          {price.cropName}
+                        </TableCell>
                         <TableCell className="text-right text-lg font-semibold text-primary">
                           ₹{price.price.toFixed(2)}
                         </TableCell>
@@ -149,12 +124,24 @@ const MarketPricesPage = () => {
                           per {price.unit}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {formatDate(price.last_updated)}
+                          {formatDate(price.lastUpdated)}
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
+                    {hasNextPage && (
+                        <div className="flex justify-center p-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => fetchNextPage()}
+                            disabled={isFetchingNextPage}
+                          >
+                            Load more
+                          </Button>
+                        </div>
+                    )}
               </div>
             )}
           </CardContent>
@@ -163,8 +150,8 @@ const MarketPricesPage = () => {
         {/* Info Note */}
         <div className="max-w-4xl mx-auto mt-8 p-4 bg-primary/10 rounded-lg text-sm text-muted-foreground text-center">
           <p>
-            Prices are indicative and may vary based on quality and market conditions.
-            Please verify with local traders for exact rates.
+            Prices are indicative and may vary based on quality and market
+            conditions. Please verify with local traders for exact rates.
           </p>
         </div>
       </div>
