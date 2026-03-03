@@ -33,7 +33,6 @@ import LanguageToggle from "./LanguageToggle";
 import ThemeToggle from "./ThemeToggle";
 
 import { useApiAuth } from "@/hooks/useApiAuth";
-import { authService } from "@/services/authService";
 import { CUSTOM_ROUTES } from "@/custom-routes";
 import { VillageContext } from "@/context/VillageContextConfig";
 import { cn } from "@/lib/utils";
@@ -67,7 +66,6 @@ const Header: React.FC = () => {
     user,
     isAdmin,
     isSuperAdmin,
-    loading: authLoading,
     isAuthenticated,
     logout,
   } = useApiAuth();
@@ -121,7 +119,7 @@ const Header: React.FC = () => {
       .map((section) => ({
         title: section.title[currentLang] || section.title.en,
         items: section.items
-          .filter((item) => item.isVisible && isPageVisible(item.pageKey))
+          .filter((item) => item.isVisible && true) //isPageVisible(item.pageKey))
           .sort((a, b) => a.order - b.order)
           .map((item) => ({
             name: item.label[currentLang] || item.label.en,
@@ -135,6 +133,8 @@ const Header: React.FC = () => {
   }, [currentLang, isPageVisible]);
 
   const { standaloneNavItems, homeMenuSections } = navigationData;
+
+  console.log("navigationData", navigationData)
 
   // ------------------------------------------------------------------
   // YELLOW CONTACT BAR (NON-STICKY)
@@ -189,19 +189,19 @@ const Header: React.FC = () => {
     </div>
   );
 
-  const sections: Visible[] = [
-    "about",
-    "panchayat",
-    "schemes",
-    "services",
-    "development",
-    //"gallery",
-    "contact",
-    "announcement",
-    "proudPeople",
-    "ashaWorkers",
-    "anganwadiWorkers",
-  ];
+  // const sections: Visible[] = [
+  //   "about",
+  //   "panchayat",
+  //   "schemes",
+  //   "services",
+  //   "development",
+  //   //"gallery",
+  //   "contact",
+  //   "announcement",
+  //   "proudPeople",
+  //   "ashaWorkers",
+  //   "anganwadiWorkers",
+  // ];
   // ------------------------------------------------------------------
   // WHITE HEADER (STICKY)
   // ------------------------------------------------------------------
