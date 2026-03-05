@@ -1,6 +1,5 @@
 /**
  * API-based Auth Hook
- * Replaces Supabase auth with REST API authentication
  * Optimized with memoization and stable callbacks
  */
 

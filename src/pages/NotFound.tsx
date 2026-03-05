@@ -17,7 +17,7 @@ const NotFound = () => {
     <main className="flex min-h-screen items-center justify-center bg-gradient-subtle">
       <article className="text-center p-8">
         <h1 className="mb-4 text-6xl font-bold text-primary">404</h1>
-        <p className="mb-8 text-2xl text-muted-foreground">Oops! Page not found</p>
+        <p className="mb-8 text-2xl text-muted-foreground">Oops! Page not found or you don't have permission to access it.</p>
         <Link to="/">
           <Button className="gap-2">
             <Home className="h-4 w-4" />

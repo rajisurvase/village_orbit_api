@@ -134,8 +134,6 @@ const Header: React.FC = () => {
 
   const { standaloneNavItems, homeMenuSections } = navigationData;
 
-  console.log("navigationData", navigationData)
-
   // ------------------------------------------------------------------
   // YELLOW CONTACT BAR (NON-STICKY)
   // ------------------------------------------------------------------

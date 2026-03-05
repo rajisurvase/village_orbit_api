@@ -2,11 +2,12 @@ import apiConfig from "@/config/apiConfig";
 import apiClient, { ApiResponse } from "./apiClient";
 import { AddServiceFormData } from "@/schema/service";
 
-type ServiceCategory = {
+export type ServiceCategory = {
   id?: string;
   name: string;
-  display_order: number;
+  displayOrder: number;
   isActive: boolean;
+  type?: "ADD" | "EDIT" | "DELETE";
 };
 
 export const GetAllCategories = async () => {
@@ -24,7 +25,7 @@ export const GetServiceById = async (serviceId: string) => {
 };
 
 export const CreateUpdateCategory = async (payload: ServiceCategory) => {
-  const { id, ...rest } = payload;
+  const { id, type, ...rest } = payload;
   let response;
   if (id) {
     response = await apiClient.put<ApiResponse<ServiceCategory>>(
@@ -39,6 +40,14 @@ export const CreateUpdateCategory = async (payload: ServiceCategory) => {
     return response.data;
   }
 };
+
+export const DeleteCategory = async (id: string) => {
+  const response = await apiClient.delete<ApiResponse<null>>(
+    `${apiConfig.endpoints.services.categories}/${id}`,
+  );
+  return response.data;
+}
+
 
 export interface IGetServiceListPayload {
   villageId: string;
@@ -76,7 +85,7 @@ export const GetAllServices = async (queryParams: IGetServiceListPayload) => {
 };
 
 export const CreateService = async (
-  payload: AddServiceFormData & { imageUrl: string; villageId : string, id?: string,  },
+  payload: AddServiceFormData & { imageUrl: string; villageId: string, id?: string, },
 ) => {
   const { id, ...rest } = payload;
   if (id) {
@@ -93,3 +102,10 @@ export const CreateService = async (
     return response.data;
   }
 };
+
+export const DeleteService = async (id: string) => {
+  const response = await apiClient.delete<ApiResponse<null>>(
+    `${apiConfig.endpoints.services.delete(id)}`,
+  );
+  return response.data;
+}

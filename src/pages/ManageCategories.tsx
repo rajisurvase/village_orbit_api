@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Trash2, Edit } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Edit, Loader } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -22,100 +21,198 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useServiceCategory } from "@/hooks/village/useService";
+import { CreateUpdateCategory, DeleteCategory, ServiceCategory } from "@/services/village-service-category";
+import { useMutation } from "@tanstack/react-query";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const ManageCategories = () => {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+const INITIAL_FORM_DATA = {
+  name: "",
+  displayOrder: 0,
+  isActive: "1",
+};
+
+const CreateServiceCategoryModel = ({ editingCategory, handleAction }: { editingCategory: ServiceCategory | null; handleAction: (type: "Success") => void }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<any>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    display_order: 0,
-  });
-
-  const { data: categoriesData, isLoading } = useServiceCategory();
-
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: CreateUpdateCategory
+  })
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    try {
-      if (editingCategory) {
-        // Update existing category
-        const { error } = await supabase
-          .from("service_categories")
-          .update({
-            name: formData.name,
-            display_order: formData.display_order,
-          })
-          .eq("id", editingCategory.id);
-
-        if (error) throw error;
-        toast.success("Category updated successfully!");
-      } else {
-        // Create new category
-        const { error } = await supabase.from("service_categories").insert({
-          name: formData.name,
-          display_order: formData.display_order,
-        });
-
-        if (error) throw error;
-        toast.success("Category added successfully!");
+    mutateAsync({
+      ...formData,
+      isActive: formData.isActive === "1" ? true : false,
+      id: editingCategory ? editingCategory.id : undefined,
+    }, {
+      onSuccess: () => {
+        toast.success(`Category ${editingCategory ? "updated" : "added"} successfully!`);
+        setIsDialogOpen(false);
+        setFormData(INITIAL_FORM_DATA);
+        handleAction("Success");
+      },
+      onError: (error: any) => {
+        toast.error(error.message || `Failed to ${editingCategory ? "update" : "add"} category`);
+        console.error(error);
       }
+    })
+  };
 
-      setIsDialogOpen(false);
-      setFormData({ name: "", display_order: 0 });
-      setEditingCategory(null);
-      // fetchCategories();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to save category");
-      console.error(error);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (editingCategory) {
+      setFormData({
+        name: editingCategory.name,
+        displayOrder: editingCategory.displayOrder,
+        isActive: editingCategory.isActive ? "1" : "0",
+      });
+      setIsDialogOpen(true);
     }
-  };
+  }, [editingCategory]);
 
-  const handleEdit = (category: any) => {
-    setEditingCategory(category);
-    setFormData({
-      name: category.name,
-      display_order: category.display_order,
-    });
-    setIsDialogOpen(true);
-  };
+  return (
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogTrigger asChild>
+        <Button
+          onClick={() => {
+            setFormData(INITIAL_FORM_DATA);
+          }}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add Category
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            {editingCategory ? "Edit Category" : "Add New Category"}
+          </DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="name">Category Name *</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              placeholder="Enter category name"
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="order">Display Order</Label>
+            <Input
+              id="order"
+              type="number"
+              value={formData.displayOrder}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  displayOrder: parseInt(e.target.value),
+                })
+              }
+              placeholder="0"
+            />
+          </div>
+          <div>
+            <Select onValueChange={(value) => {
+              setFormData({ ...formData, isActive: value })
+            }} value={formData.isActive}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+
+                <SelectItem value={"1"}>
+                  Active
+                </SelectItem>
+                <SelectItem value={"0"}>
+                  Inactive
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button type="submit" disabled={isPending} className="w-full">
+            {isPending
+              ? "Saving..."
+              : editingCategory
+                ? "Update Category"
+                : "Add Category"}
+          </Button>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+const CategoryListItem = ({ category, handleEdit, refetch }: { category: ServiceCategory; handleEdit: (type: "toggle" | "edit") => void, refetch: () => void }) => {
+  const { mutateAsync: mutateDeleteAsync, isPending: isDeletePending } = useMutation({
+    mutationFn: DeleteCategory
+  })
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this category?")) return;
 
-    try {
-      const { error } = await supabase
-        .from("service_categories")
-        .delete()
-        .eq("id", id);
+    mutateDeleteAsync(id, {
+      onSuccess: () => {
+        toast.success("Category deleted successfully!");
+        refetch()
+      },
+      onError: (error: any) => {
+        toast.error(error.message || "Failed to delete category");
+      }
 
-      if (error) throw error;
-      toast.success("Category deleted successfully!");
-      // fetchCategories();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to delete category");
-      console.error(error);
-    }
+    })
   };
 
-  const toggleActive = async (id: string, currentStatus: boolean) => {
-    try {
-      const { error } = await supabase
-        .from("service_categories")
-        .update({ is_active: !currentStatus })
-        .eq("id", id);
+  return (
+    <TableRow key={category.id}>
+      <TableCell className="font-medium">
+        {category.name}
+      </TableCell>
+      <TableCell>{category.displayOrder}</TableCell>
+      <TableCell>
+        <Button
+          variant={category.isActive ? "default" : "secondary"}
+          size="sm"
+          onClick={() =>
+            handleEdit("toggle")
+          }
+          disabled
+        >
+          {category.isActive ? "Active" : "Inactive"}
+        </Button>
+      </TableCell>
+      <TableCell>
+        <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleEdit("edit")}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={isDeletePending}
+            onClick={() => handleDelete(category.id)}
+          >
+            {isDeletePending ? <Loader /> : <Trash2 className="h-4 w-4 text-destructive" />}
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  )
+}
 
-      if (error) throw error;
-      toast.success(`Category ${!currentStatus ? "activated" : "deactivated"}`);
-      // fetchCategories();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update category");
-      console.error(error);
-    }
+const ManageCategories = () => {
+  const navigate = useNavigate();
+  const [editingCategory, setEditingCategory] = useState<ServiceCategory | null>(null);
+  const { data: categoriesData, isLoading, refetch } = useServiceCategory();
+
+  const handleEdit = (category: ServiceCategory) => {
+    setEditingCategory(category);
   };
 
   return (
@@ -133,63 +230,14 @@ const ManageCategories = () => {
         <div className="bg-card rounded-lg shadow-lg p-8">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold">Manage Service Categories</h1>
-
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button
-                  onClick={() => {
-                    setEditingCategory(null);
-                    setFormData({ name: "", display_order: 0 });
-                  }}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Category
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>
-                    {editingCategory ? "Edit Category" : "Add New Category"}
-                  </DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <Label htmlFor="name">Category Name *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                      }
-                      placeholder="Enter category name"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="order">Display Order</Label>
-                    <Input
-                      id="order"
-                      type="number"
-                      value={formData.display_order}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          display_order: parseInt(e.target.value),
-                        })
-                      }
-                      placeholder="0"
-                    />
-                  </div>
-                  <Button type="submit" disabled={loading} className="w-full">
-                    {loading
-                      ? "Saving..."
-                      : editingCategory
-                      ? "Update Category"
-                      : "Add Category"}
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
+            <CreateServiceCategoryModel editingCategory={editingCategory}
+              handleAction={(type) => {
+                if (type === "Success") {
+                  refetch()
+                }
+                setEditingCategory(null);
+              }}
+            />
           </div>
 
           <Table>
@@ -208,44 +256,25 @@ const ManageCategories = () => {
                     Loading...
                   </TableCell>
                 </TableRow>
-              ) : (
+              ) : !!categoriesData.length ?(
                 categoriesData.map((category) => (
-                  <TableRow key={category.id}>
-                    <TableCell className="font-medium">
-                      {category.name}
-                    </TableCell>
-                    <TableCell>{category.display_order}</TableCell>
-                    <TableCell>
-                      <Button
-                        variant={category.isActive ? "default" : "secondary"}
-                        size="sm"
-                        onClick={() =>
-                          toggleActive(category.id, category.isActive)
-                        }
-                      >
-                        {category.isActive ? "Active" : "Inactive"}
-                      </Button>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(category)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(category.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                  <CategoryListItem key={category.id}
+                    category={{ ...category }}
+                    handleEdit={(type) => {
+                      handleEdit({
+                        ...category,
+                        isActive: type === "toggle" ? !category.isActive : category.isActive
+                      })
+                    }}
+                    refetch={refetch}
+                  />
                 ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center">
+                    No categories found. Please add a category.
+                  </TableCell>
+                </TableRow>
               )}
             </TableBody>
           </Table>

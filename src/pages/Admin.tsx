@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useApiAuth } from "@/hooks/useApiAuth";
 import { Button } from "@/components/ui/button";
 import {

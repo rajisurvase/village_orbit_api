@@ -1,7 +1,7 @@
 import { Loader2 } from 'lucide-react'
 const CustomLoader = () => {
   return (
-    <div className="flex items-center justify-center min-h-screen">
+    <div className="flex items-center justify-center min-h-[75vh]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
   )

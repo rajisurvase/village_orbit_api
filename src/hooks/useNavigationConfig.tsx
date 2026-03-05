@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+
 
 export interface NavMenuItem {
   id: string;
@@ -372,83 +371,83 @@ export const getDefaultNavigationConfig = (): NavigationConfig => ({
   ],
 });
 
-export const useNavigationConfig = (villageId?: string) => {
-  const [config, setConfig] = useState<NavigationConfig | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+// export const useNavigationConfig = (villageId?: string) => {
+//   const [config, setConfig] = useState<NavigationConfig | null>(null);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchNavConfig = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+//   useEffect(() => {
+//     const fetchNavConfig = async () => {
+//       try {
+//         setLoading(true);
+//         setError(null);
 
-        if (!villageId) {
-          setConfig(getDefaultNavigationConfig());
-          setLoading(false);
-          return;
-        }
+//         if (!villageId) {
+//           setConfig(getDefaultNavigationConfig());
+//           setLoading(false);
+//           return;
+//         }
 
-        // Fetch navigation config from village_config
-        const { data: configData, error: configError } = await supabase
-          .from("village_config")
-          .select("config_data")
-          .eq("village_id", villageId)
-          .eq("language", "en") // Navigation config is language-independent, stored with en
-          .maybeSingle();
+//         // Fetch navigation config from village_config
+//         const { data: configData, error: configError } = await supabase
+//           .from("village_config")
+//           .select("config_data")
+//           .eq("village_id", villageId)
+//           .eq("language", "en") // Navigation config is language-independent, stored with en
+//           .maybeSingle();
 
-        if (configError) {
-          console.error("Error fetching nav config:", configError);
-          setConfig(getDefaultNavigationConfig());
-        } else if (configData?.config_data) {
-          const data = configData.config_data as any;
-          if (data.navigationConfig) {
-            setConfig(data.navigationConfig);
-          } else {
-            setConfig(getDefaultNavigationConfig());
-          }
-        } else {
-          setConfig(getDefaultNavigationConfig());
-        }
-      } catch (err) {
-        console.error("Error in fetchNavConfig:", err);
-        setError(err instanceof Error ? err.message : "Unknown error");
-        setConfig(getDefaultNavigationConfig());
-      } finally {
-        setLoading(false);
-      }
-    };
+//         if (configError) {
+//           console.error("Error fetching nav config:", configError);
+//           setConfig(getDefaultNavigationConfig());
+//         } else if (configData?.config_data) {
+//           const data = configData.config_data as any;
+//           if (data.navigationConfig) {
+//             setConfig(data.navigationConfig);
+//           } else {
+//             setConfig(getDefaultNavigationConfig());
+//           }
+//         } else {
+//           setConfig(getDefaultNavigationConfig());
+//         }
+//       } catch (err) {
+//         console.error("Error in fetchNavConfig:", err);
+//         setError(err instanceof Error ? err.message : "Unknown error");
+//         setConfig(getDefaultNavigationConfig());
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
 
-    fetchNavConfig();
+//     fetchNavConfig();
 
-    // Set up real-time subscription for navigation config updates
-    const channel = supabase
-      .channel("nav-config-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "village_config",
-        },
-        (payload) => {
-          if (
-            payload.eventType === "UPDATE" ||
-            payload.eventType === "INSERT"
-          ) {
-            const newData = payload.new as any;
-            if (newData.config_data?.navigationConfig) {
-              setConfig(newData.config_data.navigationConfig);
-            }
-          }
-        },
-      )
-      .subscribe();
+//     // Set up real-time subscription for navigation config updates
+//     const channel = supabase
+//       .channel("nav-config-changes")
+//       .on(
+//         "postgres_changes",
+//         {
+//           event: "*",
+//           schema: "public",
+//           table: "village_config",
+//         },
+//         (payload) => {
+//           if (
+//             payload.eventType === "UPDATE" ||
+//             payload.eventType === "INSERT"
+//           ) {
+//             const newData = payload.new as any;
+//             if (newData.config_data?.navigationConfig) {
+//               setConfig(newData.config_data.navigationConfig);
+//             }
+//           }
+//         },
+//       )
+//       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [villageId]);
+//     return () => {
+//       supabase.removeChannel(channel);
+//     };
+//   }, [villageId]);
 
-  return { config, loading, error };
-};
+//   return { config, loading, error };
+// };

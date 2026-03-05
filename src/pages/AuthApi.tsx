@@ -1,6 +1,5 @@
 /**
  * API-based Authentication Page
- * Uses REST API instead of Supabase for authentication
  */
 
 import { useState, useEffect } from "react";
