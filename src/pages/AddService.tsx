@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useContext, useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,18 +31,18 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { UploadVillageFile } from "@/services/village-service";
-import { VILLAGES } from "@/config/villageConfig";
 import { CUSTOM_ROUTES } from "@/custom-routes";
-import { useGetFullFilePath } from "@/hooks/useVillagehooks";
 import { GetFullFilePath } from "@/services/commonService";
+import { VillageContext } from "@/context/VillageContextConfig";
 
 const AddService = () => {
+  const { config } = useContext(VillageContext);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const serviceId = searchParams.get("serviceId");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
-  const ViLLAGE_ID = VILLAGES.shivankhed.id; // Replace with dynamic village ID if needed
+  const ViLLAGE_ID = config.villageId;
 
   const { data: categoriesData, isLoading } = useServiceCategory();
   const { data: serviceDetails, isLoading: isServiceLoading } = useQuery({

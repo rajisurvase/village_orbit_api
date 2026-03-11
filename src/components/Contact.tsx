@@ -14,9 +14,8 @@ import ContactForm from "./ContactForm";
 import { Link, useSearchParams } from "react-router-dom";
 import DocumentsModal from "./DocumentsModal";
 import { useState, useEffect, useRef } from "react";
-import { VILLAGES } from "@/config/villageConfig";
 
-const Contact = ({ contact, documents = [], quickServices = [] }) => {
+const Contact = ({ contact, documents = [], quickServices = [], villageId }) => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const [isDocsModalOpen, setIsDocsModalOpen] = useState(false);
@@ -236,7 +235,7 @@ const Contact = ({ contact, documents = [], quickServices = [] }) => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ContactForm villageId={VILLAGES.shivankhed.id} />
+                <ContactForm villageId={villageId} />
               </CardContent>
             </Card>
 

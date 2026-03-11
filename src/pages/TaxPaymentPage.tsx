@@ -99,7 +99,7 @@ const TaxPaymentPage = () => {
       const { data: villageData } = await supabase
         .from("villages")
         .select("id")
-        .eq("name", VILLAGES.shivankhed.name)
+        .eq("name", "shivankhed")
         .maybeSingle();
 
       const { data, error } = await supabase.functions.invoke("create-tax-payment", {

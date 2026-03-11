@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,12 +32,12 @@ import {
   GetAdminItems,
 } from "@/services/marketPlace/items.service";
 import { Item } from "@/services/marketPlace/items.types";
-import { VILLAGES } from "@/config/villageConfig";
 import {
   useActionTriggerItem,
   useAdminActionOnBuySellItem,
 } from "@/services/marketPlace/items.query";
 import CommonImage from "@/components/CommonImage";
+import { VillageContext } from "@/context/VillageContextConfig";
 
 const ItemCard = ({ isSelected, item, refetch, handleCheckBox }: { isSelected: boolean, item: Item; refetch: () => void, handleCheckBox:()=>void }) => {
   const [rejectionReason, setRejectionReason] = useState("");
@@ -255,13 +255,14 @@ const ItemCard = ({ isSelected, item, refetch, handleCheckBox }: { isSelected: b
 
 export default function AdminMarketplaceDashboard() {
   const { loading: authLoading } = useApiAuth();
+  const {config} = useContext(VillageContext)
   const navigate = useNavigate();
   const [tab, setTab] = useState<"pending" | "approved" | "rejected">(
     "pending",
   );
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   // const { sendNotification } = usePushNotifications();
-  const villageId = VILLAGES.shivankhed.id;
+  const villageId = config.villageId;
   const { mutateAsync, isPending } = useAdminActionOnBuySellItem();
 
   const { data: analytics } = useQuery({

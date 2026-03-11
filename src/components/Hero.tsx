@@ -1,17 +1,23 @@
-import { Card } from "@/components/ui/card";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { useTranslation } from "react-i18next";
 import Autoplay from "embla-carousel-autoplay";
 import { useRef, memo } from "react";
+import { VillageData } from "@/config/villageConfig";
 
 interface HeroProps {
-  village: any;
-  panchayat: any;
+  village: VillageData;
+  isLoading : boolean
 }
 
-const Hero = ({ village, panchayat }: HeroProps) => {
+const Hero = ({ village, isLoading }: HeroProps) => {
   const { t } = useTranslation();
   const plugin = useRef(Autoplay({ delay: 4000, stopOnInteraction: true }));
+
+  if(isLoading) {
+    return 
+  }
+  
+  
 
   return (
     <section id="home" className="relative min-h-[100svh] flex items-center">

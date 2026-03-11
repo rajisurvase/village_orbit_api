@@ -1,13 +1,13 @@
 import apiConfig from "@/config/apiConfig";
 import apiClient, { ApiResponse } from "./apiClient";
-import { VillageConfig } from "@/config/villageConfig";
+import { VillageConfig, VillageConfigData } from "@/config/villageConfig";
 
 export type GetVillageByIdResponse = {
   id: string;
   villageName: string;
   villageId: string;
   language: string;
-  configData: VillageConfig;
+  configData: VillageConfigData;
 };
 
 export const GetVillageById = async (payload: {

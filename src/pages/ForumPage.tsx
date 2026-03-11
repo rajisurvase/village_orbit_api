@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApiAuth } from "@/hooks/useApiAuth";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { Heart, Loader, MessageCircle, Trash2 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import { CUSTOM_ROUTES } from "@/custom-routes";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
@@ -18,11 +17,12 @@ import {
   addCommentToPost,
 } from "@/services/forum";
 import { useForumPostList } from "@/hooks/village/useForumPost";
-import { VILLAGES } from "@/config/villageConfig";
 import dayjs from "dayjs";
+import { VillageContext } from "@/context/VillageContextConfig";
 
 export default function ForumPage() {
   const { user } = useApiAuth();
+  const {config} = useContext(VillageContext)
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showCreatePost, setShowCreatePost] = useState(false);
@@ -33,6 +33,7 @@ export default function ForumPage() {
   });
   const [selectedPost, setSelectedPost] = useState<string | null>(null);
   const [newComment, setNewComment] = useState("");
+  const villageId = config.villageId
 
   const { mutateAsync: mutatetForum, isPending: isLikePending } = useMutation({
     mutationFn: actionForumPost,
@@ -52,7 +53,7 @@ export default function ForumPage() {
     isLoading,
     refetch,
   } = useForumPostList({
-    villageId: VILLAGES.shivankhed.id,
+    villageId,
     page: 0,
     size: 20,
   });

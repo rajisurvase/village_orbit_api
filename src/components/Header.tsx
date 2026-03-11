@@ -224,17 +224,18 @@ const Header: React.FC = () => {
                   />
                 </div>
 
-                <div>
-                  <h1 className="text-base sm:text-lg md:text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                    {t("header.title")}
-                  </h1>
-                  {config?.village && (
+
+                {config?.village && (
+                  <div>
+                    <h1 className="text-base sm:text-lg md:text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                      {config.village.name ||"N/A"}
+                    </h1>
                     <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground">
                       {config.village.state} {config.village.district && ","}{" "}
                       {config.village.district}
                     </p>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </Link>
 
@@ -284,7 +285,7 @@ const Header: React.FC = () => {
                                     className={cn(
                                       "block py-2 px-3 text-sm rounded-md transition-colors hover:bg-accent hover:text-accent-foreground",
                                       location.pathname === item.href &&
-                                        "bg-accent text-accent-foreground",
+                                      "bg-accent text-accent-foreground",
                                     )}
                                   >
                                     {item.name}
@@ -307,7 +308,7 @@ const Header: React.FC = () => {
                     className={cn(
                       "text-foreground hover:text-primary hover:bg-primary/10",
                       location.pathname === item.href &&
-                        "bg-primary/10 text-primary",
+                      "bg-primary/10 text-primary",
                     )}
                     asChild
                   >
@@ -446,7 +447,7 @@ const Header: React.FC = () => {
                               className={cn(
                                 "block py-2 px-3 text-sm rounded-md hover:bg-accent",
                                 location.pathname === item.href &&
-                                  "bg-accent text-accent-foreground",
+                                "bg-accent text-accent-foreground",
                               )}
                             >
                               {item.name}
@@ -464,7 +465,7 @@ const Header: React.FC = () => {
                       className={cn(
                         "justify-start text-foreground hover:text-primary",
                         location.pathname === item.href &&
-                          "bg-primary/10 text-primary",
+                        "bg-primary/10 text-primary",
                       )}
                       asChild
                       onClick={() => setIsMenuOpen(false)}

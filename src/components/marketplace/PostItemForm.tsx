@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -15,7 +15,7 @@ import useApiAuth from "@/hooks/useApiAuth";
 // marketplace helper used by submit handler
 import { createItemWithImages } from '@/services/marketPlace/buySell';
 import { CATEGORIES } from ".";
-import { VILLAGES } from "@/config/villageConfig";
+import { VillageContext } from "@/context/VillageContextConfig";
 
 const formSchema = z.object({
   seller_name: z.string().min(2, "Seller name must be at least 2 characters").max(100),
@@ -32,11 +32,13 @@ interface PostItemFormProps {
 }
 
 const PostItemForm = ({ onSuccess }: PostItemFormProps) => {
+  const {config} = useContext(VillageContext)
   const { user } = useApiAuth();
   const [uploading, setUploading] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const { toast } = useToast();
+  const villageId = config.villageId
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -124,7 +126,7 @@ const PostItemForm = ({ onSuccess }: PostItemFormProps) => {
           village: values.village,
           contact: values.contact,
           user_id: user.userId,
-          villageId : VILLAGES.shivankhed.id
+          villageId : villageId
         },
         imageFiles
       );

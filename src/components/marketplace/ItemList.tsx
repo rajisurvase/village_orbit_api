@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useContext } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -27,11 +27,11 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
-import { VILLAGES } from "@/config/villageConfig";
 import { CATEGORIES } from ".";
 import { Item } from "@/services/marketPlace/items.types";
 import { useItems } from "@/services/marketPlace/items.query";
 import CommonImage from "../CommonImage";
+import { VillageContext } from "@/context/VillageContextConfig";
 
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest First" },
@@ -43,6 +43,7 @@ const SORT_OPTIONS = [
 const ITEMS_PER_PAGE = 20;
 
 const ItemList = () => {
+  const { config } = useContext(VillageContext);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [sortBy, setSortBy] = useState("newest");
@@ -58,7 +59,7 @@ const ItemList = () => {
     search: searchQuery,
     category:
       selectedCategory === "All Categories" ? undefined : selectedCategory,
-    villageId: VILLAGES.shivankhed.id,
+    villageId: config.villageId,
   });
 
   // notify on error

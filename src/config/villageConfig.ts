@@ -104,6 +104,8 @@ export interface VideoItem {
 
 export interface VillageConfigData {
   village: VillageData;
+  villageId : string;
+  villageName: string;
   panchayat: {
     sarpanch: PersonProfile;
     upsarpanch?: PersonProfile;
@@ -160,15 +162,6 @@ export interface VillageConfigData {
   }>;
 }
 
-
-// Available villages configuration
-export const VILLAGES: Record<string, VillageConfig> = {
-  shivankhed: {
-    id: 'c10f6335-ab11-48b1-b65d-62bfece2fffd',
-    name: 'Shivankhed',
-    domain: 'shivankhed'
-  }
-};
 
 // Get current village based on hostname
 // export const getCurrentVillage = (): VillageConfig => {

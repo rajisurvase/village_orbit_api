@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,10 +38,11 @@ import {
   GetContactList,
   UpdateContactStatus,
 } from "@/services/feedbackService";
-import { VILLAGES } from "@/config/villageConfig";
 import useDebounce from "@/hooks/useDebounce";
+import { VillageContext } from "@/context/VillageContextConfig";
 
 const ContactMessagesAdmin = () => {
+  const {config} = useContext(VillageContext)
   const navigate = useNavigate();
   const { loading: authLoading, hasPermission } = useApiAuth();
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -52,11 +53,12 @@ const ContactMessagesAdmin = () => {
   const { mutateAsync, isPending } = useMutation({
     mutationFn: UpdateContactStatus,
   });
+  const villageId = config.villageId
 
   const { data: contactList, isLoading } = useQuery({
     queryKey: [
       "contactMessages",
-      VILLAGES.shivankhed.id,
+      villageId,
       statusFilter,
       dateFilter,
       debouncedSearch,
@@ -65,7 +67,7 @@ const ContactMessagesAdmin = () => {
       GetContactList({
         page: 0,
         limit: 20,
-        villageId: VILLAGES.shivankhed.id,
+        villageId,
         status: statusFilter === "all" ? undefined : statusFilter,
         date: dateFilter || undefined,
         search: debouncedSearch || undefined,

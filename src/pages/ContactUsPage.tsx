@@ -21,6 +21,7 @@ const ContactUsPage = () => {
       contact={config.contact} 
       documents={config.documents}
       quickServices={config.quickServices || []}
+      villageId={config.villageId!}
     />
   ) : (
     <NotFound />

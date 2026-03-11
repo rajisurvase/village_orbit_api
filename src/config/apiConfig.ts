@@ -4,9 +4,11 @@
  * The API base URL is configurable via environment variables or admin config
  */
 
+import { getSubdomainSlug } from "@/lib/subdomainUtils";
+
 // Default API configuration - Single source of truth for API host
 const DEFAULT_API_BASE_URL =
-  "http://ec2-13-127-151-221.ap-south-1.compute.amazonaws.com:8001";
+  "https://api.villageorbit.in";
 const API_VERSION = "v1";
 
 // Get API base URL from environment or use default
@@ -37,13 +39,20 @@ export const getApiBaseUrl = (): string => {
   return DEFAULT_API_BASE_URL;
 };
 
-// Get village ID from localStorage or default
+// Get village ID from subdomain, localStorage, or default
 export const getDefaultVillageId = (): string => {
   if (typeof window !== "undefined") {
+    // Check subdomain first (highest priority)
+    const subdomainSlug = getSubdomainSlug();
+    if (subdomainSlug) {
+      return subdomainSlug;
+    }
+
+    // Then check localStorage
     const villageId = localStorage.getItem("village_id");
     if (villageId) return villageId;
   }
-  return "shivankhed"; // Default village
+  return 
 };
 
 // Set village ID in localStorage
@@ -51,6 +60,11 @@ export const setVillageId = (villageId: string): void => {
   if (typeof window !== "undefined") {
     localStorage.setItem("village_id", villageId);
   }
+};
+
+// Get current village slug from subdomain (regardless of what's in localStorage)
+export const getCurrentVillageSlugFromDomain = (): string | null => {
+  return getSubdomainSlug();
 };
 
 // API Configuration object

@@ -4,7 +4,6 @@ import { VillageContext } from "@/context/VillageContextConfig";
 import { usePageSEO } from "@/hooks/usePageSEO";
 import HeroSkeleton from "@/components/ui/skeletons/HeroSkeleton";
 import SectionSkeleton from "@/components/ui/skeletons/SectionSkeleton";
-import { VILLAGES } from "@/config/villageConfig";
 import LazySection from "@/components/LazySection";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
@@ -55,17 +54,15 @@ const Index: React.FC = () => {
 
   // SEO configuration
   usePageSEO({
-    title: `${VILLAGES.shivankhed.name} Gram Panchayat | Official Website`,
-    description: `Official website of ${VILLAGES.shivankhed.name} Gram Panchayat. Access government schemes, development projects, announcements, services, and contact information.`,
+    title: `Village Gram Panchayat | Official Website`,
+    description: `Official website of Village Gram Panchayat. Access government schemes, development projects, announcements, services, and contact information.`,
     keywords: [
       "gram panchayat",
       "village website",
       "government schemes",
       "development projects",
-      "village services",
-      VILLAGES.shivankhed.name,
-    ],
-    canonical: "https://shivankhedkhurd.vercel.app",
+      "village services"
+    ]
   });
 
   // Memoize normalized workers to prevent recreation on every render
@@ -84,7 +81,7 @@ const Index: React.FC = () => {
   // Memoize section props to prevent unnecessary re-renders
   const heroProps = useMemo(() => ({
     village: config?.village,
-    panchayat: config?.panchayat,
+    isLoading : loading, 
   }), [config?.village, config?.panchayat]);
 
   const contactProps = useMemo(() => ({

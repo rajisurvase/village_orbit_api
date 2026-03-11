@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApiAuth } from "@/hooks/useApiAuth";
 import { Button } from "@/components/ui/button";
@@ -35,12 +35,14 @@ import {
 import { CUSTOM_ROUTES } from "@/custom-routes";
 import { SuperAdminGuard } from "@/components/guards/PermissionGuard";
 import { usePageVisibilityData } from "@/hooks/village/useService";
-import { VILLAGES } from "@/config/villageConfig";
 import { useVillages } from "@/hooks/useVillagehooks";
 import { useMutation } from "@tanstack/react-query";
 import { UpdateVillagePageVisibility } from "@/services/village-service";
+import { VillageContext } from "@/context/VillageContextConfig";
 
 const Admin = () => {
+    const { config } = useContext(VillageContext);
+  
   const {
     user,
     isSuperAdmin,
@@ -50,6 +52,7 @@ const Admin = () => {
     logout,
     hasPermission,
   } = useApiAuth();
+  const villageId = config.villageId
   const { data: villages, isLoading: villagesLoading } = useVillages();
   const [selectedVillage, setSelectedVillage] = useState("");
   const [updating, setUpdating] = useState(false);
@@ -65,7 +68,7 @@ const Admin = () => {
     data: pages,
     isLoading,
     refetch,
-  } = usePageVisibilityData(canAccessAdmin, VILLAGES.shivankhed.id);
+  } = usePageVisibilityData(canAccessAdmin,villageId);
 
   const handleToggleVisibility = async (
     pageKey: string,
@@ -74,7 +77,7 @@ const Admin = () => {
     mutateAsync(
       {
         pageKey,
-        villageId: VILLAGES.shivankhed.id,
+        villageId: villageId,
         isVisible: !currentVisibility,
       },
       {

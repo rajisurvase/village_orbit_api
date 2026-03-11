@@ -12,10 +12,11 @@ import {
 import { toast } from "sonner";
 import { ArrowLeft, Loader, Pencil, Trash2 } from "lucide-react";
 import { useServices } from "@/hooks/village/useService";
-import { VILLAGES } from "@/config/villageConfig";
 import { DeleteService, IService } from "@/services/village-service-category";
 import { CUSTOM_ROUTES } from "@/custom-routes";
 import { useMutation } from "@tanstack/react-query";
+import { useContext } from "react";
+import { VillageContext } from "@/context/VillageContextConfig";
 
 
 const ServiceTableItem = ({ service, refetch }: { service: IService; refetch: () => void }) => {
@@ -79,14 +80,15 @@ const ServiceTableItem = ({ service, refetch }: { service: IService; refetch: ()
 }
 
 const ServicesAdminDashboard = () => {
+  const {config} = useContext(VillageContext)
   const navigate = useNavigate();
-
+  const villageId = config.villageId
   const {
     data,
     isLoading,
     refetch
   } = useServices({
-    villageId: VILLAGES.shivankhed.id,
+    villageId,
     page: 0,
     limit: 20,
     sortOrder: "asc",
