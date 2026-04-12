@@ -1,4 +1,5 @@
 {
+  "id": "/",
   "name": "Village Orbit - Gram Panchayat Portal",
   "short_name": "Village Orbit",
   "description": "Official Village Orbit Gram Panchayat website for accessing government schemes, development projects, and village services etc.",
@@ -19,6 +20,21 @@
     "sizes": "512x512",
     "type": "image/png",
     "purpose": "any maskable"
+  }
+],
+"screenshots": [
+  {
+    "src": "/screenshots/home.png",
+    "sizes": "1080x1920",
+    "type": "image/png",
+    "form_factor": "narrow",
+    "label": "Home screen on mobile"
+  },
+  {
+    "src": "/screenshots/desktop.png",
+    "sizes": "1920x1080",
+    "type": "image/png",
+    "form_factor": "wide"
   }
 ],
   "categories": ["government", "utilities", "lifestyle","local services"],
