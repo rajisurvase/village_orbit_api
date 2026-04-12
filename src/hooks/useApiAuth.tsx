@@ -34,6 +34,7 @@ interface SignupData {
   fullName: string;
   mobile: string;
   aadharNumber?: string;
+  villageId : string
 }
 
 // Pre-lowercase role names for faster comparison
@@ -118,6 +119,7 @@ export const useApiAuth = (): UseApiAuthReturn => {
         fullName: data.fullName,
         mobile: data.mobile,
         aadharNumber: data.aadharNumber,
+        villageId: data.villageId
       });
       
       if (response.success) {

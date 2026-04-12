@@ -29,11 +29,11 @@ export const useServices = (payload : IGetServiceListPayload) => {
 
 export const usePageVisibilityData = (enabled: boolean, selectedVillageId: string) => {
   return useQuery({
-    queryKey: ["page-visibility", selectedVillageId],
+    queryKey: ["page-visibility", selectedVillageId, enabled],
     queryFn: () => GetVillagePageVisibility(selectedVillageId),
     enabled : enabled && Boolean(selectedVillageId),
     select(data) {
-      return data.data;
-    }
+       return  data?.data || []
+    },
   });
 }

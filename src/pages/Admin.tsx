@@ -406,8 +406,8 @@ const Admin = () => {
                     <div className="flex items-center justify-center">
                       <Loader2 className="h-6 w-6 animate-spin text-primary" />
                     </div>
-                  ) : pages.length >= 0 ? (
-                    pages.map((page) => (
+                  ) : Number(pages?.length ||0) > 0 ? (
+                    pages?.map((page) => (
                       <div
                         key={page.id}
                         className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/5 transition-colors"

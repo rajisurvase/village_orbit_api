@@ -2,15 +2,31 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { useApiAuth } from "@/hooks/useApiAuth";
+import { useVillages } from "@/hooks/useVillagehooks";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const emailSchema = z.string().trim().email("Invalid email address");
-const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
+const passwordSchema = z
+  .string()
+  .min(6, "Password must be at least 6 characters");
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -21,21 +37,41 @@ const Auth = () => {
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, loading: authLoading, isAuthenticated, isSuperAdmin, isAdmin, isSubAdmin, login, signup } = useApiAuth();
+  const [selectedVillage, setSelectedVillage] = useState("empty");
+  const {
+    user,
+    loading: authLoading,
+    isAuthenticated,
+    isSuperAdmin,
+    isAdmin,
+    isSubAdmin,
+    login,
+    signup,
+  } = useApiAuth();
+  const { data } = useVillages();
 
   useEffect(() => {
     // Check if user is already logged in
     if (!authLoading && isAuthenticated && user) {
       // Redirect based on role
       if (isSuperAdmin || isAdmin || isSubAdmin) {
+        // user.villageId
         navigate("/admin");
-      } else if (user.approvalStatus === 'APPROVED') {
+      } else if (user.approvalStatus === "APPROVED") {
         navigate("/my-dashboard");
       } else {
         navigate("/");
       }
     }
-  }, [authLoading, isAuthenticated, user, isSuperAdmin, isAdmin, isSubAdmin, navigate]);
+  }, [
+    authLoading,
+    isAuthenticated,
+    user,
+    isSuperAdmin,
+    isAdmin,
+    isSubAdmin,
+    navigate,
+  ]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +92,8 @@ const Auth = () => {
       } else {
         toast({
           title: "Login Failed",
-          description: result.error || "Invalid email or password. Please try again.",
+          description:
+            result.error || "Invalid email or password. Please try again.",
           variant: "destructive",
         });
       }
@@ -110,6 +147,15 @@ const Auth = () => {
         setSubmitting(false);
         return;
       }
+      if (!selectedVillage) {
+        toast({
+          title: "Validation Error",
+          description: "Please select a village",
+          variant: "destructive",
+        });
+        setSubmitting(false);
+        return;
+      }
 
       const result = await signup({
         email,
@@ -117,12 +163,15 @@ const Auth = () => {
         fullName,
         mobile,
         aadharNumber,
+        villageId: selectedVillage,
       });
 
       if (result.success) {
         toast({
           title: "Registration Submitted!",
-          description: result.message || "Your registration has been submitted for approval. You will receive notification once approved.",
+          description:
+            result.message ||
+            "Your registration has been submitted for approval. You will receive notification once approved.",
         });
         setEmail("");
         setPassword("");
@@ -161,7 +210,9 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Village Portal</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">
+            Village Portal
+          </CardTitle>
           <CardDescription className="text-center">
             Sign in to access the village management system
           </CardDescription>
@@ -172,7 +223,7 @@ const Auth = () => {
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
@@ -202,7 +253,7 @@ const Auth = () => {
                 </Button>
               </form>
             </TabsContent>
-            
+
             <TabsContent value="signup">
               <form onSubmit={handleSignup} className="space-y-4">
                 <div className="space-y-2">
@@ -223,7 +274,9 @@ const Auth = () => {
                     type="tel"
                     placeholder="10-digit mobile number"
                     value={mobile}
-                    onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    onChange={(e) =>
+                      setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))
+                    }
                     maxLength={10}
                     required
                   />
@@ -235,7 +288,11 @@ const Auth = () => {
                     type="text"
                     placeholder="12-digit Aadhar number"
                     value={aadharNumber}
-                    onChange={(e) => setAadharNumber(e.target.value.replace(/\D/g, '').slice(0, 12))}
+                    onChange={(e) =>
+                      setAadharNumber(
+                        e.target.value.replace(/\D/g, "").slice(0, 12),
+                      )
+                    }
                     maxLength={12}
                     required
                   />
@@ -250,6 +307,25 @@ const Auth = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="subject">Village</Label>
+                  <Select
+                    value={selectedVillage}
+                    onValueChange={(value) => setSelectedVillage(value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="empty">Select Village</SelectItem>
+                      {data?.map((village) => (
+                        <SelectItem key={village.id} value={village.id}>
+                          {village.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
