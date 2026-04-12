@@ -1,7 +1,7 @@
 {
-  "name": "Shivankhed Khurd - Gram Panchayat Portal",
-  "short_name": "Shivankhed Khurd",
-  "description": "Official Shivankhed Khurd Gram Panchayat website for accessing government schemes, development projects, and village services etc.",
+  "name": "Village Orbit - Gram Panchayat Portal",
+  "short_name": "Village Orbit",
+  "description": "Official Village Orbit Gram Panchayat website for accessing government schemes, development projects, and village services etc.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1a4d2e",
@@ -9,13 +9,13 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/favicon.ico",
+      "src": "/pwa-192.png",
       "sizes": "192x192",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     },
     {
-      "src": "/favicon.ico",
+      "src": "/pwa-512.png",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
